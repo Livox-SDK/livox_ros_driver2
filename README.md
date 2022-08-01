@@ -26,7 +26,7 @@ For Livox SDK 2 installation, please refer to:
 ## 2. Build & run Livox ROS Driver 2
 1. Clone source code from GitHub:  
 ```shell
-git clone https://github.com/Livox-SDK/livox_ros_driver2.git ws_livox/src
+git clone https://github.com/Livox-SDK/livox_ros_driver2.git ws_livox/src/livox_ros_driver2
 ```
 2. Follow these steps to build the Livox ROS Driver 2 (take Noetic as example):  
 ```shell
@@ -40,8 +40,8 @@ source ../../devel/setup.sh
 roslaunch livox_ros_driver2 [launch file]
 ```
 in which,
-* livox_ros_driver2: *the ROS package name of Livox ROS Driver 2;*
-* [launch file]: *the ROS launch file in the 'launch_ROS1' folder, containing the launch info and config about the target LiDAR(s);*
+* livox_ros_driver2: the ROS package name of Livox ROS Driver 2;
+* [launch file]: the ROS launch file in the 'launch_ROS1' folder, containing the launch info and config about the target LiDAR(s);
 
 A rviz launch example for HAP LiDAR would be:  
 ```shell
