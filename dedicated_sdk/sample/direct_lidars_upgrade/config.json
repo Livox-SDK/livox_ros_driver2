@@ -1,0 +1,16 @@
+{
+    "direct_lidar_config" : {
+        "host_ipinfo_config" : {
+            "host_push_cmd_ip": "192.168.1.100",
+            "host_point_data_ip": "192.168.1.100",
+            "host_imu_data_ip" : "192.168.1.100",
+            "host_cmd_port": 56101,
+            "host_push_cmd_port": 56201,
+            "host_point_data_port": 56301,
+            "host_imu_data_port": 56401,
+            "host_log_port": 56501
+        }
+    }
+}
+
+

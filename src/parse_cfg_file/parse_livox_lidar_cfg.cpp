@@ -26,15 +26,13 @@
 
 namespace livox_ros {
 
-bool LivoxLidarConfigParser::Parse(std::vector<UserLivoxLidarConfig> &lidar_configs,
-                                   std::vector<LidarExtrinsicParameters> &extrinsic_params) {
+bool LivoxLidarConfigParser::Parse(std::vector<UserLivoxLidarConfig> &lidar_configs) {
   FILE* raw_file = std::fopen(path_.c_str(), "rb");
   if (!raw_file) {
     std::cout << "failed to open config file: " << path_ << std::endl;
   }
 
   lidar_configs.clear();
-  extrinsic_params.clear();
   char read_buffer[kMaxBufferSize];
   rapidjson::FileReadStream config_file(raw_file, read_buffer, sizeof(read_buffer));
   rapidjson::Document doc;
@@ -50,12 +48,8 @@ bool LivoxLidarConfigParser::Parse(std::vector<UserLivoxLidarConfig> &lidar_conf
       std::cout << "there is no user-defined config" << std::endl;
       break;
     }
-    if (!ParseBasicConfigs(doc, lidar_configs)) {
+    if (!ParseUserConfigs(doc, lidar_configs)) {
       std::cout << "failed to parse basic configs" << std::endl;
-      break;
-    }
-    if (!ParseExtrinsics(doc, extrinsic_params)) {
-      std::cout << "failed to parse extrinsic parameters" << std::endl;
       break;
     }
     return true;
@@ -66,7 +60,7 @@ bool LivoxLidarConfigParser::Parse(std::vector<UserLivoxLidarConfig> &lidar_conf
 }
 
 
-bool LivoxLidarConfigParser::ParseBasicConfigs(const rapidjson::Document &doc,
+bool LivoxLidarConfigParser::ParseUserConfigs(const rapidjson::Document &doc,
                                               std::vector<UserLivoxLidarConfig> &user_configs) {
   const rapidjson::Value &lidar_configs = doc["lidar_configs"];
   for (auto &config : lidar_configs.GetArray()) {
@@ -77,10 +71,10 @@ bool LivoxLidarConfigParser::ParseBasicConfigs(const rapidjson::Document &doc,
 
     // parse user configs
     user_config.handle = IpStringToNum(std::string(config["ip"].GetString()));
-    if (!config.HasMember("data_type")) {
+    if (!config.HasMember("pcl_data_type")) {
       user_config.data_type = -1;
     } else {
-      user_config.data_type = static_cast<int8_t>(config["data_type"].GetInt());
+      user_config.data_type = static_cast<int8_t>(config["pcl_data_type"].GetInt());
     }
     if (!config.HasMember("pattern_mode")) {
       user_config.pattern_mode = -1;
@@ -97,8 +91,19 @@ bool LivoxLidarConfigParser::ParseBasicConfigs(const rapidjson::Document &doc,
     } else {
       user_config.dual_emit_en = static_cast<uint8_t>(config["dual_emit_en"].GetInt());
     }
+    if (!config.HasMember("extrinsic_parameter")) {
+      user_config.extrinsic_param = {0};
+    } else {
+      auto &value = config["extrinsic_parameter"];
+      if (!ParseExtrinsics(value, user_config.extrinsic_param)) {
+        user_config.extrinsic_param = {0};
+        std::cout << "failed to parse extrinsic parameters, ip: "
+                  << IpNumToString(user_config.handle) << std::endl;
+      }
+    }
     user_config.set_bits = 0;
     user_config.get_bits = 0;
+
     user_configs.push_back(user_config);
   }
 
@@ -111,44 +116,40 @@ bool LivoxLidarConfigParser::ParseBasicConfigs(const rapidjson::Document &doc,
   return true;
 }
 
-bool LivoxLidarConfigParser::ParseExtrinsics(const rapidjson::Document &doc,
-                                             std::vector<LidarExtrinsicParameters>& extrinsic_params) {
-  const rapidjson::Value &lidar_configs = doc["lidar_configs"];
-  for (auto &config : lidar_configs.GetArray()) {
-    if (!config.HasMember("ip") || !config.HasMember("extrinsic_parameter")) {
-      continue;
-    }
-
-    LidarExtrinsicParameters param;
-    param.lidar_type = kLivoxLidarType;
-    param.handle = IpStringToNum(config["ip"].GetString());
-    auto &value = config["extrinsic_parameter"];
-    if (!value.HasMember("roll") || !value.HasMember("pitch") ||
-        !value.HasMember("yaw")  || !value.HasMember("x") ||
-        !value.HasMember("y")    || !value.HasMember("z")){
-      std::cout << "incomplete extrinsic parameters, skip..." << std::endl;
-      continue;
-    }
-    param.roll  = static_cast<float>(value["roll"].GetFloat());
+bool LivoxLidarConfigParser::ParseExtrinsics(const rapidjson::Value &value,
+                                             ExtrinsicParameter &param) {
+  if (!value.HasMember("roll")) {
+    param.roll = 0.0f;
+  } else {
+    param.roll = static_cast<float>(value["roll"].GetFloat());
+  }
+  if (!value.HasMember("pitch")) {
+    param.pitch = 0.0f;
+  } else {
     param.pitch = static_cast<float>(value["pitch"].GetFloat());
-    param.yaw   = static_cast<float>(value["yaw"].GetFloat());
-    param.x     = static_cast<int32_t>(value["x"].GetInt());
-    param.y     = static_cast<int32_t>(value["y"].GetInt());
-    param.z     = static_cast<int32_t>(value["z"].GetInt());
-    std::cout << "extrinsic parameter[" << extrinsic_params.size() << "], " << std::endl
-              << "  roll: " << param.roll << ", pitch: " << param.pitch << ", yaw: " << param.yaw
-              << "  x: " << param.x << ", y: " << param.y << ", z: " << param.z << std::endl;
-    extrinsic_params.push_back(param);
+  }
+  if (!value.HasMember("yaw")) {
+    param.yaw = 0.0f;
+  } else {
+    param.yaw = static_cast<float>(value["yaw"].GetFloat());
+  }
+  if (!value.HasMember("x")) {
+    param.x = 0;
+  } else {
+    param.x = static_cast<int32_t>(value["x"].GetInt());
+  }
+  if (!value.HasMember("y")) {
+    param.y = 0;
+  } else {
+    param.y = static_cast<int32_t>(value["y"].GetInt());
+  }
+  if (!value.HasMember("z")) {
+    param.z = 0;
+  } else {
+    param.z = static_cast<int32_t>(value["z"].GetInt());
   }
 
-  if (0 == extrinsic_params.size()) {
-    std::cout << "no valid extrinsic parameters" << std::endl;
-    return false;
-  }
-  std::cout << "successfully parse extrinsic parameters, counts: "
-            << extrinsic_params.size() << std::endl;
   return true;
 }
 
-
-} // namespace livox
+} // namespace livox_ros

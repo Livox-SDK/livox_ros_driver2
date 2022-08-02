@@ -1,0 +1,43 @@
+{
+    "direct_lidar_config" : {
+        "lidar_config" : [
+            {
+                "sn" : "47MDK150010051",
+                "lidar_id": 255,
+                "lidar_ipmode":1,
+                "lidar_ipinfo_config" : {
+                    "lidar_ipaddr": "192.168.1.3",
+                    "lidar_subnet_mask": "255.255.255.0",
+                    "lidar_gateway": "192.168.1.1"
+                },
+                "host_ipinfo_config" : {
+                    "host_push_cmd_ip": "192.168.1.100",
+                    "host_point_data_ip": "192.168.1.100",
+                    "host_imu_data_ip" : "192.168.1.100",
+                    "host_cmd_port": 56101,
+                    "host_push_cmd_port": 56201,
+                    "host_point_data_port": 56301,
+                    "host_imu_data_port": 56401,
+                    "host_log_port": 56501
+                },
+
+                "sample_mode": 1,
+                "pattern_mode": 0,
+                "pcl_data_type" : 3,
+                "imu_data_en": 1,                 
+                "install_attitude" : {
+                    "roll_deg" : 1.0,
+                    "pitch_deg" : 1.0,
+                    "yaw_deg" : 1.0,
+                    "x" : 1,
+                    "y" : 1,
+                    "z" : 1
+                },
+                "work_mode" : 3
+            }
+        ]
+    }
+}
+
+
+

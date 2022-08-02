@@ -268,15 +268,6 @@ bool LdsLidar::InitVehicleLidar() {
   /** Set vehicle lidars extrinsic params */
 	for (size_t i = 0; i < vehicle_lidars_extrins_params.size(); ++i) {
 		AddLidarsExtrinsicParams(vehicle_lidars_extrins_params[i]);
-    LivoxLidarInstallAttitude attitude;
-    attitude.roll_deg = vehicle_lidars_extrins_params[i].roll;
-    attitude.pitch_deg = vehicle_lidars_extrins_params[i].pitch;
-    attitude.yaw_deg = vehicle_lidars_extrins_params[i].yaw;
-    attitude.x = vehicle_lidars_extrins_params[i].x;
-    attitude.y = vehicle_lidars_extrins_params[i].y;
-    attitude.z = vehicle_lidars_extrins_params[i].z;
-    SetLivoxLidarInstallAttitude(vehicle_lidars_extrins_params[i].handle, &attitude,
-                                 LivoxLidarCallback::SetAttitudeCallback, nullptr);
 	}
 
   printf("Vehicle lidar livox-sdk init succ.\n");
@@ -318,14 +309,19 @@ bool LdsLidar::InitDirectLidar() {
 bool LdsLidar::InitLivoxLidar() {
   // parse user config
   LivoxLidarConfigParser parser(path_);
-  std::vector<LidarExtrinsicParameters> extrinsic_params;
-  std::vector<UserLivoxLidarConfig> basic_configs;
-  if (!parser.Parse(basic_configs, extrinsic_params)) {
+  std::vector<UserLivoxLidarConfig> user_configs;
+  if (!parser.Parse(user_configs)) {
     std::cout << "failed to parse user-defined config" << std::endl;
   }
 
+  // SDK initialization
+  if (!LivoxLidarSdkInit(path_.c_str())) {
+    std::cout << "Failed to init livox lidar sdk." << std::endl;
+    return false;
+  }
+
   // fill in lidar devices
-  for (auto& config : basic_configs) {
+  for (auto& config : user_configs) {
     uint8_t index = 0;
     int8_t ret = g_lds_ldiar->cache_index_.GetFreeIndex(kLivoxLidarType, config.handle, index);
     if (ret != 0) {
@@ -335,16 +331,16 @@ bool LdsLidar::InitLivoxLidar() {
     LidarDevice *p_lidar = &(g_lds_ldiar->lidars_[index]);
     p_lidar->lidar_type = kLivoxLidarType;
     p_lidar->livox_config = config;
-  }
 
-  // SDK initializtion
-  if (!LivoxLidarSdkInit(path_.c_str())) {
-    std::cout << "Failed to init livox lidar sdk." << std::endl;
-    return false;
-  }
-
-  // register extrinsic parameters to sdk
-  for (auto& param : extrinsic_params) {
+    LidarExtrinsicParameters param;
+    param.handle = config.handle;
+    param.lidar_type = kLivoxLidarType;
+    param.roll  = config.extrinsic_param.roll;
+    param.pitch = config.extrinsic_param.pitch;
+    param.yaw   = config.extrinsic_param.yaw;
+    param.x     = config.extrinsic_param.x;
+    param.y     = config.extrinsic_param.y;
+    param.z     = config.extrinsic_param.z;
     AddLidarsExtrinsicParams(param);
   }
 

@@ -124,6 +124,15 @@ typedef enum {
   kExtrinsicParameterFromXml
 } ExtrinsicParameterType;
 
+typedef struct {
+  float roll;  /**< Roll angle, unit: degree. */
+  float pitch; /**< Pitch angle, unit: degree. */
+  float yaw;   /**< Yaw angle, unit: degree. */
+  int32_t x;   /**< X translation, unit: mm. */
+  int32_t y;   /**< Y translation, unit: mm. */
+  int32_t z;   /**< Z translation, unit: mm. */
+} ExtrinsicParameter;
+
 /** Configuration in json config file for livox lidar */
 typedef struct {
   char broadcast_code[16];
@@ -187,6 +196,7 @@ typedef struct {
   int8_t pattern_mode;
   int32_t blind_spot_set;
   int8_t dual_emit_en;
+  ExtrinsicParameter extrinsic_param;
   volatile uint32_t set_bits;
   volatile uint32_t get_bits;
 } UserLivoxLidarConfig;

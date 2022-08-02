@@ -9,32 +9,35 @@ Livox ROS Driver 2 of current version support only ROS1 (noetic recommended), an
 ### 1.1 Prerequisites
 * OS: Ubuntu 18.04/20.04
 * ROS: Noetic Ninjemys (ROS2 would be supported in the near future)
-* SDK: Livox SDK 2
+* SDK: A dedicated Livox SDK (dedicatedly applied to Livox ROS Driver 2)
 
 ### 1.2 Install ROS
-For ROS Noetic installation, please refer to:  
-[ROS Noetic installation instructions](https://wiki.ros.org/noetic/Installation)  
+For ROS Noetic installation, please refer to:
+[ROS Noetic installation instructions](https://wiki.ros.org/noetic/Installation)
 
 Desktop-Full installation is recommend.
 
 
-### 1.3 Install Livox SDK 2
-For Livox SDK 2 installation, please refer to:  
-[Intallation of Livox SDK 2](https://github.com/Livox-SDK/Livox-SDK2/blob/master/README.md#21-installation)
-
-
-## 2. Build & run Livox ROS Driver 2
-1. Clone source code from GitHub:  
+### 1.3 Install the dedicated Livox SDK
+1. Clone Livox ROS Driver 2 source code from GitHub:
 ```shell
 git clone https://github.com/Livox-SDK/livox_ros_driver2.git ws_livox/src/livox_ros_driver2
 ```
-2. Follow these steps to build the Livox ROS Driver 2 (take Noetic as example):  
+2. Build & install the dedicated Livox SDK:
 ```shell
-cd  ws_livox/src/livox_ros_driver2
+cd ws_livox/src/livox_ros_driver2
+sudo ./dedicated_sdk/build.sh ROS1
+```
+
+
+## 2. Build & run Livox ROS Driver 2
+1. Change directory to the folder 'livox_ros_driver2' (as in the previous step).
+2. Build the Livox ROS Driver 2 (take Noetic as example):
+```shell
 source /opt/ros/noetic/setup.sh
 ./build.sh ROS1
 ```
-3. In the same terminal (and in the same directory) with the previous step, use the following commands to run Livox ROS Driver 2:  
+3. In the same terminal (and in the same directory) with the previous step, use the following commands to run Livox ROS Driver 2:
 ```shell
 source ../../devel/setup.sh
 roslaunch livox_ros_driver2 [launch file]
@@ -43,7 +46,7 @@ in which,
 * livox_ros_driver2: the ROS package name of Livox ROS Driver 2;
 * [launch file]: the ROS launch file in the 'launch_ROS1' folder, containing the launch info and config about the target LiDAR(s);
 
-A rviz launch example for HAP LiDAR would be:  
+A rviz launch example for HAP LiDAR would be:
 ```shell
 roslaunch livox_ros_driver2 livox_lidar_rviz_HAP.launch
 ```
@@ -83,9 +86,9 @@ Follow is a configuration example for HAP LiDAR(located in config_ROS1/HAP_confi
 	"lidar_configs" : [
 		{
 			"ip" : "192.168.1.100",  # ip of the LiDAR you want to config
-			"data_type" : 1,         # pcl_data_type
-			"pattern_mode" : 0,      # pattern_mode
-			"blind_spot_set" : 50,   # blind_spot_set
+			"pcl_data_type" : 1,
+			"pattern_mode" : 0,
+			"blind_spot_set" : 50,
 			"extrinsic_parameter" : {
 				"roll": 0.0,
 				"pitch": 0.0,
@@ -100,13 +103,13 @@ Follow is a configuration example for HAP LiDAR(located in config_ROS1/HAP_confi
 
 ```
 
-For more infomation about the HAP config, please refer to:  
+For more infomation about the HAP config, please refer to:
 [HAP Config File Description](https://github.com/Livox-SDK/Livox-SDK2/wiki/hap-config-file-description)
 
 
 ## 4. Supported LiDAR list
 * HAP
-* (more types are comming soon...)  
+* (more types are comming soon...)
 
 
 ## 5. FAQ

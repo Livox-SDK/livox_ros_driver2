@@ -44,14 +44,12 @@ class LivoxLidarConfigParser {
   explicit LivoxLidarConfigParser(const std::string& path)  : path_(path) {}
   ~LivoxLidarConfigParser() {}
 
-  bool Parse(std::vector<UserLivoxLidarConfig> &lidar_configs,
-             std::vector<LidarExtrinsicParameters> &extrinsic_params);
+  bool Parse(std::vector<UserLivoxLidarConfig> &lidar_configs);
 
  private:
-  bool ParseBasicConfigs(const rapidjson::Document &doc,
+  bool ParseUserConfigs(const rapidjson::Document &doc,
                          std::vector<UserLivoxLidarConfig> &user_configs);
-  bool ParseExtrinsics(const rapidjson::Document &doc,
-                       std::vector<LidarExtrinsicParameters> &extrinsic_params);
+  bool ParseExtrinsics(const rapidjson::Value &value, ExtrinsicParameter &param);
 
   const std::string path_;
 };
