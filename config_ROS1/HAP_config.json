@@ -3,8 +3,6 @@
 			"lidar_type": 8
 	},
 	"HAP": {
-		"device_type" : "HAP",
-		"lidar_ipaddr": "",
 		"lidar_net_info" : {
 			"cmd_data_port": 56000,
 			"push_msg_port": 0,
@@ -32,12 +30,12 @@
 			"pattern_mode" : 0,
 			"blind_spot_set" : 50,
 			"extrinsic_parameter" : {
-				"roll": 1.1,
-				"pitch": 2.2,
-				"yaw": 3.3,
-				"x": 4,
-				"y": 5,
-				"z": 6
+				"roll": 0.0,
+				"pitch": 0.0,
+				"yaw": 0.0,
+				"x": 0,
+				"y": 0,
+				"z": 0
 			}
 		}
 	]

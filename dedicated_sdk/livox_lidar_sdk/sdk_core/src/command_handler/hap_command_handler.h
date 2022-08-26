@@ -54,7 +54,7 @@ class HapCommandHandler : public CommandHandler {
 
   virtual bool Init(std::shared_ptr<std::vector<LivoxLidarCfg>>& lidars_cfg_ptr,
     std::shared_ptr<std::vector<LivoxLidarCfg>>& custom_lidars_cfg_ptr);
-  virtual void Handle(const uint32_t handle, const Command& command);
+  virtual void Handle(const uint32_t handle, uint16_t lidar_port, const Command& command);
   virtual void UpdateLidarCfg(const ViewLidarIpInfo& view_lidar_info);
   virtual void UpdateLidarCfg(const uint32_t handle, const uint16_t lidar_cmd_port);
   virtual livox_status SendCommand(const Command& command);  

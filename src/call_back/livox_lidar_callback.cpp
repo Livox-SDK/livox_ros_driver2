@@ -57,12 +57,12 @@ void LivoxLidarCallback::LidarInfoChangeCallback(const uint32_t handle,
     // lock for modify the lidar device set_bits
     {
       std::lock_guard<std::mutex> lock(lds_lidar->config_mutex_);
-      if (config.data_type != -1 ) {
+      if (config.pcl_data_type != -1 ) {
         lidar_device->livox_config.set_bits |= kConfigDataType;
-        SetLivoxLidarPclDataType(handle, static_cast<LivoxLidarPointDataType>(config.data_type),
+        SetLivoxLidarPclDataType(handle, static_cast<LivoxLidarPointDataType>(config.pcl_data_type),
                                 LivoxLidarCallback::SetDataTypeCallback, lds_lidar);
         std::cout << "set pcl data type, handle: " << handle << ", data type: "
-                  << static_cast<int32_t>(config.data_type) << std::endl;
+                  << static_cast<int32_t>(config.pcl_data_type) << std::endl;
       }
       if (config.pattern_mode != -1) {
         lidar_device->livox_config.set_bits |= kConfigScanPattern;
@@ -141,7 +141,7 @@ void LivoxLidarCallback::SetDataTypeCallback(livox_status status, uint32_t handl
               << ", set_bit: " << lidar_device->livox_config.set_bits << std::endl;
   } else if (status == kLivoxLidarStatusTimeout) {
     const UserLivoxLidarConfig& config = lidar_device->livox_config;
-    SetLivoxLidarPclDataType(handle, static_cast<LivoxLidarPointDataType>(config.data_type),
+    SetLivoxLidarPclDataType(handle, static_cast<LivoxLidarPointDataType>(config.pcl_data_type),
                              LivoxLidarCallback::SetDataTypeCallback, client_data);
     std::cout << "set data type timeout, handle: " << handle
               << ", try again..." << std::endl;

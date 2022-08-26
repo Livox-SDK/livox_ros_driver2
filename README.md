@@ -9,7 +9,6 @@ Livox ROS Driver 2 of current version support only ROS1 (noetic recommended), an
 ### 1.1 Prerequisites
 * OS: Ubuntu 18.04/20.04
 * ROS: Noetic Ninjemys (ROS2 would be supported in the near future)
-* SDK: A dedicated Livox SDK (dedicatedly applied to Livox ROS Driver 2)
 
 ### 1.2 Install ROS
 For ROS Noetic installation, please refer to:
@@ -18,8 +17,8 @@ For ROS Noetic installation, please refer to:
 Desktop-Full installation is recommend.
 
 
-### 1.3 Install the dedicated Livox SDK
-1. Clone Livox ROS Driver 2 source code from GitHub:
+## 2. Build & run Livox ROS Driver 2
+1. Clone Livox ROS Driver 2 source code:
 ```shell
 git clone https://github.com/Livox-SDK/livox_ros_driver2.git ws_livox/src/livox_ros_driver2
 ```
@@ -28,23 +27,19 @@ git clone https://github.com/Livox-SDK/livox_ros_driver2.git ws_livox/src/livox_
 cd ws_livox/src/livox_ros_driver2
 sudo ./dedicated_sdk/build.sh ROS1
 ```
-
-
-## 2. Build & run Livox ROS Driver 2
-1. Change directory to the folder 'livox_ros_driver2' (as in the previous step).
-2. Build the Livox ROS Driver 2 (take Noetic as example):
+3. Build the Livox ROS Driver 2 (take Noetic as example):
 ```shell
 source /opt/ros/noetic/setup.sh
 ./build.sh ROS1
 ```
-3. In the same terminal (and in the same directory) with the previous step, use the following commands to run Livox ROS Driver 2:
+4. Run Livox ROS Driver 2:
 ```shell
 source ../../devel/setup.sh
 roslaunch livox_ros_driver2 [launch file]
 ```
-in which,
-* livox_ros_driver2: the ROS package name of Livox ROS Driver 2;
-* [launch file]: the ROS launch file in the 'launch_ROS1' folder, containing the launch info and config about the target LiDAR(s);
+in which,  
+* livox_ros_driver2: the ROS package name of Livox ROS Driver 2;  
+* [launch file]: the ROS launch file in the 'launch_ROS1' folder, containing the launch info and config about the target LiDAR(s);  
 
 A rviz launch example for HAP LiDAR would be:
 ```shell

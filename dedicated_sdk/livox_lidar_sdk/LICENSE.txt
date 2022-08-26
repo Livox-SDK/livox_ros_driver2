@@ -47,8 +47,8 @@ Livox-SDK
     │   │   ├── comm_port.h
     │   │   └── protocol.h
     │   ├── config.h
-    │   ├── livox_direct_def.h
-    │   └─ livox_direct_sdk.h
+    │   ├── livox_lidar_def.h
+    │   └─ livox_lidar_api.h
     └── src
         ├── base
         │   ├── command_callback.h

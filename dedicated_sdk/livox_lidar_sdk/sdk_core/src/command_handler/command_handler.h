@@ -50,7 +50,7 @@ class CommandHandler {
   virtual bool Init(std::shared_ptr<std::vector<LivoxLidarCfg>>& lidars_cfg_ptr,
     std::shared_ptr<std::vector<LivoxLidarCfg>>& custom_lidars_cfg_ptr) = 0;
 
-  virtual void Handle(const uint32_t handle, const Command& command) = 0;
+  virtual void Handle(const uint32_t handle, uint16_t lidar_port, const Command& command) = 0;
   virtual void UpdateLidarCfg(const ViewLidarIpInfo& view_lidar_info) = 0;
   virtual void UpdateLidarCfg(const uint32_t handle, const uint16_t lidar_cmd_port) = 0;
   virtual livox_status SendCommand(const Command& command) = 0;

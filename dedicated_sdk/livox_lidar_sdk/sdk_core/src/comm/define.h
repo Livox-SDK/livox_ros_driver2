@@ -80,20 +80,6 @@ typedef struct {
   GeneralCfgInfo general_cfg_info;
 } LivoxLidarCfg;
 
-/** Device type. */
-typedef enum {
-  kLivoxLidarTypeHub = 0,
-  kLivoxLidarTypeMid40 = 1,
-  kLivoxLidarTypeTele = 2,
-  kLivoxLidarTypeHorizon = 3,
-  kLivoxLidarTypeMid70 = 6,
-  kLivoxLidarTypeAvia = 7,
-  kLivoxLidarTypeMid360 = 9,
-  kLivoxLidarTypeIndustrialHAP = 10,
-  kLivoxLidarTypeHAP = 15,
-  kLivoxLidarTypePA = 16
-} LivoxLidarDeviceType;
-
 typedef enum {
   /**
    * Lidar command set, set the working mode and sub working mode of a LiDAR.
@@ -181,12 +167,31 @@ typedef struct {
 
 static const uint16_t kDetectionPort = 56000;
 static const uint16_t kDetectionListenPort = 56001;
+
 static const uint16_t kHAPCmdPort = 56000;
 static const uint16_t kHAPPointDataPort = 57000;
 static const uint16_t kHAPIMUPort = 58000;
 static const uint16_t kHAPLogPort = 59000;
 
 static const uint16_t kLogPort = 59000;
+
+static const uint16_t kMid360LidarCmdPort = 56100;
+static const uint16_t kMid360LidarPushMsgPort = 56200;
+static const uint16_t kMid360LidarPointCloudPort = 56300;
+static const uint16_t kMid360LidarImuDataPort = 56400;
+static const uint16_t kMid360LidarLogPort = 56500;
+
+static const uint16_t kMid360HostCmdPort = 56101;
+static const uint16_t kMid360HostPushMsgPort = 56201;
+static const uint16_t kMid360HostPointCloudPort = 56301;
+static const uint16_t kMid360HostImuDataPort = 56401;
+static const uint16_t kMid360HostLogPort = 56501;
+
+
+static const uint16_t kPaLidarCmdPort = 9347;
+static const uint16_t kPaLidarPointCloudPort = 10000;
+static const uint16_t kPaLidarFaultPort = 10001;
+static const uint16_t kPaLidarLogPort = 1002;
 
 
 typedef enum {

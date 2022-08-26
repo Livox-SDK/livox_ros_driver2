@@ -53,8 +53,13 @@ bool ParseCfgFile::Parse(std::shared_ptr<std::vector<LivoxLidarCfg>>& lidars_cfg
 
   if (doc.HasMember("HAP") && doc["HAP"].IsObject()) {
     LivoxLidarCfg hap_lidar_cfg;
+    if (!GetDevType("HAP", hap_lidar_cfg.device_type)) {
+      LOG_ERROR("Parse hap object failed, the device_type is error.");
+      return false;
+    }
+
     const rapidjson::Value &hap_object = doc["HAP"];
-    if (!ParseLidarCfg(hap_object, hap_lidar_cfg)) {
+    if (!ParseLidarCfg(hap_object, hap_lidar_cfg, false)) {
       if (raw_file) {
         std::fclose(raw_file);
       }
@@ -64,13 +69,47 @@ bool ParseCfgFile::Parse(std::shared_ptr<std::vector<LivoxLidarCfg>>& lidars_cfg
     lidars_cfg_ptr->push_back(std::move(hap_lidar_cfg));
   }
 
+  if (doc.HasMember("MID360") && doc["MID360"].IsObject()) {
+    LivoxLidarCfg lidar_cfg;
+    if (!GetDevType("MID360", lidar_cfg.device_type)) {
+      LOG_ERROR("Parse mid360 object failed, the device_type is error.");
+      return false;
+    }
+    const rapidjson::Value &hap_object = doc["MID360"];
+    if (!ParseLidarCfg(hap_object, lidar_cfg, false)) {
+      if (raw_file) {
+        std::fclose(raw_file);
+      }
+      LOG_ERROR("Parse mid360 lidar cfg failed.");
+      return false;
+    }
+    lidars_cfg_ptr->push_back(std::move(lidar_cfg));
+  }
+
+  if (doc.HasMember("PA") && doc["PA"].IsObject()) {
+    LivoxLidarCfg pa_lidar_cfg;
+    if (!GetDevType("PA", pa_lidar_cfg.device_type)) {
+      LOG_ERROR("Parse pa object failed, the device_type is error.");
+      return false;
+    }
+    const rapidjson::Value &hap_object = doc["PA"];
+    if (!ParseLidarCfg(hap_object, pa_lidar_cfg, false)) {
+      if (raw_file) {
+        std::fclose(raw_file);
+      }
+      LOG_ERROR("Parse pa lidar cfg failed.");
+      return false;
+    }
+    lidars_cfg_ptr->push_back(std::move(pa_lidar_cfg));
+  }
+
   if (doc.HasMember("custom_lidars") && doc["custom_lidars"].IsArray()) {
     const rapidjson::Value& custom_lidars = doc["custom_lidars"];
     size_t lidars_num = custom_lidars.Size();
     for (size_t i = 0; i < lidars_num; ++i) {
       LivoxLidarCfg lidar_cfg;
       const rapidjson::Value &object = custom_lidars[i];
-      if (!ParseLidarCfg(object, lidar_cfg)) {
+      if (!ParseLidarCfg(object, lidar_cfg, true)) {
         if (raw_file) {
           std::fclose(raw_file);
         }
@@ -87,19 +126,21 @@ bool ParseCfgFile::Parse(std::shared_ptr<std::vector<LivoxLidarCfg>>& lidars_cfg
   return true;
 }
 
-bool ParseCfgFile::ParseLidarCfg(const rapidjson::Value &object, LivoxLidarCfg& lidar_cfg) {
-  if (!object.HasMember("device_type") || !object["device_type"].IsString()) {
-    LOG_ERROR("Parse hap object failed, has not device_type member or device_type is not string.");
-    return false;
+bool ParseCfgFile::ParseLidarCfg(const rapidjson::Value &object, LivoxLidarCfg& lidar_cfg, bool is_custom) {
+  if (is_custom) {
+    if (!object.HasMember("device_type") || !object["device_type"].IsString()) {
+      LOG_ERROR("Parse hap object failed, has not device_type member or device_type is not string.");
+      return false;
+    }
+
+    std::string device_type = object["device_type"].GetString();
+    if (!GetDevType(device_type, lidar_cfg.device_type)) {
+      LOG_ERROR("Parse hap object failed, the device_type is error, the val:{}", device_type.c_str());
+      return false;
+    }
   }
 
-  std::string device_type = object["device_type"].GetString();
-  if (!GetDevType(device_type, lidar_cfg.device_type)) {
-    LOG_ERROR("Parse hap object failed, the device_type is error, the val:{}", device_type.c_str());
-    return false;
-  }
-
-  if (!ParseLidarNetInfo(object, lidar_cfg.lidar_net_info)) {
+  if (!ParseLidarNetInfo(object, lidar_cfg.lidar_net_info, is_custom)) {
     LOG_ERROR("Parse hap lidar net info failed.");
     return false;
   }
@@ -121,18 +162,26 @@ bool ParseCfgFile::GetDevType(const std::string& type, uint8_t& device_type) {
   if (type == "HAP") {
     device_type = kLivoxLidarTypeIndustrialHAP;
     return true;
+  } else if (type == "MID360") {
+    device_type = kLivoxLidarTypeMid360;
+    return true;
+  } else if (type == "PA") {
+    device_type = kLivoxLidarTypePA;
+    return true;
   }
   return false;
 }
 
-
-
-bool ParseCfgFile::ParseLidarNetInfo(const rapidjson::Value &object, LivoxLidarNetInfo& lidar_net_info) {
-  if (!object.HasMember("lidar_ipaddr") || !object["lidar_ipaddr"].IsString()) {
-    LOG_ERROR("Parse lidar net info failed, has not lidar_ipaddr or lidar_ipaddr is not str.");
-    return false;
+bool ParseCfgFile::ParseLidarNetInfo(const rapidjson::Value &object, LivoxLidarNetInfo& lidar_net_info, bool is_custom) {
+  if (is_custom) {
+    if (!object.HasMember("lidar_ipaddr") || !object["lidar_ipaddr"].IsString()) {
+      LOG_ERROR("Parse lidar net info failed, has not lidar_ipaddr or lidar_ipaddr is not str.");
+      return false;
+    }
+    lidar_net_info.lidar_ipaddr = object["lidar_ipaddr"].GetString();
+  } else {
+    lidar_net_info.lidar_ipaddr = "";
   }
-  lidar_net_info.lidar_ipaddr = object["lidar_ipaddr"].GetString();
 
   if (!object.HasMember("lidar_net_info") || !object["lidar_net_info"].IsObject()) {
     LOG_ERROR("Parse lidar net info failed, has not lidar_net_info member or lidar_net_info is not object.");
@@ -199,11 +248,11 @@ bool ParseCfgFile::ParseHostNetInfo(const rapidjson::Value &object, HostNetInfo&
   }
   host_net_info.push_msg_ip = host_net_info_object["push_msg_ip"].GetString();
 
-  if (!host_net_info_object.HasMember("push_msg_ip") || !host_net_info_object["push_msg_ip"].IsString()) {
-    LOG_ERROR("Parse host net info failed, has not push_msg_ip or push_msg_ip is not string.");
+  if (!host_net_info_object.HasMember("push_msg_port") || !host_net_info_object["push_msg_port"].IsUint()) {
+    LOG_ERROR("Parse host net info failed, has not push_msg_port or push_msg_port is not uint.");
     return false;
   }
-  host_net_info.push_msg_ip = host_net_info_object["push_msg_ip"].GetString();
+  host_net_info.push_msg_port = host_net_info_object["push_msg_port"].GetUint();
 
   // parse point data info
   if (!host_net_info_object.HasMember("point_data_ip") || !host_net_info_object["point_data_ip"].IsString()) {

@@ -5,7 +5,6 @@
 #include "livox_def.h"
 #include "livox_def_common.h"
 #include "livox_def_vehicle.h"
-#include "livox_def_direct.h"
 #include "livox_sdk_common.h"
 #include "livox_sdk_common_util.h"
 #include "livox_lidar_def.h"
@@ -42,16 +41,10 @@ private:
   void VehicleExtendRawPointCloudProcess(StoragePacket& pkt);
   void VehicleExtendHalfRawPointCloudProcess(StoragePacket& pkt);
 
-  void DirectLidarPointCloudProcess(StoragePacket & pkt);
-  void DirectExtendRawPointCloudProcess(StoragePacket& pkt);
-  void DirectExtendHalfRawPointCloudProcess(StoragePacket& pkt);
-  void DirectSphericalPointProcess(StoragePacket& pkt);
-
   void LivoxLidarPointCloudProcess(StoragePacket & pkt);
   void ProcessCartesianHighPoint(StoragePacket & pkt);
   void ProcessCartesianLowPoint(StoragePacket & pkt);
   void ProcessSphericalPoint(StoragePacket & pkt);
-
   std::vector<PointCloudXyzlt> points_clouds_;
   ExtrinsicParameters extrinsic_ = {
     {0, 0, 0},

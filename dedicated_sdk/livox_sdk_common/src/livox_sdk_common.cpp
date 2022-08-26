@@ -162,19 +162,6 @@ void UpgradeLivoxLidars(const uint32_t* handle, const uint8_t lidar_num) {
   upgrade_manager().UpgradeLivoxLidars(handle, lidar_num);
 }
 
-// Direct lidar upgrade
-bool SetDirectUpgradeFirmwarePath(const char* firmware_path) {
-  return upgrade_manager().SetDirectUpgradeFirmwarePath(firmware_path);
-}
-
-void SetDirectLidarUpgradeProgressCallback(OnDirectLidarUpgradeProgressCallback cb, void* client_data) {
-  upgrade_manager().SetDirectLidarUpgradeProgressCallback(cb, client_data);
-}
-void UpgradeDirectLidars(const uint32_t* handle, const uint8_t lidar_num) {
-  upgrade_manager().UpgradeDirectLidars(handle, lidar_num);
-}
-
-
 bool SetUpgradeFirmwarePath(const char *dir) {
   return upgrade_manager().SetUpgradeFirmwarePath(std::string(dir));
 }

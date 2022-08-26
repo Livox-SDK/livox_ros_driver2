@@ -30,7 +30,6 @@
 
 #include "livox_def.h"
 
-
 namespace livox {
 namespace common {
 

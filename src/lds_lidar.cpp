@@ -47,12 +47,10 @@
 #include "parse_cfg_file/parse_cfg_file.h"
 #include "parse_cfg_file/parse_industrial_lidar_cfg.h"
 #include "parse_cfg_file/parse_vehicle_lidar_cfg.h"
-#include "parse_cfg_file/parse_direct_lidar_cfg.h"
 #include "parse_cfg_file/parse_livox_lidar_cfg.h"
 
 #include "call_back/industrial_lidar_callback.h"
 #include "call_back/vehicle_lidar_callback.h"
-#include "call_back/direct_lidar_callback.h"
 #include "call_back/lidar_common_callback.h"
 #include "call_back/livox_lidar_callback.h"
 
@@ -120,10 +118,6 @@ bool LdsLidar::InitLidars(const std::vector<std::string>& broadcast_code_strs) {
     if (!InitVehicleLidar()) {
       return false;
     }
-  } else if (lidar_summary_info_.lidar_type & kDirectLidarType) {
-    if (!InitDirectLidar()) {
-      return false;
-    }
   } else if (lidar_summary_info_.lidar_type & kLivoxLidarType) {
     if (!InitLivoxLidar()) {
       return false;
@@ -140,10 +134,6 @@ bool LdsLidar::Start() {
     }
   } else if (lidar_summary_info_.lidar_type & kVehicleLidarType) {
     if (!VehicleLidarStart()) {
-      return false;
-    }
-  } else if (lidar_summary_info_.lidar_type & kDirectLidarType) {
-    if (!DirectLidarStart()) {
       return false;
     }
   } else if (lidar_summary_info_.lidar_type & kLivoxLidarType) {
@@ -274,39 +264,11 @@ bool LdsLidar::InitVehicleLidar() {
   return true;
 }
 
-bool LdsLidar::InitDirectLidar() {
+bool LdsLidar::InitLivoxLidar() {
 #ifdef BUILDING_ROS2
-  DisableDirectLidarConsoleLogger();
+  DisableConsoleLogger();
 #endif
 
-  if (!ParseDirectLidarCfgFile(path_).Parse(direct_lidar_param_)) {
-    return false;
-  }
-  if (direct_lidar_param_.direct_host_cfg_ptr == nullptr && direct_lidar_param_.direct_lidars_cfg_ptr == nullptr) {
-    return false;
-  }
-
-  if (direct_lidar_param_.direct_host_cfg_ptr) {
-    if (!LivoxDirectInit(direct_lidar_param_.direct_host_cfg_ptr.get(), nullptr)) {
-      return false;
-    }
-  } else {
-    direct_lidar_param_.is_custom = true;
-    if (!LivoxDirectInit(nullptr, direct_lidar_param_.direct_lidars_cfg_ptr->data(),
-        direct_lidar_param_.direct_lidars_cfg_ptr->size())) {
-      return false;
-    }
-    SetDirectLidarExtrinsicParams();
-    ProcessDirectConfig();
-  }
-
-  SetDirectLidarInfoCallback(DirectLidarCallback::DirectLidarInfoCb, this);
-  SetDirectLidarCfgUpdateCallback(DirectLidarCallback::DirectLidarCfgUpdateCb, this);
-  printf("Init direct lidar succ.\n");
-  return true;
-}
-
-bool LdsLidar::InitLivoxLidar() {
   // parse user config
   LivoxLidarConfigParser parser(path_);
   std::vector<UserLivoxLidarConfig> user_configs;
@@ -348,151 +310,12 @@ bool LdsLidar::InitLivoxLidar() {
   return true;
 }
 
-void LdsLidar::SetDirectLidarExtrinsicParams() {
-  for (size_t i = 0; i < direct_lidar_param_.direct_lidars_cfg_ptr->size(); ++i) {
-    //uint8_t slot = direct_lidar_param_.direct_lidars_cfg_ptr->at(i).lidar_id;
-    const InstallAttitude& install_attitude = direct_lidar_param_.direct_lidars_cfg_ptr->at(i).install_attitude;
-    LidarExtrinsicParameters extrinsic_params;
-    //extrinsic_params.slot = slot;
-    extrinsic_params.handle = inet_addr(direct_lidar_param_.direct_lidars_cfg_ptr->at(i).lidar_ipinfo_cfg.lidar_ipaddr);
-    extrinsic_params.lidar_type = static_cast<uint8_t>(kDirectLidarType);
-    extrinsic_params.roll = install_attitude.roll_deg;
-    extrinsic_params.pitch = install_attitude.pitch_deg;
-    extrinsic_params.yaw = install_attitude.yaw_deg;
-    extrinsic_params.x = install_attitude.x;
-    extrinsic_params.y = install_attitude.y;
-    extrinsic_params.z = install_attitude.z;
-    AddLidarsExtrinsicParams(extrinsic_params);
-  }
-}
-
-void LdsLidar::SetDirectLidarExtrinsicParamsByDeviceInfo(const uint32_t handle, const InstallAttitude& install_attitude) {
-  if (direct_lidar_param_.is_custom) {
-    return;
-  }
-
-  std::map<uint32_t, LidarExtrinsicParameters>& extrinsic_params_map = direct_lidar_param_.extrinsic_params_map;
-  if (extrinsic_params_map.find(handle) == extrinsic_params_map.end()) {
-    LidarExtrinsicParameters extrinsic_params;
-    //extrinsic_params.slot = slot;
-    extrinsic_params.handle = handle;
-    extrinsic_params.lidar_type = static_cast<uint8_t>(kDirectLidarType);
-    extrinsic_params.roll = install_attitude.roll_deg;
-    extrinsic_params.pitch = install_attitude.pitch_deg;
-    extrinsic_params.yaw = install_attitude.yaw_deg;
-    extrinsic_params.x = install_attitude.x;
-    extrinsic_params.y = install_attitude.y;
-    extrinsic_params.z = install_attitude.z;
-    AddLidarsExtrinsicParams(extrinsic_params);
-    extrinsic_params_map[handle] = extrinsic_params;
-  }
-}
-
-void LdsLidar::ProcessDirectConfig() {
-  std::vector<DirectLidarCfg>& direct_lidar_cfg_vec = *direct_lidar_param_.direct_lidars_cfg_ptr;
-  for (size_t i = 0; i < direct_lidar_cfg_vec.size(); ++i) {
-    const DirectLidarCfg& direct_lidar_cfg = direct_lidar_cfg_vec[i];
-    uint32_t handle = inet_addr(direct_lidar_cfg.lidar_ipinfo_cfg.lidar_ipaddr);
-    uint8_t index = 0;
-    int8_t ret = cache_index_.GetFreeIndex(kDirectLidarType, handle, index);
-    if (ret != 0) {
-      printf("Process raw vechicle config failed, can not get index by slot, the slot:%u\n", direct_lidar_cfg.lidar_id);
-      continue;
-    }
-
-    LidarDevice *p_lidar = &(g_lds_ldiar->lidars_[index]);
-    UserDirectConfig &user_direct_config = p_lidar->direct_config;
-
-    strcpy(user_direct_config.sn, direct_lidar_cfg.sn);
-    user_direct_config.lidar_id = direct_lidar_cfg.lidar_id;
-    user_direct_config.lidar_ipmode = direct_lidar_cfg.lidar_ipmode;
-
-    strcpy(user_direct_config.lidar_ip, direct_lidar_cfg.lidar_ipinfo_cfg.lidar_ipaddr);
-    strcpy(user_direct_config.lidar_submask, direct_lidar_cfg.lidar_ipinfo_cfg.lidar_subnet_mask);
-    strcpy(user_direct_config.lidar_gateway, direct_lidar_cfg.lidar_ipinfo_cfg.lidar_gateway);
-
-    strcpy(user_direct_config.host_push_msg_ip, direct_lidar_cfg.host_cfg.host_push_cmd_ip);
-    user_direct_config.host_push_msg_port = direct_lidar_cfg.host_cfg.host_push_cmd_port;
-
-    strcpy(user_direct_config.host_point_data_ip, direct_lidar_cfg.host_cfg.host_point_data_ip);
-    user_direct_config.host_point_data_port = direct_lidar_cfg.host_cfg.host_point_data_port;
-
-    strcpy(user_direct_config.host_imu_data_ip, direct_lidar_cfg.host_cfg.host_imu_data_ip);
-    user_direct_config.host_imu_data_port = direct_lidar_cfg.host_cfg.host_imu_data_port;
-
-    user_direct_config.sample_mode = direct_lidar_cfg.sample_mode;
-    user_direct_config.pattern_mode = direct_lidar_cfg.pattern_mode;
-    user_direct_config.pcl_data_type = direct_lidar_cfg.pcl_data_type;
-    user_direct_config.imu_data_en = direct_lidar_cfg.imu_data_en;
-    user_direct_config.work_mode = direct_lidar_cfg.work_mode;
-  }
-}
-
-void LdsLidar::ProcessDirectConfigByDeviceInfo(const uint32_t handle, const DirectLidarStateInfo* info) {
-  if (direct_lidar_param_.is_custom) {
-    return;
-  }
-  //printf("ProcessDirectConfigByDeviceInfo handle:%u, sn:%s.\n", handle, info->sn);
-  if (direct_lidar_param_.devices.find(handle) != direct_lidar_param_.devices.end()) {
-    return;
-  }
-
-  uint8_t index = 0;
-  //printf("ProcessDirectConfigByDeviceInfo lidar_type:%u, handle:%u.\n", kDirectLidarType, handle);
-  int8_t ret = cache_index_.GetFreeIndex(kDirectLidarType, handle, index);
-  if (ret != 0) {
-    printf("Process raw vechicle config failed, can not get index by handle, the handle:%u\n", handle);
-    return;
-  }
-
-
-  LidarDevice *p_lidar = &(g_lds_ldiar->lidars_[index]);
-  UserDirectConfig &user_direct_config = p_lidar->direct_config;
-
-  strcpy(user_direct_config.sn, info->sn);
-  user_direct_config.lidar_id = info->lidar_id;
-  user_direct_config.lidar_ipmode = info->lidar_ipmode;
-
-  strcpy(user_direct_config.lidar_ip, info->lidar_ip);
-  strcpy(user_direct_config.lidar_submask, info->lidar_submask);
-  strcpy(user_direct_config.lidar_gateway, info->lidar_gateway);
-
-  strcpy(user_direct_config.host_push_msg_ip, info->host_push_msg_ip);
-  user_direct_config.host_push_msg_port = info->host_push_msg_port;
-
-  strcpy(user_direct_config.host_point_data_ip, info->host_point_data_ip);
-  user_direct_config.host_point_data_port = info->host_point_data_port;
-
-  strcpy(user_direct_config.host_imu_data_ip, info->host_imu_data_ip);
-  user_direct_config.host_imu_data_port = info->host_imu_data_port;
-
-  user_direct_config.sample_mode = info->sample_mode;
-  user_direct_config.pattern_mode = info->pattern_mode;
-  user_direct_config.pcl_data_type = info->pcl_data_type;
-  user_direct_config.imu_data_en = info->imu_data_en;
-  user_direct_config.work_mode = info->work_mode;
-
-  direct_lidar_param_.devices[user_direct_config.lidar_id] = user_direct_config.sn;
-}
-
-void LdsLidar::DirectLidarStartSamp(const uint32_t handle) {
-  uint8_t index = 0;
-  int8_t ret = cache_index_.GetFreeIndex(kDirectLidarType, handle, index);
-  if (ret != 0) {
-    printf("Process raw vechicle config failed, can not get index by slot, the slot:%u\n", handle);
-    return;
-  }
-
-  LidarDevice *p_lidar = &(g_lds_ldiar->lidars_[index]);
-  p_lidar->connect_state = kConnectStateSampling;
-}
-
 void LdsLidar::SetLidarPubHandle() {
   SetPointCloudCallback(LidarCommonCallback::OnLidarPointClounCb, g_lds_ldiar);
   SetLidarImuDataCallback(LidarCommonCallback::LidarImuDataCallback, g_lds_ldiar);
 
   PointCloudConfig point_cloud_config;
-  point_cloud_config.publish_freq = 10; // 10Hz;
+  point_cloud_config.publish_freq = Lds::GetLdsFrequency();
   SetPointCloudConfig(point_cloud_config);
 }
 
@@ -510,15 +333,6 @@ bool LdsLidar::IndustrialLidarStart() {
 bool LdsLidar::VehicleLidarStart() {
   /** Sync work mode to lidars by 1 Hz. */
   return vehicle_lidar_thread_.Start();
-}
-
-bool LdsLidar::DirectLidarStart() {
-  if (!LivoxDirectStart()) {
-    printf("Direct lidar start failed.\n");
-    return false;
-  }
-  printf("Direct lidar start succ.\n");
-  return true;
 }
 
 bool LdsLidar::LivoxLidarStart() {

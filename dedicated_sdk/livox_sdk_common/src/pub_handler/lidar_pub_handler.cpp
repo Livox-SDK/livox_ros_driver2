@@ -37,8 +37,6 @@ void LidarPubHandler::PointCloudProcess(StoragePacket & pkt) {
     IndustryLidarPointCloudProcess(pkt);
   } else if (pkt.lidar_type == static_cast<uint8_t>(LivoxLidarType::kVehicleLidarType)) {
     VehicleLidarPointCloudProcess(pkt);
-  } else if (pkt.lidar_type == static_cast<uint8_t>(LivoxLidarType::kDirectLidarType)) {
-    DirectLidarPointCloudProcess(pkt);
   } else if (pkt.lidar_type == static_cast<uint8_t>(LivoxLidarType::kLivoxLidarType)) {
     LivoxLidarPointCloudProcess(pkt);
   }
@@ -76,22 +74,6 @@ void LidarPubHandler::VehicleLidarPointCloudProcess(StoragePacket & pkt) {
       break;
     case kLowResolutionPointData:
       VehicleExtendHalfRawPointCloudProcess(pkt);
-      break;
-    default:
-      break;
-  }
-}
-
-void LidarPubHandler::DirectLidarPointCloudProcess(StoragePacket & pkt) {
-  switch (pkt.data_type) {
-    case kCartesianCoordinateHighData:
-      DirectExtendRawPointCloudProcess(pkt);
-      break;
-    case kCartesianCoordinateLowData:
-      DirectExtendHalfRawPointCloudProcess(pkt);
-      break;
-    case kSphericalCoordinateData:
-      DirectSphericalPointProcess(pkt);
       break;
     default:
       break;
@@ -422,103 +404,6 @@ void LidarPubHandler::VehicleExtendHalfRawPointCloudProcess(StoragePacket& pkt) 
     point.intensity = raw[i].reflectivity;
     point.line = i % pkt.line_num;
     point.tag = raw[i].tag;
-    point.offset_time = pkt.time_stamp + i * pkt.point_interval;
-    std::lock_guard<std::mutex> lock(mutex_);
-    points_clouds_.push_back(point);
-  }
-}
-
-void LidarPubHandler::DirectExtendRawPointCloudProcess(StoragePacket& pkt) {
-  pkt.point_num = pkt.raw_data.size()/ sizeof(LivoxDirectCartesianHighRawPoint);
-  LivoxDirectCartesianHighRawPoint* raw = (LivoxDirectCartesianHighRawPoint*)pkt.raw_data.data();
-  PointCloudXyzlt point = {};
-  for (uint32_t i = 0; i < pkt.point_num; i++) {
-    if (pkt.extrinsic_enable) {
-      point.x = raw[i].x / 1000.0;
-      point.y = raw[i].y / 1000.0;
-      point.z = raw[i].z / 1000.0;
-    } else {
-      point.x = (raw[i].x * extrinsic_.rotation[0][0] +
-                raw[i].y * extrinsic_.rotation[0][1] +
-                raw[i].z * extrinsic_.rotation[0][2] + extrinsic_.trans[0]) / 1000.0;
-
-      point.y = (raw[i].x * extrinsic_.rotation[1][0] +
-                raw[i].y * extrinsic_.rotation[1][1] +
-                raw[i].z * extrinsic_.rotation[1][2] + extrinsic_.trans[1]) / 1000.0;
-
-      point.z = (raw[i].x * extrinsic_.rotation[2][0] +
-                raw[i].y * extrinsic_.rotation[2][1] +
-                raw[i].z * extrinsic_.rotation[2][2] + extrinsic_.trans[2]) / 1000.0;
-    }
-    point.intensity = raw[i].reflectivity;
-    point.line = 0;
-    point.tag = 0;
-    point.offset_time = pkt.time_stamp + i * pkt.point_interval;
-    std::lock_guard<std::mutex> lock(mutex_);
-    points_clouds_.push_back(point);
-  }
-}
-
-void LidarPubHandler::DirectExtendHalfRawPointCloudProcess(StoragePacket& pkt) {
-  pkt.point_num = pkt.raw_data.size()/ sizeof(LivoxDirectCartesianLowRawPoint);
-  LivoxDirectCartesianLowRawPoint* raw = (LivoxDirectCartesianLowRawPoint*)pkt.raw_data.data();
-  PointCloudXyzlt point = {};
-  for (uint32_t i = 0; i < pkt.point_num; i++) {
-    if (pkt.extrinsic_enable) {
-      point.x = raw[i].x / 100.0;
-      point.y = raw[i].y / 100.0;
-      point.z = raw[i].z / 100.0;
-    } else {
-      point.x = (raw[i].x * extrinsic_.rotation[0][0] +
-                raw[i].y * extrinsic_.rotation[0][1] +
-                raw[i].z * extrinsic_.rotation[0][2] + extrinsic_.trans[0]) / 100.0;
-      point.y = (raw[i].x* extrinsic_.rotation[1][0] +
-                raw[i].y * extrinsic_.rotation[1][1] +
-                raw[i].z * extrinsic_.rotation[1][2] + extrinsic_.trans[1]) / 100.0;
-      point.z = (raw[i].x * extrinsic_.rotation[2][0] +
-                raw[i].y * extrinsic_.rotation[2][1] +
-                raw[i].z * extrinsic_.rotation[2][2] + extrinsic_.trans[2]) / 100.0;
-    }
-    point.intensity = raw[i].reflectivity;
-    point.line = i % pkt.line_num;
-    point.tag = raw[i].tag;
-    point.offset_time = pkt.time_stamp + i * pkt.point_interval;
-    std::lock_guard<std::mutex> lock(mutex_);
-    points_clouds_.push_back(point);
-  }
-}
-
-void LidarPubHandler::DirectSphericalPointProcess(StoragePacket& pkt) {
-  pkt.point_num = pkt.raw_data.size()/ sizeof(LivoxDirectSpherPoint);
-  LivoxDirectSpherPoint* raw = (LivoxDirectSpherPoint*)pkt.raw_data.data();
-  PointCloudXyzlt point = {};
-  for (uint32_t i = 0; i < pkt.point_num; i++) {
-
-    double radius = raw[i].depth / 1000.0;
-    double theta = raw[i].theta / 100.0 / 180 * PI;
-    double phi = raw[i].phi / 100.0 / 180 * PI;
-    double src_x = radius * sin(theta) * cos(phi);
-    double src_y = radius * sin(theta) * sin(phi);
-    double src_z = radius * cos(theta);
-    if (pkt.extrinsic_enable) {
-      point.x = src_x;
-      point.y = src_y;
-      point.z = src_z;
-    } else {
-      point.x = src_x * extrinsic_.rotation[0][0] +
-                src_y * extrinsic_.rotation[0][1] +
-                src_z * extrinsic_.rotation[0][2] + (extrinsic_.trans[0] / 1000.0);
-      point.y = src_x * extrinsic_.rotation[1][0] +
-                src_y * extrinsic_.rotation[1][1] +
-                src_z * extrinsic_.rotation[1][2] + (extrinsic_.trans[1] / 1000.0);
-      point.z = src_x * extrinsic_.rotation[2][0] +
-                src_y * extrinsic_.rotation[2][1] +
-                src_z * extrinsic_.rotation[2][2] + (extrinsic_.trans[2] / 1000.0);
-    }
-
-    point.intensity = raw[i].reflectivity;
-    point.line = 0;
-    point.tag = 0;
     point.offset_time = pkt.time_stamp + i * pkt.point_interval;
     std::lock_guard<std::mutex> lock(mutex_);
     points_clouds_.push_back(point);

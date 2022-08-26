@@ -25,7 +25,6 @@
 #include "upgrade_manager.h"
 #include <livox_sdk_common.h>
 #include <thread>
-#include "direct/direct_lidar_upgrader.h"
 
 namespace livox {
 namespace common {
@@ -121,50 +120,6 @@ void UpgradeManager::UpgradeVehicleLidars(const uint8_t* slot, const uint8_t lid
 
 void UpgradeManager::CloseVehicleLidarFirmwareFile() {
   vehicle_firmware_.Close();
-}
-
-//Direct lidar upgrader
-bool UpgradeManager::SetDirectUpgradeFirmwarePath(const char* firmware_path) {
-  if (!direct_firmware_.Open(firmware_path)) {
-    printf("Open firmware_path fail\r\n");
-    return false;
-  }
-
-  return true;
-}
-
-void UpgradeManager::SetDirectLidarUpgradeProgressCallback(OnDirectLidarUpgradeProgressCallback cb, void* client_data) {
-  direct_lidar_info_cb_ = cb;
-  direct_lidar_client_data_ = client_data;
-}
-
-void UpgradeManager::UpgradeDirectLidars(const uint32_t* handle, const uint8_t lidar_num) {
-  std::vector<DirectLidarUpgrader> upgrader_vec;
-  upgrader_vec.reserve(lidar_num);
-  for (size_t i = 0; i < lidar_num; ++i) {   
-    DirectLidarUpgrader upgrader(direct_firmware_, handle[i]);
-
-    OnDirectLidarUpgradeProgressCallback cb = direct_lidar_info_cb_;
-    void* client_data = direct_lidar_client_data_;
-    upgrader.AddUpgradeProgressObserver([cb, client_data](uint32_t slot, LidarUpgradeState state) {
-      if (cb) {
-        cb(LivoxLidarType::kDirectLidarType, slot, state, client_data);
-      }
-    });
- 
-    upgrader_vec.emplace_back(std::move(upgrader));
-  }
-
-  for (size_t i = 0; i < upgrader_vec.size(); ++i) {
-    DirectLidarUpgrader& upgrader = upgrader_vec[i];
-    upgrader.StartUpgradeDirectLidar();
-  }
-
-  CloseDirectLidarFirmwareFile();
-}
-
-void UpgradeManager::CloseDirectLidarFirmwareFile() {
-  direct_firmware_.Close();
 }
 
 //livoix lidar upgrader

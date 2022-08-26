@@ -19,7 +19,6 @@ endif(UNIX)
 
 add_subdirectory(livox_sdk/sdk_core sdk_core)
 add_subdirectory(livox_sdk_vehicle/sdk_core vehicle_sdk_core)
-add_subdirectory(livox_sdk_direct/sdk_core direct_sdk_core)
 add_subdirectory(livox_lidar_sdk/sdk_core livox_lidar_sdk_core)
 
 add_subdirectory(livox_sdk_common)

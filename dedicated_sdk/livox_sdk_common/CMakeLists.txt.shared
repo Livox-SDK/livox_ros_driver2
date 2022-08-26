@@ -9,9 +9,12 @@ add_library(${SDK_LIBRARY} SHARED "")
 set(LIVOX_SDK_COMMON_PATH ${CMAKE_CURRENT_SOURCE_DIR} CACHE PATH "")
 
 target_include_directories(${SDK_LIBRARY}
-        PUBLIC include 
+        PUBLIC include
         PRIVATE
         src)
+
+set_target_properties(${SDK_LIBRARY} PROPERTIES PUBLIC_HEADER "include/livox_sdk_common.h;include/livox_def_common.h;include/livox_sdk_common_util.h")
+
 
 target_compile_options(${SDK_LIBRARY}
         PRIVATE $<$<CXX_COMPILER_ID:GNU>:-Wall -Werror -Wno-c++11-long-long>
@@ -43,8 +46,6 @@ target_sources(${SDK_LIBRARY}
         src/upgrader/vehicle/vehicle_lidar_upgrader.cpp
         src/upgrader/industry/industry_upgrader.h
         src/upgrader/industry/industry_upgrader.cpp
-        src/upgrader/direct/direct_lidar_upgrader.h
-        src/upgrader/direct/direct_lidar_upgrader.cpp
 
         src/upgrader/livox_lidar/livox_lidar_upgrader.h
         src/upgrader/livox_lidar/livox_lidar_upgrader.cpp
@@ -53,10 +54,10 @@ target_sources(${SDK_LIBRARY}
         src/pub_handler/pub_handler.cpp
         src/pub_handler/lidar_pub_handler.h
         src/pub_handler/lidar_pub_handler.cpp
-        
+
         src/algorithm/obstacle_zone_converter/obstacle_zone_converter.h
         src/algorithm/obstacle_zone_converter/obstacle_zone_converter.cpp)
-        
+
 set(Eigen3_DIR src/third_party/eigen/share/eigen3/cmake)
 find_package(Eigen3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIRS})
@@ -66,7 +67,6 @@ target_link_libraries(${SDK_LIBRARY}
         PUBLIC
         ${PROJECT_NAME}_shared
         ${PROJECT_NAME}_vehicle_shared
-        ${PROJECT_NAME}_direct_shared
         livox_lidar_sdk_shared)
 
 install(TARGETS ${SDK_LIBRARY}

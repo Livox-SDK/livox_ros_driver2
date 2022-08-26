@@ -61,18 +61,22 @@ class Lds {
   static void ResetLidar(LidarDevice *lidar, uint8_t data_src);
   static void SetLidarDataSrc(LidarDevice *lidar, uint8_t data_src);
   void ResetLds(uint8_t data_src);
-  
+
   void RequestExit();
-  
+
   bool IsAllQueueEmpty();
   bool IsAllQueueReadStop();
-  
+
   void CleanRequestExit() { request_exit_ = false; }
   bool IsRequestExit() { return request_exit_; }
   virtual void PrepareExit(void);
-  
+
   void UpdateLidarInfoByEthPacket(LidarDevice *p_lidar, LivoxEthPacket* eth_packet);
   void UpdateVehicleLidarInfoByEthPacket(LidarDevice *p_lidar, LivoxVehicleEthPacket* eth_packet);
+
+  // get publishing frequency
+  double GetLdsFrequency() {return publish_freq_;}
+
  public:
   uint8_t lidar_count_;                 /**< Lidar access handle. */
   LidarDevice lidars_[kMaxSourceLidar]; /**< The index is the handle */

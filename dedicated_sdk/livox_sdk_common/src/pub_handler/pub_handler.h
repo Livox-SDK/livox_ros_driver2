@@ -17,10 +17,8 @@
 #include"livox_sdk.h"
 #include "livox_sdk_vehicle.h"
 #include "livox_def_vehicle.h"
-#include "livox_sdk_direct.h"
-#include "livox_def_direct.h"
 #include "livox_lidar_def.h"
-#include "livox_lidar_sdk.h"
+#include "livox_lidar_api.h"
 
 namespace livox {
 
@@ -63,8 +61,6 @@ private:
                                                uint32_t data_num, void* client_data);
   static void OnLidarPointCloudCallback(uint8_t handle, LivoxEthPacket* data, uint32_t data_num,
                                         void* client_data);
-  static void OnDirectLidarPointCloudCallback(uint32_t handle, LivoxDirectEthPacket* data,
-                                              uint32_t data_num, void* client_data);
   static void OnLivoxLidarPointCloudCallback(uint32_t handle, const uint8_t dev_type,
                                              LivoxLidarEthernetPacket *data, void *client_data);
 
@@ -90,8 +86,7 @@ private:
   std::map<uint32_t, DeviceInfo> devices_info_;
   uint16_t vehicle_listen_id_ = 0;
   uint16_t listen_id_ = 0;
-  uint16_t direct_listen_id_ = 0;
-  uint16_t lidar_listen_id_ = 0;  // HAP...
+  uint16_t lidar_listen_id_ = 0;
 };
 
 PubHandler &pub_handler();

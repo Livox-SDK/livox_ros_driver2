@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>livox_ros_driver2</name>
+  <name>livox_ros_driver</name>
   <version>2.0.0</version>
   <description>The ROS device driver for Livox 3D LiDARs and Livox Hub</description>
 

@@ -21,8 +21,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-#ifndef LIVOX_ROS_DRIVER_COMM_H_
-#define LIVOX_ROS_DRIVER_COMM_H_
+#ifndef LIVOX_ROS_DRIVER2_COMM_H_
+#define LIVOX_ROS_DRIVER2_COMM_H_
 
 #include <math.h>
 #include <stdint.h>
@@ -42,8 +42,6 @@
 #include "livox_sdk.h"
 #include "livox_def_vehicle.h"
 #include "livox_sdk_vehicle.h"
-#include "livox_def_direct.h"
-#include "livox_sdk_direct.h"
 #include "livox_def_common.h"
 
 namespace livox_ros {
@@ -167,32 +165,8 @@ typedef struct {
 } UserVehicleConfig;
 
 typedef struct {
-  char sn[16];
-  uint8_t lidar_id;
-  uint8_t lidar_ipmode;
-
-  char lidar_ip[16];
-  char lidar_submask[16];
-  char lidar_gateway[16];
-
-  char host_push_msg_ip[16];
-  uint16_t host_push_msg_port;
-  char host_point_data_ip[16];
-  uint16_t host_point_data_port;
-  char host_imu_data_ip[16];
-  uint16_t host_imu_data_port;
-
-  uint8_t sample_mode;
-  uint8_t pattern_mode;
-  uint8_t pcl_data_type;
-  uint8_t imu_data_en;
-  uint8_t work_mode;
-  uint8_t work_state;
-} UserDirectConfig;
-
-typedef struct {
   uint32_t handle;
-  int8_t data_type;
+  int8_t pcl_data_type;
   int8_t pattern_mode;
   int32_t blind_spot_set;
   int8_t dual_emit_en;
@@ -219,20 +193,8 @@ typedef struct {
   uint32_t firmware_ver; /**< Firmware version of lidar  */
   UserConfig config;
   UserVehicleConfig vehicle_config;
-  UserDirectConfig direct_config;
   UserLivoxLidarConfig livox_config;
 } LidarDevice;
-
-struct DirectLidarParam {
- public:
-  DirectLidarParam() : is_custom(false), direct_host_cfg_ptr(nullptr), direct_lidars_cfg_ptr(nullptr) {}
- public:
-  bool is_custom;
-  std::shared_ptr<DirectLidarHostCfg> direct_host_cfg_ptr;
-  std::shared_ptr<std::vector<DirectLidarCfg>> direct_lidars_cfg_ptr;
-  std::map<uint32_t, LidarExtrinsicParameters> extrinsic_params_map;
-  std::map<uint8_t, std::string> devices;
-};
 
 typedef struct {
  uint8_t lidar_type;
@@ -265,4 +227,4 @@ uint32_t IpStringToNum(std::string ip_string);
 
 }
 
-#endif
+#endif // LIVOX_ROS_DRIVER2_COMM_H_

@@ -11,7 +11,7 @@ target_include_directories(${SDK_LIBRARY}
         PUBLIC
         include
 	include/third_party/FastCRC
-        include/third_party/spdlog				 
+        include/third_party/spdlog
         PRIVATE
         src)
 
@@ -53,17 +53,15 @@ target_sources(${SDK_LIBRARY}
 
         src/upgrader/industry/industry_upgrader.h
         src/upgrader/industry/industry_upgrader.cpp
-        src/upgrader/direct/direct_lidar_upgrader.h
-        src/upgrader/direct/direct_lidar_upgrader.cpp
 
         src/pub_handler/pub_handler.h
         src/pub_handler/pub_handler.cpp
         src/pub_handler/lidar_pub_handler.h
         src/pub_handler/lidar_pub_handler.cpp
-        
+
         src/algorithm/obstacle_zone_converter/obstacle_zone_converter.h
         src/algorithm/obstacle_zone_converter/obstacle_zone_converter.cpp)
-        
+
 set(Eigen3_DIR src/third_party/eigen/share/eigen3/cmake)
 find_package(Eigen3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIRS})
@@ -73,7 +71,6 @@ target_link_libraries(${SDK_LIBRARY}
         PUBLIC
         ${PROJECT_NAME}_static
         ${PROJECT_NAME}_vehicle_static
-        ${PROJECT_NAME}_direct_static
         livox_lidar_sdk_static
 )
 

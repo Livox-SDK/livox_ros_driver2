@@ -74,17 +74,6 @@ typedef void (*OnLivoxLidarUpgradeProgressCallback)(LivoxLidarType type,
 void SetLivoxLidarUpgradeProgressCallback(OnLivoxLidarUpgradeProgressCallback cb, void* client_data);
 void UpgradeLivoxLidars(const uint32_t* handle, const uint8_t lidar_num);
 
-// Direct lidar upgrade
-bool SetDirectUpgradeFirmwarePath(const char* firmware_path);
-
-typedef void (*OnDirectLidarUpgradeProgressCallback)(LivoxLidarType type,
-                                               uint32_t handle,
-                                               LidarUpgradeState state,
-                                               void *client_data);
-void SetDirectLidarUpgradeProgressCallback(OnDirectLidarUpgradeProgressCallback cb, void* client_data);
-
-void UpgradeDirectLidars(const uint32_t* handle, const uint8_t lidar_num);
-
 bool SetUpgradeFirmwarePath(const char *dir);
 
 typedef void (*OnUpgradeProgressCallbackCallback)(LivoxLidarType type,

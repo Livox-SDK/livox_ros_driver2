@@ -33,7 +33,7 @@
 #include "livox_def_common.h"
 #include "livox_sdk_vehicle.h"
 #include "livox_sdk.h"
-#include "livox_lidar_sdk.h"
+#include "livox_lidar_api.h"
 #include "lvx_file_manager.h"
 
 #ifdef WIN32
@@ -415,10 +415,6 @@ void LvxFileRecordHandler::CopyPackHeader(uint32_t handle,
   return;
 }
 
-
-
-
-
 void LvxFileRecordHandler::OnVehicleLidarPointCloudCallback(uint8_t slot,
                                                             LivoxVehicleEthPacket* data,
                                                             uint32_t data_num,
@@ -601,7 +597,6 @@ void LvxFileRecordHandler::CopyPackHeader(uint8_t slot,
   memcpy(header.timestamp, eth_packet.timestamp, 8 * sizeof(uint8_t));
   return;
 }
-
 
 void LvxFileRecordHandler::OnLidarPointCloudCallback(uint8_t handle,
                                                      LivoxEthPacket* data,

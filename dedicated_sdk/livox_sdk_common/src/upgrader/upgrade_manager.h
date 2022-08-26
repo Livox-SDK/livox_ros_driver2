@@ -41,8 +41,6 @@
 #include "vehicle/vehicle_upgrader.h"
 #include "vehicle/vehicle_lidar_upgrader.h"
 
-#include "direct/direct_lidar_upgrader.h"
-
 #include "industry/industry_upgrader.h"
 
 #include "livox_lidar/livox_lidar_upgrader.h"
@@ -102,14 +100,10 @@ private:
 
   // for vehicle 
   Firmware vehicle_firmware_;
-  Firmware direct_firmware_;
   Firmware livox_lidar_firmware_;
 
   OnUpgradeProgressCallbackCallback info_cb_;
   void *client_data_;
-
-  OnDirectLidarUpgradeProgressCallback direct_lidar_info_cb_;
-  void *direct_lidar_client_data_;
 
   OnLivoxLidarUpgradeProgressCallback livox_lidar_info_cb_;
   void *livox_lidar_client_data_;  

@@ -28,6 +28,7 @@
 #include "comm/generate_seq.h"
 #include "base/logging.h"
 
+#include "command_handler/command_impl.h"
 #include "command_handler/general_command_handler.h"
 #include "data_handler/data_handler.h"
 
@@ -74,6 +75,7 @@ bool DeviceManager::Init(const std::string& host_ip) {
 
 bool DeviceManager::Init(std::shared_ptr<std::vector<LivoxLidarCfg>>& lidars_cfg_ptr,
     std::shared_ptr<std::vector<LivoxLidarCfg>>& custom_lidars_cfg_ptr) {
+  is_view_ = false;
   lidars_cfg_ptr_ = lidars_cfg_ptr;
   custom_lidars_cfg_ptr_ = custom_lidars_cfg_ptr;
   if (lidars_cfg_ptr_ && !(lidars_cfg_ptr_->empty())) {
@@ -135,7 +137,6 @@ void DeviceManager::GenerateDevTypeTable() {
     custom_lidars_cfg_map_[lidar_ip] = lidar_cfg;
   }
 }
-
 
 bool DeviceManager::CreateIOThread() {
   if (!CreateDetectionIOThread()) {
@@ -220,16 +221,13 @@ bool DeviceManager::CreateDetectionChannel() {
 #ifdef WIN32
 #else
   detection_broadcast_socket_ = util::CreateSocket(kDetectionPort, true, true, true, "255.255.255.255");
-  LOG_INFO("Create detection channel detection socket:{}", detection_broadcast_socket_);
   if (detection_broadcast_socket_ < 0) {
     LOG_ERROR("Create detection broadcast socket failed.");
     return false;
   }
   detection_io_thread_->loop().lock()->AddDelegate(detection_broadcast_socket_, this, nullptr);
 #endif
-
   detection_socket_ = util::CreateSocket(kDetectionPort, true, true, true, host_ip_);
-  LOG_INFO("Create detection channel detection socket:{}", detection_broadcast_socket_);
   if (detection_socket_ < 0) {
     LOG_ERROR("Create detection socket failed.");
     return false;
@@ -268,6 +266,19 @@ bool DeviceManager::CreateCommandChannel(const uint8_t dev_type, const HostNetIn
     LOG_ERROR("Create socket and add delegate failed.");
     return false;
   }
+
+#ifdef WIN32
+#else
+  if (dev_type == kLivoxLidarTypeMid360) {
+    socket_t broadcast_socket = util::CreateSocket(host_net_info.push_msg_port, true, true, true, "255.255.255.255");
+    if (broadcast_socket < 0) {
+      LOG_ERROR("Create broadcast socket failed.");
+      return false;
+    }
+    vec_broadcast_socket_.push_back(broadcast_socket);
+    cmd_io_thread_->loop().lock()->AddDelegate(broadcast_socket, this, nullptr);
+  }
+#endif
 
   if (!CreateCmdSocketAndAddDelegate(dev_type, host_net_info.log_data_ip, host_net_info.log_data_port, is_custom)) {
     LOG_ERROR("Create socket and add delegate failed.");
@@ -314,21 +325,24 @@ bool DeviceManager::CreateCmdSocketAndAddDelegate(const uint8_t dev_type, const 
   } else {
     sock = util::CreateSocket(port, true, true, true, host_ip);
   }
+
   if (sock < 0) {
-    LOG_ERROR("Add command channel faileld, can not create socket, the ip {} port {} ", host_ip.c_str(), port);
+    LOG_ERROR("Add command channel faileld, can not create socket, dev_type:{}, the ip {} port {} ",
+        dev_type, host_ip.c_str(), port);
     return false;
   }
+
   socket_vec_.push_back(sock);
   channel_info_[key] = sock;
   command_channel_.insert(sock);
 
-  
   if (is_custom) {    
     custom_command_channel_[key] = sock;
   } else {
-    general_command_channel_[dev_type] = sock;
+    if (port == kMid360HostCmdPort || port == kHAPCmdPort) { 
+      general_command_channel_[dev_type] = sock;
+    }
   }
-
   cmd_io_thread_->loop().lock()->AddDelegate(sock, this, nullptr);
   return true;
 }
@@ -370,7 +384,6 @@ void DeviceManager::DetectionLidars() {
 
 void DeviceManager::Detection() {
   uint8_t req_buff[kMaxCommandBufferSize] = {0};
-  uint16_t req_len = sizeof(uint8_t);
 
   CommPacket packet;
   packet.protocol = kLidarSdk;
@@ -380,9 +393,7 @@ void DeviceManager::Detection() {
   packet.cmd_type = kCommandTypeCmd;
   packet.sender_type = kHostSend;
   packet.data = req_buff;
-  packet.data_len = req_len;
-
-  //LOG_INFO("Detection lidars, the seq:{}", packet.seq_num);
+  packet.data_len = 0;
 
   std::vector<uint8_t> buf(kMaxCommandBufferSize + 1);
   int size = 0;
@@ -420,6 +431,7 @@ void DeviceManager::OnData(socket_t sock, void *client_data) {
   struct in_addr log_addr;
   log_addr.s_addr = handle;
   std::string lidar_ip = inet_ntoa(log_addr);
+
   if (lidar_ip == host_ip_) {
     return;
   }
@@ -466,7 +478,7 @@ void DeviceManager::OnData(socket_t sock, void *client_data) {
         return;
       }
     }
-
+    
     if (lidars_cmd_port_.find(dev_type) != lidars_cmd_port_.end()) {
       if (lidars_cmd_port_[dev_type].find(port) != lidars_cmd_port_[dev_type].end()) {
         GeneralCommandHandler::GetInstance().Handler(dev_type, handle, port, (uint8_t*)(buf.get()), size);
@@ -528,14 +540,12 @@ void DeviceManager::HandleDetectionData(uint32_t handle, DetectionData* detectio
       return;
     }
     return;
-  } 
-  
-  lidars_dev_type_[handle] = detection_data->dev_type; 
+  }
+  lidars_dev_type_[handle] = detection_data->dev_type;
 }
 
 void DeviceManager::GetLivoxLidarInternalInfo(const uint32_t handle) {
-  GeneralCommandHandler::GetInstance().QueryLivoxLidarInternalInfo(handle, 
-      DeviceManager::GetLivoxLidarInternalInfoCallback, this);
+  CommandImpl::QueryLivoxLidarInternalInfo(handle, DeviceManager::GetLivoxLidarInternalInfoCallback, this);
 }
 
 void DeviceManager::GetLivoxLidarInternalInfoCallback(livox_status status, uint32_t handle,
@@ -596,9 +606,10 @@ void DeviceManager::AddViewLidar(const uint32_t handle, LivoxLidarDiagInternalIn
     off += kv->length;
   }
 
-  LOG_INFO("host_point_port:{}, lidar_point_port:{}, host_imu_data_port:{}, lidar_imu_data_port:{}",
-      view_lidar_info_ptr->host_point_port, view_lidar_info_ptr->lidar_point_port,
-      view_lidar_info_ptr->host_imu_data_port,  view_lidar_info_ptr->lidar_imu_data_port);
+  if (view_lidar_info_ptr->dev_type == kLivoxLidarTypeMid360) {
+    view_lidar_info_ptr->lidar_point_port = kMid360LidarPointCloudPort;
+    view_lidar_info_ptr->lidar_imu_data_port = kMid360LidarImuDataPort;
+  }
 
   CreateViewDataChannel(*view_lidar_info_ptr);
   {
@@ -670,7 +681,7 @@ int DeviceManager::SendTo(const uint8_t dev_type, const uint32_t handle, const s
     sock = detection_socket_;
   }
   std::lock_guard<std::mutex> lock(mutex_cmd_channel_);
-  size_t byte =  sendto(sock, (const char*)buf.data(), size, 0, addr, addrlen);    
+  size_t byte =  sendto(sock, (const char*)buf.data(), size, 0, addr, addrlen);
 	return byte;
 }
 
@@ -686,15 +697,11 @@ bool DeviceManager::GetCmdChannel(const uint8_t dev_type, const uint32_t handle,
   }
 
   if (general_command_channel_.find(dev_type) != general_command_channel_.end()) {
-    if (general_command_channel_.find(dev_type) != general_command_channel_.end()) {
-      sock = general_command_channel_[dev_type];
-      return true;
-    }
-    return false;
+    sock = general_command_channel_[dev_type];
+    return true;
   }
   return false;
 }
-
 
 void DeviceManager::Destory() {
   host_ip_ = "";
@@ -713,6 +720,13 @@ void DeviceManager::Destory() {
       cmd_io_thread_->loop().lock()->RemoveDelegate(sock, this);
     }
   }
+
+  for (auto it = vec_broadcast_socket_.begin(); it != vec_broadcast_socket_.end(); ++it) {
+    socket_t sock = *it;
+    if (sock > 0) {
+      cmd_io_thread_->loop().lock()->RemoveDelegate(sock, this);
+    }
+  }
   
   for (auto it = data_channel_.begin(); it != data_channel_.end(); ++it) {
     socket_t sock = *it;
@@ -726,6 +740,12 @@ void DeviceManager::Destory() {
     sock = -1;
   }
   socket_vec_.clear();
+
+  for (socket_t & sock : vec_broadcast_socket_) {
+    util::CloseSock(sock);
+    sock = -1;
+  }
+  vec_broadcast_socket_.clear();
 
   if (detection_thread_) {
     is_stop_detection_.store(true);
@@ -777,7 +797,6 @@ void DeviceManager::Destory() {
   general_command_channel_.clear();
   custom_command_channel_.clear();
 
-
   command_channel_.clear();
   data_channel_.clear();
 
@@ -811,4 +830,3 @@ DeviceManager::~DeviceManager() {
 
 } // namespace lidar
 } // namespace livox
-

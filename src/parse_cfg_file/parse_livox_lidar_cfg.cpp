@@ -72,9 +72,9 @@ bool LivoxLidarConfigParser::ParseUserConfigs(const rapidjson::Document &doc,
     // parse user configs
     user_config.handle = IpStringToNum(std::string(config["ip"].GetString()));
     if (!config.HasMember("pcl_data_type")) {
-      user_config.data_type = -1;
+      user_config.pcl_data_type = -1;
     } else {
-      user_config.data_type = static_cast<int8_t>(config["pcl_data_type"].GetInt());
+      user_config.pcl_data_type = static_cast<int8_t>(config["pcl_data_type"].GetInt());
     }
     if (!config.HasMember("pattern_mode")) {
       user_config.pattern_mode = -1;
@@ -92,11 +92,11 @@ bool LivoxLidarConfigParser::ParseUserConfigs(const rapidjson::Document &doc,
       user_config.dual_emit_en = static_cast<uint8_t>(config["dual_emit_en"].GetInt());
     }
     if (!config.HasMember("extrinsic_parameter")) {
-      user_config.extrinsic_param = {0};
+      memset(&user_config.extrinsic_param, 0, sizeof(user_config.extrinsic_param));
     } else {
       auto &value = config["extrinsic_parameter"];
       if (!ParseExtrinsics(value, user_config.extrinsic_param)) {
-        user_config.extrinsic_param = {0};
+        memset(&user_config.extrinsic_param, 0, sizeof(user_config.extrinsic_param));
         std::cout << "failed to parse extrinsic parameters, ip: "
                   << IpNumToString(user_config.handle) << std::endl;
       }
@@ -152,4 +152,5 @@ bool LivoxLidarConfigParser::ParseExtrinsics(const rapidjson::Value &value,
   return true;
 }
 
-} // namespace livox_ros
+
+} // namespace livox

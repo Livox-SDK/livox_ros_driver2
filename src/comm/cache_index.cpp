@@ -66,8 +66,6 @@ int8_t CacheIndex::GenerateIndexKey(const uint8_t livox_lidar_type, const uint32
     key = "industrial_lidar_" + std::to_string(handle);
   } else if (livox_lidar_type == kVehicleLidarType) {
     key = "vehicle_lidar_" + std::to_string(handle);
-  } else if (livox_lidar_type == kDirectLidarType) {
-    key = "direct_lidar_" + std::to_string(handle);
   } else if (livox_lidar_type == kLivoxLidarType) {
     key = "livox_lidar_" + std::to_string(handle);
   } else {

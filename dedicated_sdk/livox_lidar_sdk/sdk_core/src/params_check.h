@@ -44,6 +44,8 @@ class ParamsCheck {
   bool Check();
  private:
   bool CheckLidarIp();
+  void CheckLidarPort();
+  void CheckPort(const uint8_t dev_type, LivoxLidarNetInfo& lidar_net_info);
  private:
   std::shared_ptr<std::vector<LivoxLidarCfg>> lidars_cfg_ptr_;
   std::shared_ptr<std::vector<LivoxLidarCfg>> custom_lidars_cfg_ptr_;

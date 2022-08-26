@@ -21,10 +21,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-#ifndef LIVOX_ROS_DRIVER_LDDC_H_
-#define LIVOX_ROS_DRIVER_LDDC_H_
+#ifndef LIVOX_ROS_DRIVER2_LDDC_H_
+#define LIVOX_ROS_DRIVER2_LDDC_H_
 
-#include "include/livox_ros_driver.h"
+#include "include/livox_ros_driver2.h"
 
 #include "driver_node.h"
 #include "lds.h"
@@ -158,4 +158,5 @@ class Lddc {
 };
 
 }  // namespace livox_ros
-#endif
+
+#endif // LIVOX_ROS_DRIVER2_LDDC_H_

@@ -315,12 +315,10 @@ void Lddc::PublishPointcloud2Data(const uint8_t index, const uint64_t timestamp,
 }
 
 void Lddc::InitCustomMsg(CustomMsg& livox_msg, const StoragePacket& pkg, uint8_t index) {
+  livox_msg.header.frame_id.assign(frame_id_);
+
 #ifdef BUILDING_ROS1
   static uint32_t msg_seq = 0;
-#endif
-
-  livox_msg.header.frame_id.assign(frame_id_);
-#ifdef BUILDING_ROS1
   livox_msg.header.seq = msg_seq;
   ++msg_seq;
 #endif
@@ -338,10 +336,11 @@ void Lddc::InitCustomMsg(CustomMsg& livox_msg, const StoragePacket& pkg, uint8_t
 #endif
 
   livox_msg.point_num = pkg.points_num;
-
   if (lds_->lidars_[index].lidar_type == kVehicleLidarType) {
     livox_msg.lidar_id = lds_->lidars_[index].handle;
   } else if (lds_->lidars_[index].lidar_type == kIndustryLidarType) {
+    livox_msg.lidar_id = lds_->lidars_[index].handle;
+  } else if (lds_->lidars_[index].lidar_type == kLivoxLidarType) {
     livox_msg.lidar_id = lds_->lidars_[index].handle;
   } else {
     printf("Init custom msg lidar id failed, the index:%u.\n", index);

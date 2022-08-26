@@ -28,7 +28,7 @@
 #include "../lds_lidar.h"
 #include "../comm/comm.h"
 
-#include "livox_lidar_sdk.h"
+#include "livox_lidar_api.h"
 #include "livox_lidar_def.h"
 
 #include "livox_def_common.h"

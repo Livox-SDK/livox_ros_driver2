@@ -65,25 +65,11 @@ void DataHandler::Handle(const uint8_t dev_type, const uint32_t handle, uint8_t 
     return;
   }
 
-  // uint32_t data_length = lidar_data->length - sizeof(LivoxLidarEthernetPacket) + 1;
-  // uint32_t size = 0;
   if (lidar_data->data_type == kLivoxLidarImuData) {
-    // size = data_length / sizeof(LivoxLidarImuRawPoint);
     if (imu_data_callbacks_) {
       imu_data_callbacks_(handle, dev_type, lidar_data, imu_client_data_);
     }
-  } else {
-    // if (lidar_data->data_type == kLivoxLidarCartesianCoordinateHighData) {
-    //   size = data_length / sizeof(LivoxLidarCartesianHighRawPoint);
-    // } else if (lidar_data->data_type == kLivoxLidarCartesianCoordinateLowData) {
-    //   size = data_length / sizeof(LivoxLidarCartesianLowRawPoint);
-    // } else if (lidar_data->data_type == kLivoxLidarSphericalCoordinateData) {
-    //   size = data_length / sizeof(LivoxLidarSpherPoint);
-    // } else {
-    //   //LOG_INFO("Unknow data type:{}", lidar_data->data_type);
-    //   return;
-    // }
-  
+  } else {  
     if (point_data_callbacks_) {
       point_data_callbacks_(handle, dev_type, lidar_data, point_client_data_);
     }

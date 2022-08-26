@@ -22,8 +22,8 @@
 // SOFTWARE.
 //
 
-#ifndef LIVOX_CONFIG_DIRECT_H_
-#define LIVOX_CONFIG_DIRECT_H_
+#ifndef LIVOX_LIDAR_CONFIG_H_
+#define LIVOX_LIDAR_CONFIG_H_
 
 #if defined(__linux__)
     #include <sys/epoll.h>

@@ -90,7 +90,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 ## make sure the livox_sdk_static library is installed
 find_library(LIVOX_SDK_LIBRARY liblivox_sdk_static.a /usr/local/lib)
 find_library(LIVOX_SDK_VEHICLE_LIBRARY liblivox_sdk_vehicle_static.a /usr/local/lib)
-find_library(LIVOX_SDK_DIRECT_LIBRARY  liblivox_sdk_direct_static.a  /usr/local/lib)
 find_library(LIVOX_SDK_COMMON_LIBRARY  liblivox_sdk_common_static.a  /usr/local/lib)
 find_library(LIVOX_LIDAR_SDK_LIBRARY  liblivox_lidar_sdk_static.a    /usr/local/lib)
 
@@ -98,7 +97,6 @@ include_directories(
   ./
 	${CMAKE_CURRENT_SOURCE_DIR}/livox_sdk/sdk_core/include
 	${CMAKE_CURRENT_SOURCE_DIR}/livox_sdk_vehicle/sdk_core/include
-	${CMAKE_CURRENT_SOURCE_DIR}/livox_sdk_direct/sdk_core/include
 	${CMAKE_CURRENT_SOURCE_DIR}/livox_sdk_common/include
 )
 
@@ -106,7 +104,6 @@ link_directories(
   ./
 	${CMAKE_CURRENT_SOURCE_DIR}/livox_sdk/build/sdk_core
 	${CMAKE_CURRENT_SOURCE_DIR}/livox_sdk_vehicle/build/sdk_core
-	${CMAKE_CURRENT_SOURCE_DIR}/livox_sdk_direct/build/sdk_core
 )
 
 
@@ -144,7 +141,7 @@ target_sources(${PROJECT_NAME}_node
 	src/lds_lidar.cpp
 	src/lds_hub.cpp
 	src/lddc.cpp
-	src/livox_ros_driver.cpp
+	src/livox_ros_driver2.cpp
 
 	src/vehicle_lidar_thread.cpp
  	src/comm/comm.cpp
@@ -154,14 +151,12 @@ target_sources(${PROJECT_NAME}_node
 	src/comm/cache_index.cpp
 
 	src/parse_cfg_file/parse_cfg_file.cpp
-	src/parse_cfg_file/parse_direct_lidar_cfg.cpp
 	src/parse_cfg_file/parse_industrial_lidar_cfg.cpp
 	src/parse_cfg_file/parse_vehicle_lidar_cfg.cpp
 	src/parse_cfg_file/parse_livox_lidar_cfg.cpp
 
 	src/call_back/industrial_lidar_callback.cpp
 	src/call_back/vehicle_lidar_callback.cpp
-	src/call_back/direct_lidar_callback.cpp
   src/call_back/lidar_common_callback.cpp
 	src/call_back/hub_callback.cpp
 	src/call_back/livox_lidar_callback.cpp
@@ -196,7 +191,6 @@ target_include_directories(${PROJECT_NAME}_node
 target_link_libraries(${PROJECT_NAME}_node
 	${LIVOX_SDK_LIBRARY}
 	${LIVOX_SDK_VEHICLE_LIBRARY}
-	${LIVOX_SDK_DIRECT_LIBRARY}
 	${LIVOX_SDK_COMMON_LIBRARY}
 	${LIVOX_LIDAR_SDK_LIBRARY}
 	${Boost_LIBRARY}

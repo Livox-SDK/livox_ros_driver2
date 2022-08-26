@@ -33,7 +33,7 @@
 
 #include <livox_def_common.h>
 #include <livox_lidar_def.h>
-#include <livox_lidar_sdk.h>
+#include <livox_lidar_api.h>
 
 #include "../firmware/firmware.h"
 

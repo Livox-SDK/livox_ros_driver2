@@ -48,8 +48,8 @@ class ParseCfgFile {
       std::shared_ptr<std::vector<LivoxLidarCfg>>& custom_lidars_cfg_ptr);
  private:
   bool GetDevType(const std::string& type, uint8_t& device_type);
-  bool ParseLidarCfg(const rapidjson::Value &object, LivoxLidarCfg& lidar_cfg);
-  bool ParseLidarNetInfo(const rapidjson::Value &object, LivoxLidarNetInfo& lidar_net_info);
+  bool ParseLidarCfg(const rapidjson::Value &object, LivoxLidarCfg& lidar_cfg, bool is_custom);
+  bool ParseLidarNetInfo(const rapidjson::Value &object, LivoxLidarNetInfo& lidar_net_info, bool is_custom);
   bool ParseHostNetInfo(const rapidjson::Value &object, HostNetInfo& host_net_info);
   bool ParseGeneralCfgInfo(const rapidjson::Value &object, GeneralCfgInfo& general_cfg_info);
  private:

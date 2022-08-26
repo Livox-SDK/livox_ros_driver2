@@ -26,8 +26,6 @@ function CheckParams() {
 #             rm /usr/local/lib/liblivox_sdk_common_static.a
 #         fi
 
-#         if [ -f "/usr/local/lib/liblivox_sdk_direct_static.a"]; then
-#             rm /usr/local/lib/liblivox_sdk_direct_static.a
 #         fi
 #         if [ -f "/usr/local/lib/liblivox_sdk_static.a"]; then
 #             rm /usr/local/lib/liblivox_sdk_static.a
@@ -45,7 +43,6 @@ function GenerateCmakeFile() {
         cp ./CMakeLists.txt.static ./CMakeLists.txt
         cp ./livox_sdk/sdk_core/CMakeLists.txt.static ./livox_sdk/sdk_core/CMakeLists.txt
         cp ./livox_sdk_common/CMakeLists.txt.static ./livox_sdk_common/CMakeLists.txt
-        cp ./livox_sdk_direct/sdk_core/CMakeLists.txt.static ./livox_sdk_direct/sdk_core/CMakeLists.txt
         cp ./livox_sdk_vehicle/sdk_core/CMakeLists.txt.static ./livox_sdk_vehicle/sdk_core/CMakeLists.txt
         cp ./livox_lidar_sdk/sdk_core/CMakeLists.txt.static ./livox_lidar_sdk/sdk_core/CMakeLists.txt
 
@@ -53,7 +50,6 @@ function GenerateCmakeFile() {
         cp ./CMakeLists.txt.shared ./CMakeLists.txt
         cp ./livox_sdk/sdk_core/CMakeLists.txt.shared ./livox_sdk/sdk_core/CMakeLists.txt
         cp ./livox_sdk_common/CMakeLists.txt.shared ./livox_sdk_common/CMakeLists.txt
-        cp ./livox_sdk_direct/sdk_core/CMakeLists.txt.shared ./livox_sdk_direct/sdk_core/CMakeLists.txt
         cp ./livox_sdk_vehicle/sdk_core/CMakeLists.txt.shared ./livox_sdk_vehicle/sdk_core/CMakeLists.txt
         cp ./livox_lidar_sdk/sdk_core/CMakeLists.txt.shared ./livox_lidar_sdk/sdk_core/CMakeLists.txt
     fi
@@ -63,7 +59,8 @@ function Complier() {
     if [ ! -d "./build" ];then
         mkdir build
     else
-        echo "文件夹已经存在"
+        rm build -R
+        mkdir build
     fi
 
     cd ./build

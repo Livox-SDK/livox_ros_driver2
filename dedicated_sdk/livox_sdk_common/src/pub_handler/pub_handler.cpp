@@ -25,10 +25,7 @@ void PubHandler::Uninit() {
     LidarRemovePointCloudObserver(listen_id_);
     listen_id_ = 0;
   }
-  if (direct_listen_id_ > 0) {
-    DirectLidarRemovePointCloudObserver(direct_listen_id_);
-    direct_listen_id_ = 0;
-  }
+
   if (lidar_listen_id_ > 0) {
     LivoxLidarRemovePointCloudObserver(lidar_listen_id_);
     lidar_listen_id_ = 0;
@@ -72,7 +69,6 @@ void PubHandler::SetPointCloudsCallback(PointCloudsCallback cb, void* client_dat
   points_callback_ = cb;
   vehicle_listen_id_ = VehicleLidarAddPointCloudObserver(OnVehicleLidarPointCloudCallback, this);
   listen_id_ = LidarAddPointCloudObserver(OnLidarPointCloudCallback, this);
-  direct_listen_id_ = DirectLidarAddPointCloudObserver(OnDirectLidarPointCloudCallback, this);
   lidar_listen_id_ = LivoxLidarAddPointCloudObserver(OnLivoxLidarPointCloudCallback, this);
 }
 
@@ -112,49 +108,6 @@ void PubHandler::OnVehicleLidarPointCloudCallback(uint8_t slot, LivoxVehicleEthP
   packet.time_stamp = GetVehicleEthPacketTimestamp(data->timestamp_type, data->timestamp, sizeof(data->timestamp));
 
   uint32_t length = data->length;
-  packet.raw_data.insert(packet.raw_data.end(), data->data, data->data + length);
-  {
-    std::unique_lock<std::mutex> lock(self->packet_mutex_);
-    self->raw_data_queues_.push_back(packet);
-    self->packet_condition_.notify_one();
-  }
-}
-
-void PubHandler::OnDirectLidarPointCloudCallback(uint32_t handle, LivoxDirectEthPacket* data, uint32_t data_num, void* client_data) {
-  PubHandler* self = (PubHandler*)client_data;
-  if (!self) {
-    return;
-  }
-
-  // if (data->data_type == kDirectLidarImuData) {
-  //   if (self->imu_callback_) {
-  //     LivoxDirectImuRawPoint* imu = (LivoxDirectImuRawPoint*) data->data;
-  //     LidarImuPoint imu_data;
-  //     imu_data.lidar_type = static_cast<uint8_t>(LivoxLidarType::kDirectLidarType);
-  //     imu_data.handle = handle;
-  //     imu_data.time_stamp = GetEthPacketTimestamp(data->timestamp_type, data->timestamp, sizeof (data->timestamp));
-  //     imu_data.gyro_x = imu->gyro_x;
-  //     imu_data.gyro_y = imu->gyro_y;
-  //     imu_data.gyro_z = imu->gyro_z;
-  //     imu_data.acc_x = imu->acc_x;
-  //     imu_data.acc_y = imu->acc_y;
-  //     imu_data.acc_z = imu->acc_z;
-  //     self->imu_callback_(&imu_data, client_data);
-  //   }
-  //   return;
-  // }
-
-  StoragePacket packet = {};
-  packet.handle = handle;
-  packet.lidar_type = static_cast<uint8_t>(LivoxLidarType::kDirectLidarType);
-  packet.extrinsic_enable = false;
-  packet.line_num = 1;
-  packet.data_type = data->data_type;
-  packet.point_interval = data->time_interval * 1000 / data_num; //ns
-
-  packet.time_stamp = GetDirectEthPacketTimestamp(data->time_type, data->timestamp, sizeof(data->timestamp));
-
-  uint32_t length = data->length - sizeof(LivoxDirectEthPacket) + 1;
   packet.raw_data.insert(packet.raw_data.end(), data->data, data->data + length);
   {
     std::unique_lock<std::mutex> lock(self->packet_mutex_);
@@ -243,7 +196,7 @@ void PubHandler::OnLivoxLidarPointCloudCallback(uint32_t handle, const uint8_t d
   packet.handle = handle;
   packet.lidar_type = static_cast<uint8_t>(LivoxLidarType::kLivoxLidarType);
   packet.extrinsic_enable = false;
-  if (dev_type == kDeviceTypeLidarHAP) {
+  if (dev_type == kLivoxLidarTypeIndustrialHAP) {
     packet.line_num = kLineNumberHAP;
   } else {
     packet.line_num = kLineNumberDefault;

@@ -2,14 +2,12 @@ cmake_minimum_required(VERSION 3.0)
 
 set(SDK_LIBRARY livox_lidar_sdk_static)
 
-
 add_library(${SDK_LIBRARY} STATIC "")
 
 set(LIVOX_SDK_MAJOR_VERSION "2")
 set(LIVOX_SDK_MINOR_VERSION "3")
 set(LIVOX_SDK_PATCH_VERSION "0")
 set(LIVOX_SDK_VERSION_STRING "${LIVOX_SDK_MAJOR_VERSION}.${LIVOX_SDK_MINOR_VERSION}.${LIVOX_SDK_PATCH_VERSION}")
-
 
 target_include_directories(${SDK_LIBRARY}
         PUBLIC
@@ -22,7 +20,7 @@ target_include_directories(${SDK_LIBRARY}
         PRIVATE
         src)
 
-set_target_properties(${SDK_LIBRARY} PROPERTIES PUBLIC_HEADER "include/livox_lidar_def.h;include/livox_lidar_sdk.h")
+set_target_properties(${SDK_LIBRARY} PROPERTIES PUBLIC_HEADER "include/livox_lidar_def.h;include/livox_lidar_api.h")
 
 if(WIN32)
   set(PLATFORM win)
@@ -59,7 +57,6 @@ target_sources(${SDK_LIBRARY}
         src/device_manager.h
         src/device_manager.cpp
 
-        
         src/comm/comm_port.cpp
         src/comm/sdk_protocol.h
         src/comm/sdk_protocol.cpp
@@ -76,12 +73,22 @@ target_sources(${SDK_LIBRARY}
         src/data_handler/data_handler.cpp
 
         src/command_handler/command_handler.h
+        src/command_handler/command_impl.h
+        src/command_handler/command_impl.cpp
         src/command_handler/general_command_handler.h
         src/command_handler/general_command_handler.cpp
         src/command_handler/hap_command_handler.h
         src/command_handler/hap_command_handler.cpp
+        src/command_handler/mid360_command_handler.h
+        src/command_handler/mid360_command_handler.cpp
+        src/command_handler/pa_command_handler.h
+        src/command_handler/pa_command_handler.cpp
+
         src/command_handler/build_request.h
         src/command_handler/build_request.cpp
+
+        src/command_handler/parse_lidar_state_info.h
+        src/command_handler/parse_lidar_state_info.cpp
         
         src/base/multiple_io/multiple_io_base.h
         src/base/multiple_io/multiple_io_base.cpp
@@ -96,7 +103,6 @@ target_sources(${SDK_LIBRARY}
         src/base/multiple_io/multiple_io_kqueue.cpp
         src/base/wake_up/wake_up_pipe.h
         src/base/wake_up/${PLATFORM}/wake_up_pipe.cpp)
-
 
 install(TARGETS ${SDK_LIBRARY}
         PUBLIC_HEADER DESTINATION include

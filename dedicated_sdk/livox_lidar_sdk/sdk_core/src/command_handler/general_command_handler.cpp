@@ -27,6 +27,8 @@
 #include "livox_lidar_def.h"
 #include "command_handler/command_handler.h"
 #include "command_handler/hap_command_handler.h"
+#include "command_handler/mid360_command_handler.h"
+#include "command_handler/pa_command_handler.h"
 
 #include "base/logging.h"
 #include "comm/protocol.h"
@@ -50,17 +52,32 @@ bool GeneralCommandHandler::Init(const std::string& host_ip, const bool is_view,
   return true; 
 }
 
-
-
 bool GeneralCommandHandler::Init(std::shared_ptr<std::vector<LivoxLidarCfg>>& lidars_cfg_ptr,
     std::shared_ptr<std::vector<LivoxLidarCfg>>& custom_lidars_cfg_ptr, DeviceManager* device_manager) {
+  is_view_ = false;
   comm_port_.reset(new CommPort());
+  device_manager_ = device_manager;
   for (auto it = lidars_cfg_ptr->begin(); it != lidars_cfg_ptr->end(); ++it) {
     const uint8_t dev_type = it->device_type;
+    std::lock_guard<std::mutex> lock(command_handle_mutex_);
     if (lidars_command_handler_.find(dev_type) == lidars_command_handler_.end()) {
       if (dev_type == kLivoxLidarTypeIndustrialHAP) {
         std::shared_ptr<HapCommandHandler> hap_command_handler_ptr(new HapCommandHandler(device_manager));
         lidars_command_handler_[dev_type] = hap_command_handler_ptr;        
+        if (!(lidars_command_handler_[dev_type]->Init(lidars_cfg_ptr, custom_lidars_cfg_ptr))) {
+          LOG_ERROR("General command handler init failed, the lidar of type:{} command init failed.", dev_type);
+          return false;
+        }
+      } else if (dev_type == kLivoxLidarTypeMid360) {
+        std::shared_ptr<Mid360CommandHandler> mid360_command_handler_ptr(new Mid360CommandHandler(device_manager));
+        lidars_command_handler_[dev_type] = mid360_command_handler_ptr;        
+        if (!(lidars_command_handler_[dev_type]->Init(lidars_cfg_ptr, custom_lidars_cfg_ptr))) {
+          LOG_ERROR("General command handler init failed, the lidar of type:{} command init failed.", dev_type);
+          return false;
+        }
+      } else if (dev_type == kLivoxLidarTypePA) {
+        std::shared_ptr<PaCommandHandler> pa_command_handler_ptr(new PaCommandHandler(device_manager));
+        lidars_command_handler_[dev_type] = pa_command_handler_ptr;        
         if (!(lidars_command_handler_[dev_type]->Init(lidars_cfg_ptr, custom_lidars_cfg_ptr))) {
           LOG_ERROR("General command handler init failed, the lidar of type:{} command init failed.", dev_type);
           return false;
@@ -71,20 +88,30 @@ bool GeneralCommandHandler::Init(std::shared_ptr<std::vector<LivoxLidarCfg>>& li
 
   for (auto it = custom_lidars_cfg_ptr->begin(); it != custom_lidars_cfg_ptr->end(); ++it) {
     const uint8_t dev_type = it->device_type;
+    std::lock_guard<std::mutex> lock(command_handle_mutex_);
     if (lidars_command_handler_.find(dev_type) == lidars_command_handler_.end()) {
       if (dev_type == kLivoxLidarTypeIndustrialHAP) {
-        lidars_command_handler_[dev_type].reset(new HapCommandHandler(device_manager));
+        lidars_command_handler_[dev_type].reset(new HapCommandHandler(device_manager_));
         if (!(lidars_command_handler_[dev_type]->Init(lidars_cfg_ptr, custom_lidars_cfg_ptr))) {
           LOG_ERROR("General command handler init failed, the custom lidar of type:{} command init failed.", dev_type);
+          return false;
+        }
+      } else if (dev_type == kLivoxLidarTypeMid360) {
+        std::shared_ptr<Mid360CommandHandler> mid360_command_handler_ptr(new Mid360CommandHandler(device_manager));
+        lidars_command_handler_[dev_type] = mid360_command_handler_ptr;        
+        if (!(lidars_command_handler_[dev_type]->Init(lidars_cfg_ptr, custom_lidars_cfg_ptr))) {
+          LOG_ERROR("General command handler init failed, the lidar of type:{} command init failed.", dev_type);
           return false;
         }
       }
     }
   }
-  device_manager_ = device_manager;
+
   return true;
 }
 
+void GeneralCommandHandler::CreateCommandHandler(const uint8_t dev_type) {
+}
   
 void GeneralCommandHandler::Destory() {
   device_manager_ = nullptr;
@@ -99,7 +126,10 @@ void GeneralCommandHandler::Destory() {
     devices_.clear();
   }
 
-  lidars_command_handler_.clear();
+  {
+    std::lock_guard<std::mutex> lock(command_handle_mutex_);
+    lidars_command_handler_.clear();
+  }
 
   {
     std::mutex commands_mutex_;
@@ -134,7 +164,6 @@ void GeneralCommandHandler::Handler(uint32_t handle, uint16_t lidar_port, uint8_
     if (packet.cmd_type == kCommandTypeCmd) {
       return;
     }
-
     HandleDetectionData(handle, lidar_port, packet);
   } else if (packet.cmd_id == kCommandIDLidarGetInternalInfo) {
     uint32_t seq = packet.seq_num;
@@ -153,6 +182,15 @@ void GeneralCommandHandler::Handler(uint32_t handle, uint16_t lidar_port, uint8_
     if (command.cb) {
       (*command.cb)(kLivoxLidarStatusSuccess, handle, command.packet.data);
     }
+  } else if (packet.cmd_id == kCommandIDLidarPushMsg) {
+    std::shared_ptr<CommandHandler> cmd_handler = GetLidarCommandHandler(handle);
+    if (cmd_handler == nullptr) {
+      LOG_ERROR("Handler general command failed, get push msg command handler faield.");
+      return;
+    }
+    Command command;
+    command.packet = packet;
+    cmd_handler->Handle(handle, lidar_port, command);
   }
 }
 
@@ -168,7 +206,6 @@ void GeneralCommandHandler::AddCommand(const Command& command) {
     cmd.packet.data = NULL;
     cmd.packet.data_len = 0;
   }
- 
 }
 
 void GeneralCommandHandler::Handler(const uint8_t dev_type, const uint32_t handle, const uint16_t lidar_port,
@@ -189,13 +226,10 @@ void GeneralCommandHandler::Handler(const uint8_t dev_type, const uint32_t handl
       LOG_INFO("GeneralCommandHandler::Handler Recv detection buf_size:{}", buf_size);
       return;
     }
-    
     HandleDetectionData(handle, lidar_port, packet);
     return;
   }
 
-
-  LOG_INFO("GeneralCommandHandler::Handler enter hap command handle, cmd_type:{}", packet.cmd_type);
   std::shared_ptr<CommandHandler> cmd_handler = GetLidarCommandHandler(dev_type);
   if (cmd_handler == nullptr) {
     LOG_ERROR("GeneralCommandHandler::Handler get cmd handler failed");
@@ -215,7 +249,7 @@ void GeneralCommandHandler::Handler(const uint8_t dev_type, const uint32_t handl
     command.packet = packet;
     command.handle = handle;
   }
-  cmd_handler->Handle(handle, command);
+  cmd_handler->Handle(handle, lidar_port, command);
 }
 
 bool GeneralCommandHandler::VerifyNetSegment(const DetectionData* detection_data) {
@@ -252,10 +286,24 @@ void GeneralCommandHandler::CreateCommandHandle(const uint8_t dev_type) {
   if (!is_view_) {
     return;
   }
+
+  std::lock_guard<std::mutex> lock(command_handle_mutex_);
   if (lidars_command_handler_.find(dev_type) == lidars_command_handler_.end()) {
     if (dev_type == kLivoxLidarTypeIndustrialHAP) {
       std::shared_ptr<HapCommandHandler> hap_command_handler_ptr(new HapCommandHandler(device_manager_));
       lidars_command_handler_[dev_type] = hap_command_handler_ptr;        
+      if (!(lidars_command_handler_[dev_type]->Init(is_view_))) {
+        LOG_ERROR("General command handler init failed, the lidar of type:{} command init failed.", dev_type);
+      }
+    } else if (dev_type == kLivoxLidarTypeMid360) {
+      std::shared_ptr<Mid360CommandHandler> mid360_command_handler_ptr(new Mid360CommandHandler(device_manager_));
+      lidars_command_handler_[dev_type] = mid360_command_handler_ptr;        
+      if (!(lidars_command_handler_[dev_type]->Init(is_view_))) {
+        LOG_ERROR("General command handler init failed, the lidar of type:{} command init failed.", dev_type);
+      }
+    } else if (dev_type == kLivoxLidarTypePA) {
+      std::shared_ptr<PaCommandHandler> pa_command_handler_ptr(new PaCommandHandler(device_manager_));
+      lidars_command_handler_[dev_type] = pa_command_handler_ptr;        
       if (!(lidars_command_handler_[dev_type]->Init(is_view_))) {
         LOG_ERROR("General command handler init failed, the lidar of type:{} command init failed.", dev_type);
       }
@@ -314,7 +362,6 @@ void GeneralCommandHandler::HandleDetectionData(uint32_t handle, uint16_t lidar_
   device_info.is_update_cfg.store(false);
   //devices_[handle] = std::move(device_info);
   
-
   LOG_INFO("Handle detection data, handle:{}, dev_type:{}, sn:{}, lidar_ip:{}, cmd_port:{}",
       handle, detection_data->dev_type, detection_data->sn, lidar_ip.c_str(), detection_data->cmd_port);
   {
@@ -326,7 +373,6 @@ void GeneralCommandHandler::HandleDetectionData(uint32_t handle, uint16_t lidar_
       }
     } else {
       device_dev_type_[handle] = detection_data->dev_type;
-      LOG_INFO("Handle detection data, set buff handle:{}, dev_type:{}", handle, detection_data->dev_type);
     }
   }
 
@@ -378,570 +424,137 @@ void GeneralCommandHandler::LivoxLidarInfoChange(const uint32_t handle) {
   }
 }
 
-std::shared_ptr<CommandHandler> GeneralCommandHandler::GetLidarCommandHandler(const uint8_t dev_type) {
-  if (lidars_command_handler_.find(dev_type) != lidars_command_handler_.end()) {
-    return lidars_command_handler_[dev_type];
+void GeneralCommandHandler::PushLivoxLidarInfo(const uint32_t handle, const std::string& info) {
+  std::lock_guard<std::mutex> lock(dev_type_mutex_);
+  if (device_dev_type_.find(handle) != device_dev_type_.end()) {
+    uint8_t dev_type = device_dev_type_[handle];
+    
+    if (livox_lidar_info_cb_) {
+      livox_lidar_info_cb_(handle, dev_type, info.c_str(), livox_lidar_info_client_data_);
+    }
   }
+}
+
+std::shared_ptr<CommandHandler> GeneralCommandHandler::GetLidarCommandHandler(const uint32_t handle) {
+  std::lock_guard<std::mutex> lock(dev_type_mutex_);
+  if (device_dev_type_.find(handle) != device_dev_type_.end()) {
+    uint8_t dev_type = device_dev_type_[handle];
+    return GetLidarCommandHandler(dev_type);
+  }
+  LOG_ERROR("Get command handler failed, get dev type failed, the handle:{}", handle);
   return nullptr;
 }
 
-livox_status GeneralCommandHandler::QueryLivoxLidarInternalInfo(uint32_t handle, QueryLivoxLidarInternalInfoCallback cb, void* client_data) {
-  uint8_t req_buff[kMaxCommandBufferSize] = {0};
-  uint16_t req_len = 0;
-
-  std::set<ParamKeyName> key_sets {
-    kKeyPclDataType,
-    kKeyPatternMode,
-    kKeyDualEmitEnable,
-    kKeyPointSendEnable,
-    kKeyLidarIPCfg,
-    kKeyLidarPointDataHostIPCfg,
-    kKeyLidarImuHostIPCfg,
-    kKeyInstallAttitude,
-    kKeyBlindSpotSet,
-    kKeyWorkMode,
-    kKeyGlassHeat,
-    kKeyImuDataEn,
-    kKeyFusaEn,
-    kKeySn,
-    kKeyProductInfo,
-    kKeyVersionApp,
-    kKeyVersionLoader,
-    kKeyVersionHardware,
-    kKeyMac,
-    kKeyCurWorkState,
-    kKeyStatusCode,
-    kKeyLidarDiagStatus,
-    kKeyLidarFlashStatus
-  };
-
-  uint16_t key_num = key_sets.size();
-  memcpy(&req_buff[req_len], &key_num, sizeof(key_num));
-  req_len = sizeof(key_num) + sizeof(uint16_t);
-
-  for (const auto &key : key_sets) {
-    LivoxLidarKeyValueParam* kList = (LivoxLidarKeyValueParam*)&req_buff[req_len];
-    kList->key = static_cast<uint16_t>(key);
-    req_len += sizeof(uint16_t);
+std::shared_ptr<CommandHandler> GeneralCommandHandler::GetLidarCommandHandler(const uint8_t dev_type) {
+  std::lock_guard<std::mutex> lock(command_handle_mutex_);
+  if (lidars_command_handler_.find(dev_type) != lidars_command_handler_.end()) {
+    return lidars_command_handler_[dev_type];
   }
-
-  return SendCommand(handle,
-                    kCommandIDLidarGetInternalInfo,
-                    req_buff,
-                    req_len,
-                    MakeCommandCallback<LivoxLidarDiagInternalInfoResponse>(cb, client_data));
+  LOG_ERROR("Get lidar command handler failed, the dev type:{}", dev_type);
+  return nullptr;
 }
 
-
-livox_status GeneralCommandHandler::SetLivoxLidarPclDataType(uint32_t handle, LivoxLidarPointDataType data_type, LivoxLidarAsyncControlCallback cb, void* client_data) {
-  uint8_t req_buff[kMaxCommandBufferSize] = {0};
-  uint16_t req_len = 0;
-
-  uint16_t key_num = 1;
-  memcpy(&req_buff[req_len], &key_num, sizeof(key_num));
-  req_len = sizeof(key_num) + sizeof(uint16_t);
-
-  LivoxLidarKeyValueParam * kv = (LivoxLidarKeyValueParam *)&req_buff[req_len];
-  kv->key = static_cast<uint16_t>(kKeyPclDataType);
-  kv->length = sizeof(uint8_t);
-  kv->value[0] = static_cast<uint8_t>(data_type);
-  req_len += sizeof(LivoxLidarKeyValueParam);
-
-  return SendCommand(handle,
-                     kCommandIDLidarWorkModeControl,
-                    req_buff,
-                    req_len,
-                    MakeCommandCallback<LivoxLidarAsyncControlResponse>(cb, client_data));
-}
-
-
-// livox_status GeneralCommandHandler::EnableLivoxLidarHighResolutionPointType(uint32_t handle, LivoxLidarAsyncControlCallback cb, void* client_data) {
-//   uint8_t req_buff[kMaxCommandBufferSize] = {0};
-//   uint16_t req_len = 0;
-
-//   uint16_t key_num = 1;
-//   memcpy(&req_buff[req_len], &key_num, sizeof(key_num));
-//   req_len = sizeof(key_num) + sizeof(uint16_t);
-
-//   LivoxLidarKeyValueParam * kv = (LivoxLidarKeyValueParam *)&req_buff[req_len];
-//   kv->key = static_cast<uint16_t>(kKeyPclDataType);
-//   kv->length = sizeof(uint8_t);
-//   kv->value[0] = static_cast<uint8_t>(kLivoxLidarCartesianCoordinateHighData); //32bit point type
-//   req_len += sizeof(LivoxLidarKeyValueParam);
-
-//   return SendCommand(handle,
-//                      kCommandIDLidarWorkModeControl,
-//                     req_buff,
-//                     req_len,
-//                     MakeCommandCallback<LivoxLidarAsyncControlResponse>(cb, client_data));
-// }
-
-// livox_status GeneralCommandHandler::DisableLivoxLidarHighResolutionPointType(uint32_t handle, LivoxLidarAsyncControlCallback cb, void* client_data) {
-//   uint8_t req_buff[kMaxCommandBufferSize] = {0};
-//   uint16_t req_len = 0;
-
-//   uint16_t key_num = 1;
-//   memcpy(&req_buff[req_len], &key_num, sizeof(key_num));
-//   req_len = sizeof(key_num) + sizeof(uint16_t);
-
-//   LivoxLidarKeyValueParam * kv = (LivoxLidarKeyValueParam *)&req_buff[req_len];
-//   kv->key = static_cast<uint16_t>(kKeyPclDataType);
-//   kv->length = sizeof(uint8_t);
-//   kv->value[0] = static_cast<uint8_t>(kLivoxLidarCartesianCoordinateLowData); //16bit point type
-//   req_len += sizeof(LivoxLidarKeyValueParam);
-
-//   return SendCommand(handle,
-//                     kCommandIDLidarWorkModeControl,
-//                     req_buff,
-//                     req_len,
-//                     MakeCommandCallback<LivoxLidarAsyncControlResponse>(cb, client_data));
-// }
-
-livox_status GeneralCommandHandler::SetLivoxLidarScanPattern(uint32_t handle, LivoxLidarScanPattern scan_pattern, LivoxLidarAsyncControlCallback cb, void* client_data) {
-  uint8_t req_buff[kMaxCommandBufferSize] = {0};
-  uint16_t req_len = 0;
-
-  uint16_t key_num = 1;
-  memcpy(&req_buff[req_len], &key_num, sizeof(key_num));
-  req_len = sizeof(key_num) + sizeof(uint16_t);
-
-  LivoxLidarKeyValueParam * kv = (LivoxLidarKeyValueParam *)&req_buff[req_len];
-  kv->key = static_cast<uint16_t>(kKeyPatternMode);
-  kv->length = sizeof(uint8_t);
-  kv->value[0] = static_cast<uint8_t>(scan_pattern);
-  req_len += sizeof(LivoxLidarKeyValueParam);
-
-  return SendCommand(handle,
-                    kCommandIDLidarWorkModeControl,
-                    req_buff,
-                    req_len,
-                    MakeCommandCallback<LivoxLidarAsyncControlResponse>(cb, client_data));
-}
-
-livox_status GeneralCommandHandler::SetLivoxLidarDualEmit(uint32_t handle, bool enable, LivoxLidarAsyncControlCallback cb, void* client_data) {
-  uint8_t req_buff[kMaxCommandBufferSize] = {0};
-  uint16_t req_len = 0;
-
-  uint16_t key_num = 1;
-  memcpy(&req_buff[req_len], &key_num, sizeof(key_num));
-  req_len = sizeof(key_num) + sizeof(uint16_t);
-
-  LivoxLidarKeyValueParam * kv = (LivoxLidarKeyValueParam *)&req_buff[req_len];
-  kv->key = static_cast<uint16_t>(kKeyDualEmitEnable);
-  kv->length = sizeof(uint8_t);
-  if (enable) {
-    kv->value[0] = 0x01;
-  } else {
-    kv->value[0] = 0x00;
+bool GeneralCommandHandler::GetQueryLidarInternalInfoKeys(const uint32_t handle, std::set<ParamKeyName>& key_sets) {
+  std::lock_guard<std::mutex> lock(dev_type_mutex_);
+  if (device_dev_type_.find(handle) != device_dev_type_.end()) {
+    uint8_t dev_type = device_dev_type_[handle];
+    if (dev_type == kLivoxLidarTypeIndustrialHAP) {
+      std::set<ParamKeyName> tmp_key_sets {
+        kKeyPclDataType,
+        kKeyPatternMode,
+        kKeyLidarIPCfg,
+        kKeyLidarPointDataHostIPCfg,
+        kKeyLidarImuHostIPCfg,
+        kKeyInstallAttitude,
+        kKeyWorkMode,
+        kKeyImuDataEn,
+        kKeySn,
+        kKeyProductInfo,
+        kKeyVersionApp,
+        kKeyVersionLoader,
+        kKeyVersionHardware,
+        kKeyMac,
+        kKeyCurWorkState
+      };
+      key_sets.swap(tmp_key_sets);
+      return true;
+    } else if (dev_type == kLivoxLidarTypeMid360) {
+      std::set<ParamKeyName> tmp_key_sets {
+        kKeyPclDataType,
+        kKeyPatternMode,
+        kKeyLidarIPCfg,
+        kKeyStateInfoHostIPCfg,
+        kKeyLidarPointDataHostIPCfg,
+        kKeyLidarImuHostIPCfg,
+        kKeyInstallAttitude,
+        kKeyRoiCfg0,
+        kKeyRoiCfg1,
+        kKeyRoiEn,
+        kKeyWorkMode,
+        kKeyImuDataEn,
+        kKeySn,
+        kKeyProductInfo,
+        kKeyVersionApp,
+        kKeyVersionLoader,
+        kKeyVersionHardware,
+        kKeyMac,
+        kKeyCurWorkState,
+        kKeyCoreTemp,
+        kKeyPowerUpCnt,
+        kKeyLocalTimeNow,
+        kKeyLastSyncTime,
+        kKeyTimeOffset,
+        kKeyTimeSyncType,
+        kKeyLidarDiagStatus,
+        kKeyFwType,
+        kKeyHmsCode
+      };
+      key_sets.swap(tmp_key_sets);
+      return true;
+    } else if (dev_type == kLivoxLidarTypePA) {
+      std::set<ParamKeyName> tmp_key_sets {
+        kKeyLidarIPCfg,
+        kKeyLidarPointDataHostIPCfg,
+        kKeyWorkMode,
+        kKeyGlassHeat,
+        kKeySn,
+        kKeyProductInfo,
+        kKeyVersionApp,
+        kKeyVersionLoader,
+        kKeyVersionHardware,
+        kKeyMac,
+        kKeyCurWorkState,
+        kKeyTimeSyncType,
+        kKeyStatusCode,
+        kKeyLidarDiagStatus,
+        kKeyFwType
+      };
+      key_sets.swap(tmp_key_sets);
+      return true;
+    }
   }
-  req_len += sizeof(LivoxLidarKeyValueParam);
-
-  return SendCommand(handle,
-                    kCommandIDLidarWorkModeControl,
-                    req_buff,
-                    req_len,
-                    MakeCommandCallback<LivoxLidarAsyncControlResponse>(cb, client_data));
+  return false;
 }
-
-livox_status GeneralCommandHandler::EnableLivoxLidarPointSend(uint32_t handle, LivoxLidarAsyncControlCallback cb, void* client_data) {
-  uint8_t req_buff[kMaxCommandBufferSize] = {0};
-  uint16_t req_len = 0;
-
-  uint16_t key_num = 1;
-  memcpy(&req_buff[req_len], &key_num, sizeof(key_num));
-  req_len = sizeof(key_num) + sizeof(uint16_t);
-
-  LivoxLidarKeyValueParam * kv = (LivoxLidarKeyValueParam *)&req_buff[req_len];
-  kv->key = static_cast<uint16_t>(kKeyPointSendEnable);
-  kv->length = sizeof(uint8_t);
-  kv->value[0] = 0x00;
-  req_len += sizeof(LivoxLidarKeyValueParam);
-
-  return SendCommand(handle,
-                    kCommandIDLidarWorkModeControl,
-                    req_buff,
-                    req_len,
-                    MakeCommandCallback<LivoxLidarAsyncControlResponse>(cb, client_data));
-}
-
-livox_status GeneralCommandHandler::DisableLivoxLidarPointSend(uint32_t handle, LivoxLidarAsyncControlCallback cb, void* client_data) {
-  uint8_t req_buff[kMaxCommandBufferSize] = {0};
-  uint16_t req_len = 0;
-
-  uint16_t key_num = 1;
-  memcpy(&req_buff[req_len], &key_num, sizeof(key_num));
-  req_len = sizeof(key_num) + sizeof(uint16_t);
-
-  LivoxLidarKeyValueParam * kv = (LivoxLidarKeyValueParam *)&req_buff[req_len];
-  kv->key = static_cast<uint16_t>(kKeyPointSendEnable);
-  kv->length = sizeof(uint8_t);
-  kv->value[0] = 0x01;
-  req_len += sizeof(LivoxLidarKeyValueParam);
-
-  return SendCommand(handle,
-                    kCommandIDLidarWorkModeControl,
-                    req_buff,
-                    req_len,
-                    MakeCommandCallback<LivoxLidarAsyncControlResponse>(cb, client_data));
-}
-
-livox_status GeneralCommandHandler::SetLivoxLidarIp(uint32_t handle, const LivoxLidarIpInfo* ip_config,
-    LivoxLidarAsyncControlCallback cb, void* client_data) {
-  uint8_t req_buff[kMaxCommandBufferSize] = {0};
-  uint16_t req_len = 0;
-
-  if (!BuildRequest::BuildSetLidarIPInfoRequest(*ip_config, req_buff, req_len)) {
-    return -1;
-  }
-
-  return SendCommand(handle,
-                     kCommandIDLidarWorkModeControl,
-                     req_buff,
-                     req_len,
-                    MakeCommandCallback<LivoxLidarAsyncControlResponse>(cb, client_data));
-}
-
-livox_status GeneralCommandHandler::SetLivoxLidarPointDataHostIPCfg(uint32_t handle, const HostPointIPInfo& host_point_ipcfg,
-    LivoxLidarAsyncControlCallback cb, void* client_data) {
-  uint8_t req_buff[kMaxCommandBufferSize] = {0};
-  uint16_t req_len = 0;
-
-  if (!BuildRequest::BuildSetHostPointDataIPInfoRequest(host_point_ipcfg, req_buff, req_len)) {
-    return -1;
-  }
-
-  return SendCommand(handle,
-                     kCommandIDLidarWorkModeControl,
-                     req_buff,
-                     req_len,
-                    MakeCommandCallback<LivoxLidarAsyncControlResponse>(cb, client_data));
-}
-
-livox_status GeneralCommandHandler::SetLivoxLidarImuDataHostIPCfg(uint32_t handle, const HostImuDataIPInfo& host_imu_ipcfg,
-    LivoxLidarAsyncControlCallback cb, void* client_data) {
-  uint8_t req_buff[kMaxCommandBufferSize] = {0};
-  uint16_t req_len = 0;
-
-  if (!BuildRequest::BuildSetHostImuDataIPInfoRequest(host_imu_ipcfg, req_buff, req_len)) {
-    return -1;
-  }
-
-  return SendCommand(handle,
-                     kCommandIDLidarWorkModeControl,
-                     req_buff,
-                     req_len,
-                    MakeCommandCallback<LivoxLidarAsyncControlResponse>(cb, client_data));
-}
-
-
-livox_status GeneralCommandHandler::SetLivoxLidarInstallAttitude(uint32_t handle, const LivoxLidarInstallAttitude& install_attitude,
-    LivoxLidarAsyncControlCallback cb, void* client_data) {
-  uint8_t req_buff[kMaxCommandBufferSize] = {0};
-  uint16_t req_len = 0;
-
-  uint16_t key_num = 1;
-  memcpy(&req_buff[req_len], &key_num, sizeof(key_num));
-  req_len = sizeof(key_num) + sizeof(uint16_t);
-
-  LivoxLidarKeyValueParam * kv = (LivoxLidarKeyValueParam *)&req_buff[req_len];
-  kv->key = static_cast<uint16_t>(kKeyInstallAttitude);
-  kv->length = sizeof(LivoxLidarInstallAttitude);
-
-  LivoxLidarInstallAttitude* install_attitude_val = (LivoxLidarInstallAttitude*)&kv->value;
-  memcpy(install_attitude_val, &install_attitude, sizeof(LivoxLidarInstallAttitude));
-  req_len += sizeof(LivoxLidarKeyValueParam) - 1 + sizeof(LivoxLidarInstallAttitude);
-
-  return SendCommand(handle,
-                    kCommandIDLidarWorkModeControl,
-                    req_buff,
-                    req_len,
-                    MakeCommandCallback<LivoxLidarAsyncControlResponse>(cb, client_data));
-}
-
-livox_status GeneralCommandHandler::SetLivoxLidarBlindSpot(uint32_t handle, uint32_t blind_spot, LivoxLidarAsyncControlCallback cb, void* client_data) {
-  uint8_t req_buff[kMaxCommandBufferSize] = {0};
-  uint16_t req_len = 0;
-
-  uint16_t key_num = 1;
-  memcpy(&req_buff[req_len], &key_num, sizeof(key_num));
-  req_len = sizeof(key_num) + sizeof(uint16_t);
-
-  //blind spot
-  LivoxLidarKeyValueParam * kv = (LivoxLidarKeyValueParam *)&req_buff[req_len];
-  kv->key = static_cast<uint16_t>(kKeyBlindSpotSet);
-  kv->length = sizeof(uint32_t);
-  uint32_t* blind_spot_set = reinterpret_cast<uint32_t*>(&kv->value[0]);
-  *blind_spot_set = blind_spot;
-  req_len += sizeof(LivoxLidarKeyValueParam) - 1 + sizeof(uint32_t);
-
-  return SendCommand(handle,
-                    kCommandIDLidarWorkModeControl,
-                    req_buff,
-                    req_len,
-                    MakeCommandCallback<LivoxLidarAsyncControlResponse>(cb, client_data));
-}
-
-livox_status GeneralCommandHandler::SetLivoxLidarWorkMode(uint32_t handle, LivoxLidarWorkMode work_mode, LivoxLidarAsyncControlCallback cb, void* client_data) {
-  uint8_t req_buff[kMaxCommandBufferSize] = {0};
-  uint16_t req_len = 0;
-  
-  uint16_t key_num = 1;
-  memcpy(&req_buff[req_len], &key_num, sizeof(key_num));
-  req_len = sizeof(key_num) + sizeof(uint16_t);
-
-  LivoxLidarKeyValueParam * kv = (LivoxLidarKeyValueParam *)&req_buff[req_len];
-  kv->key = static_cast<uint16_t>(kKeyWorkMode);
-  kv->length = sizeof(uint8_t);
-  uint8_t* val_work_mode = reinterpret_cast<uint8_t*>(&kv->value[0]);
-  *val_work_mode = work_mode;
-  req_len += sizeof(LivoxLidarKeyValueParam) - 1 + sizeof(uint8_t);
-
-  return SendCommand(handle,
-                    kCommandIDLidarWorkModeControl,
-                    req_buff,
-                    req_len,
-                    MakeCommandCallback<LivoxLidarAsyncControlResponse>(cb, client_data));
-}
-
-
-livox_status GeneralCommandHandler::EnableLivoxLidarGlassHeat(uint32_t handle, LivoxLidarAsyncControlCallback cb, void* client_data) {
-  uint8_t req_buff[kMaxCommandBufferSize] = {0};
-  uint16_t req_len = 0;
-
-  uint16_t key_num = 1;
-  memcpy(&req_buff[req_len], &key_num, sizeof(key_num));
-  req_len = sizeof(key_num) + sizeof(uint16_t); 
-
-  //glass heat
-  LivoxLidarKeyValueParam * kv = (LivoxLidarKeyValueParam *)&req_buff[req_len];
-  kv->key = static_cast<uint16_t>(kKeyGlassHeat);
-  kv->length = sizeof(uint8_t);
-  kv->value[0] = 0x01; //enable glass heat
-  req_len += sizeof(LivoxLidarKeyValueParam);
-
-  return SendCommand(handle,
-                    kCommandIDLidarWorkModeControl,
-                    req_buff,
-                    req_len,
-                    MakeCommandCallback<LivoxLidarAsyncControlResponse>(cb, client_data));
-}
-
-livox_status GeneralCommandHandler::DisableLivoxLidarGlassHeat(uint32_t handle, LivoxLidarAsyncControlCallback cb, void* client_data) {
-  uint8_t req_buff[kMaxCommandBufferSize] = {0};
-  uint16_t req_len = 0;
-
-  uint16_t key_num = 1;
-  memcpy(&req_buff[req_len], &key_num, sizeof(key_num));
-  req_len = sizeof(key_num) + sizeof(uint16_t);
-
-  //glass heat
-  LivoxLidarKeyValueParam * kv = (LivoxLidarKeyValueParam *)&req_buff[req_len];
-  kv->key = static_cast<uint16_t>(kKeyGlassHeat);
-  kv->length = sizeof(uint8_t);
-  kv->value[0] = 0x00; //disable glass heat
-  req_len += sizeof(LivoxLidarKeyValueParam);
-
-  return SendCommand(handle,
-                    kCommandIDLidarWorkModeControl,
-                    req_buff,
-                    req_len,
-                    MakeCommandCallback<LivoxLidarAsyncControlResponse>(cb, client_data));
-}
-
-livox_status GeneralCommandHandler::SetLivoxLidarGlassHeat(uint32_t handle, LivoxLidarGlassHeat glass_heat, LivoxLidarAsyncControlCallback cb, void* client_data) {
-  uint8_t req_buff[kMaxCommandBufferSize] = {0};
-  uint16_t req_len = 0;
-
-  uint16_t key_num = 1;
-  memcpy(&req_buff[req_len], &key_num, sizeof(key_num));
-  req_len = sizeof(key_num) + sizeof(uint16_t);
-
-  //glass heat
-  LivoxLidarKeyValueParam * kv = (LivoxLidarKeyValueParam *)&req_buff[req_len];
-  kv->key = static_cast<uint16_t>(kKeyGlassHeat);
-  kv->length = sizeof(uint8_t);
-  kv->value[0] = static_cast<uint8_t>(glass_heat);
-  req_len += sizeof(LivoxLidarKeyValueParam);
-
-  return SendCommand(handle,
-                    kCommandIDLidarWorkModeControl,
-                    req_buff,
-                    req_len,
-                    MakeCommandCallback<LivoxLidarAsyncControlResponse>(cb, client_data));
-}
-
-
-livox_status GeneralCommandHandler::EnableLivoxLidarImuData(uint32_t handle, LivoxLidarAsyncControlCallback cb, void* client_data) {
-  uint8_t req_buff[kMaxCommandBufferSize] = {0};
-  uint16_t req_len = 0;
-
-  uint16_t key_num = 1;
-  memcpy(&req_buff[req_len], &key_num, sizeof(key_num));
-  req_len = sizeof(key_num) + sizeof(uint16_t);
-
-  LivoxLidarKeyValueParam * kv = (LivoxLidarKeyValueParam *)&req_buff[req_len];
-  kv->key = static_cast<uint16_t>(kKeyImuDataEn);
-  kv->length = sizeof(uint8_t);
-  kv->value[0] = 0x01;
-  req_len += sizeof(LivoxLidarKeyValueParam);
-
-  return SendCommand(handle,
-                    kCommandIDLidarWorkModeControl,
-                    req_buff,
-                    req_len,
-                    MakeCommandCallback<LivoxLidarAsyncControlResponse>(cb, client_data));
-}
-
-livox_status GeneralCommandHandler::DisableLivoxLidarImuData(uint32_t handle, LivoxLidarAsyncControlCallback cb, void* client_data) {
-  uint8_t req_buff[kMaxCommandBufferSize] = {0};
-  uint16_t req_len = 0;
-
-  uint16_t key_num = 1;
-  memcpy(&req_buff[req_len], &key_num, sizeof(key_num));
-  req_len = sizeof(key_num) + sizeof(uint16_t);
-
-  LivoxLidarKeyValueParam * kv = (LivoxLidarKeyValueParam *)&req_buff[req_len];
-  kv->key = static_cast<uint16_t>(kKeyImuDataEn);
-  kv->length = sizeof(uint8_t);
-  kv->value[0] = 0x00;
-  req_len += sizeof(LivoxLidarKeyValueParam);
-
-  return SendCommand(handle,
-                    kCommandIDLidarWorkModeControl,
-                    req_buff,
-                    req_len,
-                    MakeCommandCallback<LivoxLidarAsyncControlResponse>(cb, client_data));
-}
-
-livox_status GeneralCommandHandler::EnableLivoxLidarFusaFunciont(uint32_t handle, LivoxLidarAsyncControlCallback cb, void* client_data) {
-  uint8_t req_buff[kMaxCommandBufferSize] = {0};
-  uint16_t req_len = 0;
-
-  uint16_t key_num = 1;
-  memcpy(&req_buff[req_len], &key_num, sizeof(key_num));
-  req_len = sizeof(key_num) + sizeof(uint16_t);
-
-  //glass heat
-  LivoxLidarKeyValueParam * kv = (LivoxLidarKeyValueParam *)&req_buff[req_len];
-  kv->key = static_cast<uint16_t>(kKeyFusaEn);
-  kv->length = sizeof(uint8_t);
-  kv->value[0] = 0x01; //enable glass heat
-  req_len += sizeof(LivoxLidarKeyValueParam);
-
-  return SendCommand(handle,
-                    kCommandIDLidarWorkModeControl,
-                    req_buff,
-                    req_len,
-                    MakeCommandCallback<LivoxLidarAsyncControlResponse>(cb, client_data));
-}
-
-livox_status GeneralCommandHandler::DisableLivoxLidarFusaFunciont(uint32_t handle, LivoxLidarAsyncControlCallback cb, void* client_data) {
-  uint8_t req_buff[kMaxCommandBufferSize] = {0};
-  uint16_t req_len = 0;
-
-  uint16_t key_num = 1;
-  memcpy(&req_buff[req_len], &key_num, sizeof(key_num));
-  req_len = sizeof(key_num) + sizeof(uint16_t);
-
-  //glass heat
-  LivoxLidarKeyValueParam * kv = (LivoxLidarKeyValueParam *)&req_buff[req_len];
-  kv->key = static_cast<uint16_t>(kKeyFusaEn);
-  kv->length = sizeof(uint8_t);
-  kv->value[0] = 0x00; //disable glass heat
-  req_len += sizeof(LivoxLidarKeyValueParam);
-
-  return SendCommand(handle,
-                    kCommandIDLidarWorkModeControl,
-                    req_buff,
-                    req_len,
-                    MakeCommandCallback<LivoxLidarAsyncControlResponse>(cb, client_data));
-}
-
-livox_status GeneralCommandHandler::SetLivoxLidarLogParam(uint32_t handle, const LivoxLidarLogParam& log_param, LivoxLidarAsyncControlCallback cb, void* client_data) {
-  uint8_t req_buff[kMaxCommandBufferSize] = {0};
-  uint16_t req_len = 0;
-
-  uint16_t key_num = 1;
-  memcpy(&req_buff[req_len], &key_num, sizeof(key_num));
-  req_len = sizeof(key_num) + sizeof(uint16_t);
-
-  LivoxLidarKeyValueParam * kv = (LivoxLidarKeyValueParam *)&req_buff[req_len];
-  kv->key = static_cast<uint16_t>(kKeyLogParamSet);
-  kv->length = sizeof(LivoxLidarLogParam);
-  LivoxLidarLogParam* log_param_val = (LivoxLidarLogParam*)&kv->value;
-  memcpy(log_param_val, &log_param, sizeof(LivoxLidarLogParam));
-
-  req_len += sizeof(LivoxLidarKeyValueParam) - sizeof(uint8_t) + sizeof(LivoxLidarLogParam);
-
-  return SendCommand(handle,
-                    kCommandIDLidarWorkModeControl,
-                    req_buff,
-                    req_len,
-                    MakeCommandCallback<LivoxLidarAsyncControlResponse>(cb, client_data));
-}
-
 
 livox_status GeneralCommandHandler::LivoxLidarRequestReset(uint32_t handle, LivoxLidarResetCallback cb, void* client_data) {
   LivoxLidarResetRequest reset_request;
-  return SendCommand(handle, kCommandIDLidarRebootDevice, (uint8_t*)&reset_request, sizeof(LivoxLidarResetRequest),
+  std::string sn;
+  if (devices_.find(handle) != devices_.end()) {
+    sn = devices_[handle].sn;
+  } else {
+    return kLivoxLidarStatusChannelNotExist;
+  }
+
+  if (sn.size() > 16) {
+    LOG_ERROR("Request reset failed, the sn size too long, the sn:", sn.c_str());
+    return kLivoxLidarStatusChannelNotExist;
+  }
+
+  memcpy(reset_request.data, sn.c_str(), sn.size());
+  return SendCommand(handle, kCommandIDLidarResetDevice, (uint8_t*)&reset_request, sizeof(LivoxLidarResetRequest),
       MakeCommandCallback<LivoxLidarResetResponse>(cb, client_data));
 }
 
-// Upgrade
-livox_status GeneralCommandHandler::LivoxLidarStartUpgrade(uint32_t handle, uint8_t *data, uint16_t length,
-    LivoxLidarStartUpgradeCallback cb, void* client_data) {
-  return SendCommand(handle, 
-                    kCommandIDGeneralRequestUpgrade,
-                    data, 
-                    length,
-                    MakeCommandCallback<LivoxLidarStartUpgradeResponse>(cb, client_data));
-}
-
-livox_status GeneralCommandHandler::LivoxLidarXferFirmware(uint32_t handle, uint8_t *data, uint16_t length,
-    LivoxLidarXferFirmwareCallback cb, void* client_data) {
-  return SendCommand(handle, 
-                    kCommandIDGeneralXferFirmware,
-                    data, 
-                    length,
-                    MakeCommandCallback<LivoxLidarXferFirmwareResponse>(cb, client_data));
-}
-
-livox_status GeneralCommandHandler::LivoxLidarCompleteXferFirmware(uint32_t handle, uint8_t *data, uint16_t length,
-    LivoxLidarCompleteXferFirmwareCallback cb, void* client_data) {
-  return SendCommand(handle,
-                    kCommandIDGeneralCompleteXferFirmware,
-                    data, 
-                    length,
-                    MakeCommandCallback<LivoxLidarCompleteXferFirmwareResponse>(cb, client_data));
-}
-
-livox_status GeneralCommandHandler::LivoxLidarGetUpgradeProgress(uint32_t handle, uint8_t *data,
-    uint16_t length, LivoxLidarGetUpgradeProgressCallback cb, void* client_data) {
-  return SendCommand(handle,
-                    kCommandIDGeneralRequestUpgradeProgress,
-                    data, 
-                    length,
-                    MakeCommandCallback<LivoxLidarGetUpgradeProgressResponse>(cb, client_data));
-}
-
-livox_status GeneralCommandHandler::LivoxLidarRequestFirmwareInfo(uint32_t handle,
-    LivoxLidarRequestFirmwareInfoCallback cb, void* client_data) {
-  return SendCommand(handle,
-                    kCommandIDGeneralRequestFirmwareInfo, 
-                    nullptr, 
-                    0,
-                    MakeCommandCallback<LivoxLidarRequestFirmwareInfoResponse>(cb, client_data));
-}
-
-livox_status GeneralCommandHandler::LivoxLidarRequestReboot(uint32_t handle, LivoxLidarRebootCallback cb,
-    void* client_data) {
-  LivoxLidarRebootRequest reboot_request;
-  reboot_request.timeout = 100;
-  return SendCommand(handle,
-      kCommandIDLidarRebootDevice, (uint8_t *)&reboot_request,
-      sizeof(reboot_request), MakeCommandCallback<LivoxLidarRebootResponse>(cb,
-      client_data));
-}
 
 livox_status GeneralCommandHandler::SendCommand(uint32_t handle,
                                             uint16_t command_id,
@@ -954,21 +567,18 @@ livox_status GeneralCommandHandler::SendCommand(uint32_t handle,
   uint16_t seq = GenerateSeq::GetSeq();
   Command command(seq, command_id, kCommandTypeCmd, kHostSend, data, length, handle, lidar_ip, cb);
 
-  LOG_INFO("Send command, the seq:{}, command_id:{}, lidar_ip:{}", seq, command_id, lidar_ip.c_str());
-
-  if (device_dev_type_.find(handle) != device_dev_type_.end()) {
-    uint8_t dev_type = device_dev_type_[handle];
-    std::shared_ptr<CommandHandler> cmd_handler = GetLidarCommandHandler(dev_type);
-    if (cmd_handler != nullptr) {
-      cmd_handler->SendCommand(command);
-    }
+  std::shared_ptr<CommandHandler> cmd_handler = GetLidarCommandHandler(handle);
+  if (cmd_handler == nullptr) {
+    LOG_ERROR("Send command failed, get cmd handler failed, the handle:{}, command_id:{}.", handle, command_id);
+    return kLivoxLidarStatusSendFailed;
   }
+
+  cmd_handler->SendCommand(command);
 
   {
     std::lock_guard<std::mutex> lock(commands_mutex_);  
     commands_[command.packet.seq_num] = std::make_pair(command, std::chrono::steady_clock::now() + std::chrono::milliseconds(command.time_out));
     Command &cmd = commands_[command.packet.seq_num].first;
-    LOG_INFO("Command_ Command_id:{}, seq:{}", command_id, command.packet.seq_num);
 
     if (cmd.packet.data != NULL) {
       cmd.packet.data = NULL;
@@ -982,7 +592,6 @@ livox_status GeneralCommandHandler::SendCommand(uint32_t handle,
 void GeneralCommandHandler::CommandsHandle(TimePoint now) {
   std::list<Command> timeout_commands;
 
-  
   {
     std::lock_guard<std::mutex> lock(commands_mutex_);
     std::map<uint32_t, std::pair<Command, TimePoint> >::iterator ite = commands_.begin();

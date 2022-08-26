@@ -27,7 +27,7 @@
 
 #include <functional>
 #include <memory>
-#include "livox_lidar_sdk.h"
+#include "livox_lidar_api.h"
 
 namespace livox {
 namespace lidar {

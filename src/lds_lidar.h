@@ -44,10 +44,7 @@
 #include "livox_def_vehicle.h"
 #include "livox_sdk_vehicle.h"
 
-#include "livox_sdk_direct.h"
-#include "livox_def_direct.h"
-
-#include "livox_lidar_sdk.h"
+#include "livox_lidar_api.h"
 #include "livox_lidar_def.h"
 
 #include "rapidjson/document.h"
@@ -79,25 +76,15 @@ class LdsLidar : public Lds {
   bool InitLidars(const std::vector<std::string>& broadcast_code_strs);
   bool InitIndustrialLidar(const std::vector<std::string> &broadcast_code_strs);
   bool InitVehicleLidar();
-  bool InitDirectLidar();
   bool InitLivoxLidar();    // for new SDK
 
   bool IndustrialLidarStart();
   bool VehicleLidarStart();
-  bool DirectLidarStart();
   bool LivoxLidarStart();
 
-  uint8_t GetDirectLidarCount();
-
-	void ResetLdsLidar(void);
+  void ResetLdsLidar(void);
 
   void SetLidarPubHandle();
-
-  void SetDirectLidarExtrinsicParams();
-  void SetDirectLidarExtrinsicParamsByDeviceInfo(const uint32_t handle, const InstallAttitude& install_attitude);
-  void ProcessDirectConfig();
-  void ProcessDirectConfigByDeviceInfo(const uint32_t handle, const DirectLidarStateInfo* info);
-  void DirectLidarStartSamp(const uint32_t handle);
 
   // Process config
   void ProcessRawIndustrialConfig(const std::vector<UserRawConfig>& raw_industrial_config);
@@ -130,10 +117,8 @@ class LdsLidar : public Lds {
  private:
   friend class IndustrialLidarCallback;
   friend class VehicleLidarCallback;
-  friend class DirectLidarCallback;
   std::string path_;
   LidarSummaryInfo lidar_summary_info_;
-  DirectLidarParam direct_lidar_param_;
 
   bool has_vehicle_lidar_;
   bool auto_connect_mode_;

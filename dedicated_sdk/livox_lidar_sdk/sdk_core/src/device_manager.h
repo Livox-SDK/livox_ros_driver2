@@ -28,6 +28,9 @@
 #include "livox_lidar_def.h"
 
 #include "comm/define.h"
+#include "comm/comm_port.h"
+#include "base/io_thread.h"
+#include "base/network/network_util.h"
 
 #include <string>
 #include <memory>
@@ -36,12 +39,6 @@
 #include <map>
 #include <mutex>
 #include <string.h>
-
-
-#include "base/io_thread.h"
-#include "base/network/network_util.h"
-
-#include "comm/comm_port.h"
 
 #ifdef WIN32
 #include <winsock2.h>
@@ -55,10 +52,8 @@
 #include <unistd.h>
 #endif // WIN32
 
-
 namespace livox {
 namespace lidar {
-
 
 static const size_t kMaxBufferSize = 8192;
 const uint8_t kSdkVer = 3;
@@ -173,6 +168,7 @@ class DeviceManager : public IOLoop::IOLoopDelegate {
 
   std::set<socket_t> command_channel_;
   std::set<socket_t> data_channel_;
+  std::vector<socket_t> vec_broadcast_socket_;
 
   std::shared_ptr<IOThread> cmd_io_thread_;
   std::shared_ptr<IOThread> data_io_thread_;
@@ -182,8 +178,6 @@ class DeviceManager : public IOLoop::IOLoopDelegate {
 
   std::atomic<bool> is_stop_detection_{false};
   std::shared_ptr<std::thread> detection_thread_;
-
-  // std::unique_ptr<char[]> data_buffers_;
 
   std::mutex lidars_dev_type_mutex_;
   std::map<uint32_t, uint16_t> lidars_dev_type_;
