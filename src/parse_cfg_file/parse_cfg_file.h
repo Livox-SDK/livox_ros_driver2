@@ -1,7 +1,7 @@
 //
 // The MIT License (MIT)
 //
-// Copyright (c) 2019 Livox. All rights reserved.
+// Copyright (c) 2022 Livox. All rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -21,12 +21,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
+
 #ifndef LIVOX_ROS_DRIVER_PARSE_CFG_FILE_H_
 #define LIVOX_ROS_DRIVER_PARSE_CFG_FILE_H_
 
-#include "timesync.h"
 #include "../comm/comm.h"
-#include "livox_def_vehicle.h"
 
 #include "rapidjson/document.h"
 #include "rapidjson/filereadstream.h"
@@ -43,10 +42,11 @@ class ParseCfgFile {
   ~ParseCfgFile() {}
 
   bool ParseSummaryInfo(LidarSummaryInfo& lidar_summary_info);
+  
  private:
   const std::string path_;
 };
 
-} // namespace
+} // namespace livox_ros
 
-#endif
+#endif // LIVOX_ROS_DRIVER_PARSE_CFG_FILE_H_

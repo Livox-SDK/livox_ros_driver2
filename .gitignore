@@ -1,5 +1,4 @@
 .vscode
 build
-dedicated_sdk/build
-/CMakeList.txt
 package.xml
+__pycache__

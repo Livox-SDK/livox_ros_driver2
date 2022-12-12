@@ -1,7 +1,7 @@
 //
 // The MIT License (MIT)
 //
-// Copyright (c) 2019 Livox. All rights reserved.
+// Copyright (c) 2022 Livox. All rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -32,27 +32,16 @@
 #include <vector>
 
 #include "lds.h"
-#include "vehicle_lidar_thread.h"
 #include "comm/comm.h"
-
-#include "livox_def.h"
-#include "livox_sdk.h"
-
-#include "livox_def_common.h"
-#include "livox_sdk_common.h"
-
-#include "livox_def_vehicle.h"
-#include "livox_sdk_vehicle.h"
 
 #include "livox_lidar_api.h"
 #include "livox_lidar_def.h"
 
 #include "rapidjson/document.h"
-#include "timesync.h"
 
 namespace livox_ros {
 
-class LdsLidar : public Lds {
+class LdsLidar final : public Lds {
  public:
   static LdsLidar *GetInstance(double publish_freq) {
     printf("LdsLidar *GetInstance\n");
@@ -60,9 +49,8 @@ class LdsLidar : public Lds {
     return &lds_lidar;
   }
 
-  bool InitLdsLidar(const std::string& path_name, const std::vector<std::string>& broadcast_code_strs);
+  bool InitLdsLidar(const std::string& path_name);
   bool Start();
-
 
   int DeInitLdsLidar(void);
  private:
@@ -73,41 +61,19 @@ class LdsLidar : public Lds {
 
   bool ParseSummaryConfig();
 
-  bool InitLidars(const std::vector<std::string>& broadcast_code_strs);
-  bool InitIndustrialLidar(const std::vector<std::string> &broadcast_code_strs);
-  bool InitVehicleLidar();
+  bool InitLidars();
   bool InitLivoxLidar();    // for new SDK
 
-  bool IndustrialLidarStart();
-  bool VehicleLidarStart();
   bool LivoxLidarStart();
 
   void ResetLdsLidar(void);
 
   void SetLidarPubHandle();
 
-  // Process config
-  void ProcessRawIndustrialConfig(const std::vector<UserRawConfig>& raw_industrial_config);
-  void ProcessVehicleConfig(const std::vector<UserVehicleConfig>& raw_vehicle_config);
-
-	// white list
-  int AddBroadcastCodeToWhitelist(const char *broadcast_code);
-  bool IsBroadcastCodeExistInWhitelist(const char *broadcast_code);
-
 	// auto connect mode
 	void EnableAutoConnectMode(void) { auto_connect_mode_ = true; }
   void DisableAutoConnectMode(void) { auto_connect_mode_ = false; }
   bool IsAutoConnectMode(void) { return auto_connect_mode_; }
-
-	// Raw industrial user config
- 	int AddRawIndustrialUserConfig(const UserRawConfig &config);
-  bool IsExistInRawIndustrialConfig(const char *broadcast_code);
-	int GetRawIndustrialConfig(const char *broadcast_code, UserRawConfig &config);
-
-  // Raw vehicle user config
-	int AddRawVehicleUserConfig(const UserVehicleConfig &config);
-	bool IsExistInRawVehicleConfig(const char *broadcast_code);
-	int GetRawVehicleConfig(const char *broadcast_code, UserRawConfig &config);
 
   virtual void PrepareExit(void);
 
@@ -115,24 +81,15 @@ class LdsLidar : public Lds {
   std::mutex config_mutex_;
 
  private:
-  friend class IndustrialLidarCallback;
-  friend class VehicleLidarCallback;
   std::string path_;
   LidarSummaryInfo lidar_summary_info_;
 
-  bool has_vehicle_lidar_;
   bool auto_connect_mode_;
   uint32_t whitelist_count_;
   volatile bool is_initialized_;
   char broadcast_code_whitelist_[kMaxLidarCount][kBroadcastCodeSize];
-
-  std::vector<UserRawConfig> raw_industrial_config_;
-  bool enable_timesync_;
-  TimeSync *timesync_;
-  TimeSyncConfig timesync_config_;
-
-  VehicleLidarThread vehicle_lidar_thread_;
 };
 
 }  // namespace livox_ros
-#endif
+
+#endif // LIVOX_ROS_DRIVER_LDS_LIDAR_H_

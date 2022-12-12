@@ -1,7 +1,7 @@
 //
 // The MIT License (MIT)
 //
-// Copyright (c) 2019 Livox. All rights reserved.
+// Copyright (c) 2022 Livox. All rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -22,39 +22,16 @@
 // SOFTWARE.
 //
 
-// livox lidar data queue
-
 #ifndef LIVOX_ROS_DRIVER_LDQ_H_
 #define LIVOX_ROS_DRIVER_LDQ_H_
 
 #include <stdint.h>
 #include <vector>
-#include "livox_def_common.h"
+
+#include "comm/comm.h"
 
 namespace livox_ros {
-
-const uint32_t KEthPacketMaxLength = 1500;
-
-#pragma pack(1)
-
-typedef struct {
-  // uint8_t lidar_type;
-  // uint8_t handle;
-  uint64_t base_time;
-  uint32_t points_num;
-  std::vector<PointCloudXyzlt> points;
-} StoragePacket;
-
-#pragma pack()
-
-typedef struct {
-  StoragePacket *storage_packet;
-  volatile uint32_t rd_idx;
-  volatile uint32_t wr_idx;
-  uint32_t mask;
-  uint32_t size; /**< must be power of 2. */
-} LidarDataQueue;
-
+  
 inline static bool IsPowerOf2(uint32_t size) {
   return (size != 0) && ((size & (size - 1)) == 0);
 }
@@ -85,4 +62,5 @@ bool QueueIsEmpty(LidarDataQueue *queue);
 uint32_t QueuePushAny(LidarDataQueue *queue, uint8_t *data, const uint64_t base_time);
 
 }  // namespace livox_ros
-#endif
+
+#endif // LIVOX_ROS_DRIVER_LDQ_H_

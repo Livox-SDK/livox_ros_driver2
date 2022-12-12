@@ -1,7 +1,7 @@
 //
 // The MIT License (MIT)
 //
-// Copyright (c) 2019 Livox. All rights reserved.
+// Copyright (c) 2022 Livox. All rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -21,6 +21,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
+
 #include "parse_livox_lidar_cfg.h"
 #include <iostream>
 
@@ -30,6 +31,7 @@ bool LivoxLidarConfigParser::Parse(std::vector<UserLivoxLidarConfig> &lidar_conf
   FILE* raw_file = std::fopen(path_.c_str(), "rb");
   if (!raw_file) {
     std::cout << "failed to open config file: " << path_ << std::endl;
+    return false;
   }
 
   lidar_configs.clear();
@@ -58,7 +60,6 @@ bool LivoxLidarConfigParser::Parse(std::vector<UserLivoxLidarConfig> &lidar_conf
   std::fclose(raw_file);
   return false;
 }
-
 
 bool LivoxLidarConfigParser::ParseUserConfigs(const rapidjson::Document &doc,
                                               std::vector<UserLivoxLidarConfig> &user_configs) {
@@ -117,7 +118,7 @@ bool LivoxLidarConfigParser::ParseUserConfigs(const rapidjson::Document &doc,
 }
 
 bool LivoxLidarConfigParser::ParseExtrinsics(const rapidjson::Value &value,
-                                             ExtrinsicParameter &param) {
+                                             ExtParameter &param) {
   if (!value.HasMember("roll")) {
     param.roll = 0.0f;
   } else {
@@ -152,5 +153,4 @@ bool LivoxLidarConfigParser::ParseExtrinsics(const rapidjson::Value &value,
   return true;
 }
 
-
-} // namespace livox
+} // namespace livox_ros

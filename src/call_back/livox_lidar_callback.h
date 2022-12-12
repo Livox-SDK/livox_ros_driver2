@@ -1,7 +1,7 @@
 //
 // The MIT License (MIT)
 //
-// Copyright (c) 2019 Livox. All rights reserved.
+// Copyright (c) 2022 Livox. All rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -21,6 +21,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
+
 #ifndef LIVOX_ROS_DRIVER_LIVOX_LIDAR_CALLBACK_H_
 #define LIVOX_ROS_DRIVER_LIVOX_LIDAR_CALLBACK_H_
 
@@ -30,8 +31,6 @@
 
 #include "livox_lidar_api.h"
 #include "livox_lidar_def.h"
-
-#include "livox_def_common.h"
 
 namespace livox_ros {
 
@@ -64,6 +63,6 @@ class LivoxLidarCallback {
   static LidarDevice* GetLidarDevice(const uint32_t handle, void* client_data);
 };
 
-}
+} // namespace livox_ros
 
 #endif  // LIVOX_ROS_DRIVER_LIVOX_LIDAR_CALLBACK_H_

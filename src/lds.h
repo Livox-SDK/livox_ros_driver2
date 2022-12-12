@@ -1,7 +1,7 @@
 //
 // The MIT License (MIT)
 //
-// Copyright (c) 2019 Livox. All rights reserved.
+// Copyright (c) 2022 Livox. All rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -29,16 +29,9 @@
 
 #include <map>
 
-#include "comm/ldq.h"
 #include "comm/semaphore.h"
 #include "comm/comm.h"
 #include "comm/cache_index.h"
-
-#include "livox_def.h"
-#include "livox_def_vehicle.h"
-#include "livox_sdk.h"
-#include "livox_sdk_vehicle.h"
-#include "livox_def_common.h"
 
 namespace livox_ros {
 /**
@@ -49,14 +42,12 @@ class Lds {
   Lds(const double publish_freq, const uint8_t data_src);
   virtual ~Lds();
 
-  void StorageImuData(LidarImuPoint* imu_data);
-  void StoragePointData(PointCloudFrame* frame);
-  void StorageLvxPointData(PointCloudFrame* frame);
+  void StorageImuData(ImuData* imu_data);
+  void StoragePointData(PointFrame* frame);
+  void StorageLvxPointData(PointFrame* frame);
 
-  int8_t GetHandle(const uint8_t lidar_type, const LidarPoint* lidar_point);
-  void PushLidarData(LidarPoint* lidar_data, const uint8_t index, const uint64_t base_time);
-
-  uint8_t GetDeviceType(uint8_t handle);
+  int8_t GetHandle(const uint8_t lidar_type, const PointPacket* lidar_point);
+  void PushLidarData(PointPacket* lidar_data, const uint8_t index, const uint64_t base_time);
 
   static void ResetLidar(LidarDevice *lidar, uint8_t data_src);
   static void SetLidarDataSrc(LidarDevice *lidar, uint8_t data_src);
@@ -71,11 +62,8 @@ class Lds {
   bool IsRequestExit() { return request_exit_; }
   virtual void PrepareExit(void);
 
-  void UpdateLidarInfoByEthPacket(LidarDevice *p_lidar, LivoxEthPacket* eth_packet);
-  void UpdateVehicleLidarInfoByEthPacket(LidarDevice *p_lidar, LivoxVehicleEthPacket* eth_packet);
-
   // get publishing frequency
-  double GetLdsFrequency() {return publish_freq_;}
+  double GetLdsFrequency() { return publish_freq_; }
 
  public:
   uint8_t lidar_count_;                 /**< Lidar access handle. */
@@ -90,4 +78,5 @@ class Lds {
 };
 
 }  // namespace livox_ros
-#endif
+
+#endif // LIVOX_ROS_DRIVER_LDS_H_

@@ -1,7 +1,7 @@
 //
 // The MIT License (MIT)
 //
-// Copyright (c) 2019 Livox. All rights reserved.
+// Copyright (c) 2022 Livox. All rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -21,7 +21,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
-#include "comm.h"
+
+#include "comm/comm.h"
 #include <string.h>
 #include <arpa/inet.h>
 
@@ -43,30 +44,7 @@ uint32_t CalculatePacketQueueSize(const double publish_freq) {
   if (publish_freq > 1) {
     queue_size = static_cast<uint32_t>(publish_freq) + 1;
   }
-
   return queue_size;
-}
-
-void ParseCommandlineInputBdCode(const char *cammandline_str,
-                                 std::vector<std::string> &bd_code_list) {
-  char *strs = new char[strlen(cammandline_str) + 1];
-  strcpy(strs, cammandline_str);
-
-  std::string pattern = "&";
-  char *bd_str = strtok(strs, pattern.c_str());
-  std::string invalid_bd = "000000000";
-  while (bd_str != NULL) {
-    printf("Commandline input bd:%s\n", bd_str);
-    if ((kBdCodeSize == strlen(bd_str)) &&
-        (NULL == strstr(bd_str, invalid_bd.c_str()))) {
-      bd_code_list.push_back(bd_str);
-    } else {
-      printf("Invalid bd:%s!\n", bd_str);
-    }
-    bd_str = strtok(NULL, pattern.c_str());
-  }
-
-  delete[] strs;
 }
 
 std::string IpNumToString(uint32_t ip_num) {
@@ -77,6 +55,15 @@ std::string IpNumToString(uint32_t ip_num) {
 
 uint32_t IpStringToNum(std::string ip_string) {
   return static_cast<uint32_t>(inet_addr(ip_string.c_str()));
+}
+
+std::string ReplacePeriodByUnderline(std::string str) {
+  std::size_t pos = str.find(".");
+  while (pos != std::string::npos) {
+    str.replace(pos, 1, "_");
+    pos = str.find(".");
+  }
+  return str;
 }
 
 } // namespace livox_ros

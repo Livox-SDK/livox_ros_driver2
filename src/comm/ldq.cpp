@@ -1,7 +1,7 @@
 //
 // The MIT License (MIT)
 //
-// Copyright (c) 2019 Livox. All rights reserved.
+// Copyright (c) 2022 Livox. All rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -21,11 +21,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
+
 #include <stdio.h>
 #include <string.h>
 
 #include "ldq.h"
-#include "livox_def_common.h"
 
 namespace livox_ros {
 
@@ -100,7 +100,7 @@ bool QueuePrePop(LidarDataQueue *queue, StoragePacket *storage_packet) {
   storage_packet->points_num = queue->storage_packet[rd_idx].points_num;
   storage_packet->points.resize(queue->storage_packet[rd_idx].points_num);
 
-  memcpy(storage_packet->points.data(), queue->storage_packet[rd_idx].points.data(), (storage_packet->points_num) * sizeof(PointCloudXyzlt));
+  memcpy(storage_packet->points.data(), queue->storage_packet[rd_idx].points.data(), (storage_packet->points_num) * sizeof(PointXyzlt));
   return true;
 }
 
@@ -135,13 +135,13 @@ bool QueueIsEmpty(LidarDataQueue *queue) {
 
 uint32_t QueuePushAny(LidarDataQueue *queue, uint8_t *data, const uint64_t base_time) {
   uint32_t wr_idx = queue->wr_idx & queue->mask;
-  LidarPoint* lidar_point_data = reinterpret_cast<LidarPoint*>(data);
+  PointPacket* lidar_point_data = reinterpret_cast<PointPacket*>(data);
   queue->storage_packet[wr_idx].base_time = base_time;
   queue->storage_packet[wr_idx].points_num = lidar_point_data->points_num;
 
   queue->storage_packet[wr_idx].points.clear();
   queue->storage_packet[wr_idx].points.resize(lidar_point_data->points_num);
-  memcpy(queue->storage_packet[wr_idx].points.data(), lidar_point_data->points, sizeof(PointCloudXyzlt) * (lidar_point_data->points_num));
+  memcpy(queue->storage_packet[wr_idx].points.data(), lidar_point_data->points, sizeof(PointXyzlt) * (lidar_point_data->points_num));
 
   queue->wr_idx++;
   return 1;

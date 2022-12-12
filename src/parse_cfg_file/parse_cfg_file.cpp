@@ -1,7 +1,7 @@
 //
 // The MIT License (MIT)
 //
-// Copyright (c) 2019 Livox. All rights reserved.
+// Copyright (c) 2022 Livox. All rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -21,6 +21,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
+
 #include "parse_cfg_file.h"
 
 #include <iostream>
@@ -35,6 +36,7 @@ bool ParseCfgFile::ParseSummaryInfo(LidarSummaryInfo& lidar_summary_info) {
   FILE* raw_file = std::fopen(path_.c_str(), "rb");
   if (!raw_file) {
     std::cout << "parse summary info failed, can not open file: " << path_ << std::endl;
+    return false;
   }
 
   char read_buffer[kMaxBufferSize];
@@ -61,5 +63,5 @@ bool ParseCfgFile::ParseSummaryInfo(LidarSummaryInfo& lidar_summary_info) {
   return false;
 }
 
-} // namespace
+} // namespace livox_ros
 

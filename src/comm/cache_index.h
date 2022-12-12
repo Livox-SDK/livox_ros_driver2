@@ -1,7 +1,7 @@
 //
 // The MIT License (MIT)
 //
-// Copyright (c) 2019 Livox. All rights reserved.
+// Copyright (c) 2022 Livox. All rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -30,7 +30,7 @@
 #include <map>
 #include <string>
 
-#include "comm.h"
+#include "comm/comm.h"
 
 namespace livox_ros {
 
@@ -42,11 +42,13 @@ class CacheIndex {
   int8_t GenerateIndexKey(const uint8_t livox_lidar_type, const uint32_t handle, std::string& key);
   int8_t LvxGetIndex(const uint8_t livox_lidar_type, const uint32_t handle, uint8_t& index);
   void ResetIndex(LidarDevice *lidar);
+
  private:
   std::mutex index_mutex_;
   std::map<std::string, uint8_t> map_index_; /* key:handle/slot, val:index */
-  std::array<bool, kMaxLidarCount> index_cache_;
+  std::array<bool, kMaxSourceLidar> index_cache_;
 };
 
-}
-# endif
+} // namespace livox_ros
+
+# endif // LIVOX_ROS_DRIVER_CACHE_INDEX_H_

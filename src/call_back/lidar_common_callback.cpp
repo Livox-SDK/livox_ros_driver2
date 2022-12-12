@@ -1,7 +1,7 @@
 //
 // The MIT License (MIT)
 //
-// Copyright (c) 2019 Livox. All rights reserved.
+// Copyright (c) 2022 Livox. All rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -21,6 +21,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
+
 #include "lidar_common_callback.h"
 
 #include "../lds_lidar.h"
@@ -29,14 +30,14 @@
 
 namespace livox_ros {
 
-void LidarCommonCallback::OnLidarPointClounCb(PointCloudFrame* frame, void* client_data) {
+void LidarCommonCallback::OnLidarPointClounCb(PointFrame* frame, void* client_data) {
   if (frame == nullptr) {
     printf("LidarPointCloudCb frame is nullptr.\n");
     return;
   }
 
   if (client_data == nullptr) {
-    printf("LidarPointCloudCb client data is nullptr.\n");
+    printf("Lidar point cloud cb failed, client data is nullptr.\n");
     return;
   }
 
@@ -46,31 +47,23 @@ void LidarCommonCallback::OnLidarPointClounCb(PointCloudFrame* frame, void* clie
   }
 
   LdsLidar *lds_lidar = static_cast<LdsLidar *>(client_data);
-  if (lds_lidar == nullptr) {
-    printf("Lidar point cloud cb failed, client data is nullptr.\n");
-    return;
-  }
-
+  
   //printf("Lidar point cloud, lidar_num:%u.\n", frame->lidar_num);
 
   lds_lidar->StoragePointData(frame);
 }
 
-void LidarCommonCallback::LidarImuDataCallback(LidarImuPoint* imu_data, void *client_data) {
+void LidarCommonCallback::LidarImuDataCallback(ImuData* imu_data, void *client_data) {
   if (imu_data == nullptr) {
     printf("Imu data is nullptr.\n");
     return;
   }
   if (client_data == nullptr) {
-    printf("Client data is nullptr.\n");
+    printf("Lidar point cloud cb failed, client data is nullptr.\n");
     return;
   }
 
   LdsLidar *lds_lidar = static_cast<LdsLidar *>(client_data);
-  if (lds_lidar == nullptr) {
-    printf("Lidar point cloud cb failed, client data is nullptr.\n");
-  }
-
   lds_lidar->StorageImuData(imu_data);
 }
 

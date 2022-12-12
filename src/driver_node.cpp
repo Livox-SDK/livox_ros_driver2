@@ -1,7 +1,7 @@
 //
 // The MIT License (MIT)
 //
-// Copyright (c) 2019 Livox. All rights reserved.
+// Copyright (c) 2022 Livox. All rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -28,16 +28,15 @@
 namespace livox_ros {
 
 DriverNode& DriverNode::GetNode() noexcept {
-    return *this;
+  return *this;
 }
 
-#ifdef BUILDING_ROS2
-DriverNode::~DriverNode()
-{
+DriverNode::~DriverNode() {
+  lddc_ptr_->lds_->RequestExit();
   exit_signal_.set_value();
-  poll_thread_->join();
+  pointclouddata_poll_thread_->join();
+  imudata_poll_thread_->join();
 }
-#endif
 
 } // namespace livox_ros
 

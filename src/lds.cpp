@@ -1,7 +1,7 @@
 //
 // The MIT License (MIT)
 //
-// Copyright (c) 2019 Livox. All rights reserved.
+// Copyright (c) 2022 Livox. All rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -22,8 +22,6 @@
 // SOFTWARE.
 //
 
-#include "lds.h"
-
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
@@ -31,34 +29,34 @@
 #include <chrono>
 #include <algorithm>
 
+#include "lds.h"
+#include "comm/ldq.h"
+
 namespace livox_ros {
 
 CacheIndex Lds::cache_index_;
 
 /* Member function --------------------------------------------------------- */
-Lds::Lds(const double publish_freq, const uint8_t data_src) : lidar_count_(kMaxSourceLidar),
-    semaphore_(0), publish_freq_(publish_freq), data_src_(data_src), request_exit_(false) {
+Lds::Lds(const double publish_freq, const uint8_t data_src)
+    : lidar_count_(kMaxSourceLidar),
+      semaphore_(0),
+      publish_freq_(publish_freq),
+      data_src_(data_src),
+      request_exit_(false) {
   ResetLds(data_src_);
 }
 
 Lds::~Lds() {
   lidar_count_ = 0;
-  printf("lds destory!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
   ResetLds(0);
+  printf("lds destory!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
 }
 
 void Lds::ResetLidar(LidarDevice *lidar, uint8_t data_src) {
   //cache_index_.ResetIndex(lidar);
   DeInitQueue(&lidar->data);
-
-  /** unallocated state */
-  if (lidar->lidar_type == kVehicleLidarType) {
-    lidar->handle = kMaxSourceLidar;
-  } else if (lidar->lidar_type == kIndustryLidarType) {
-    lidar->handle = kMaxSourceLidar;
-  }
-
   lidar->imu_data.Clear();
+
   lidar->data_src = data_src;
   lidar->connect_state = kConnectStateOff;
 }
@@ -97,21 +95,9 @@ bool Lds::IsAllQueueReadStop() {
   return true;
 }
 
-uint8_t Lds::GetDeviceType(uint8_t handle) {
-  if (handle < kMaxSourceLidar) {
-    return lidars_[handle].info.type;
-  } else {
-    return kDeviceTypeHub;
-  }
-}
-
-void Lds::StorageImuData(LidarImuPoint* imu_data) {
+void Lds::StorageImuData(ImuData* imu_data) {
   uint32_t device_num = 0;
-  if (imu_data->lidar_type == kVehicleLidarType) {
-    device_num = imu_data->slot;
-  } else if (imu_data->lidar_type == kIndustryLidarType) {
-    device_num = imu_data->handle;
-  } else if (imu_data->lidar_type == kLivoxLidarType) {
+  if (imu_data->lidar_type == kLivoxLidarType) {
     device_num = imu_data->handle;
   } else {
     printf("Storage imu data failed, unknown lidar type:%u.\n", imu_data->lidar_type);
@@ -130,14 +116,14 @@ void Lds::StorageImuData(LidarImuPoint* imu_data) {
   imu_queue->Push(imu_data);
 }
 
-void Lds::StorageLvxPointData(PointCloudFrame* frame) {
+void Lds::StorageLvxPointData(PointFrame* frame) {
   if (frame == nullptr) {
     return;
   }
 
   uint8_t lidar_number = frame->lidar_num;
   for (uint i = 0; i < lidar_number; ++i) {
-    LidarPoint& lidar_point = frame->lidar_point[i];
+    PointPacket& lidar_point = frame->lidar_point[i];
 
     uint64_t base_time = frame->base_time;
     uint8_t index = 0;
@@ -153,14 +139,14 @@ void Lds::StorageLvxPointData(PointCloudFrame* frame) {
   }
 }
 
-void Lds::StoragePointData(PointCloudFrame* frame) {
+void Lds::StoragePointData(PointFrame* frame) {
   if (frame == nullptr) {
     return;
   }
 
   uint8_t lidar_number = frame->lidar_num;
   for (uint i = 0; i < lidar_number; ++i) {
-    LidarPoint& lidar_point = frame->lidar_point[i];
+    PointPacket& lidar_point = frame->lidar_point[i];
     //printf("StoragePointData, lidar_type:%u, point_num:%lu.\n", lidar_point.lidar_type, lidar_point.points_num);
 
     uint64_t base_time = frame->base_time;
@@ -175,7 +161,7 @@ void Lds::StoragePointData(PointCloudFrame* frame) {
   }
 }
 
-void Lds::PushLidarData(LidarPoint* lidar_data, const uint8_t index, const uint64_t base_time) {
+void Lds::PushLidarData(PointPacket* lidar_data, const uint8_t index, const uint64_t base_time) {
   if (lidar_data == nullptr) {
     return;
   }

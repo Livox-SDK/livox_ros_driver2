@@ -1,7 +1,7 @@
 //
 // The MIT License (MIT)
 //
-// Copyright (c) 2019 Livox. All rights reserved.
+// Copyright (c) 2022 Livox. All rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -33,11 +33,14 @@
 #include "lds.h"
 #include "comm/comm.h"
 
+#include "livox_lidar_api.h"
+#include "livox_lidar_def.h"
+
 namespace livox_ros {
 /**
  * Lidar data source abstract.
  */
-class LdsLvx : public Lds {
+class LdsLvx final : public Lds {
  public:
   static LdsLvx *GetInstance(double publish_freq) {
     static LdsLvx lds_lvx(publish_freq);
@@ -54,7 +57,7 @@ class LdsLvx : public Lds {
   ~LdsLvx();
   LdsLvx &operator=(const LdsLvx &) = delete;
 
-  static void OnPointCloudsFrameCallback(uint32_t frame_index, uint32_t total_frame, PointCloudFrame *point_cloud_frame, void *client_data);
+  static void OnPointCloudsFrameCallback(uint32_t frame_index, uint32_t total_frame, PointFrame *point_cloud_frame, void *client_data);
 
  private:
   volatile bool is_initialized_;

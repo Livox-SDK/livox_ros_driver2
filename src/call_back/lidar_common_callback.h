@@ -1,7 +1,7 @@
 //
 // The MIT License (MIT)
 //
-// Copyright (c) 2019 Livox. All rights reserved.
+// Copyright (c) 2022 Livox. All rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -21,22 +21,20 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
+
 #ifndef LIVOX_ROS_DRIVER_LIDAR_COMMON_CALLBACK_H_
 #define LIVOX_ROS_DRIVER_LIDAR_COMMON_CALLBACK_H_	
 
-#include "../comm/comm.h"
-
-#include "livox_sdk.h"
-#include "livox_def_common.h"
-#include "livox_def_vehicle.h"
-#include "livox_sdk_vehicle.h"
+#include "comm/comm.h"
 
 namespace livox_ros {
 
 class LidarCommonCallback {
  public:
-  static void OnLidarPointClounCb(PointCloudFrame* frame, void* client_data);
-  static void LidarImuDataCallback(LidarImuPoint* imu_data, void *client_data);
+  static void OnLidarPointClounCb(PointFrame* frame, void* client_data);
+  static void LidarImuDataCallback(ImuData* imu_data, void *client_data);
 };
-} // namespace
-#endif
+
+} // namespace livox_ros
+
+#endif // LIVOX_ROS_DRIVER_LIDAR_COMMON_CALLBACK_H_

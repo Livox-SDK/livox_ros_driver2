@@ -1,7 +1,7 @@
 //
 // The MIT License (MIT)
 //
-// Copyright (c) 2019 Livox. All rights reserved.
+// Copyright (c) 2022 Livox. All rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -27,6 +27,9 @@
 #ifndef ROS1_HEADERS_H_
 #define ROS1_HEADERS_H_
 
+#include <thread>
+#include <future>
+
 #include <ros/ros.h>
 #include <rosbag/bag.h>
 #include <pcl_ros/point_cloud.h>
@@ -47,6 +50,5 @@
 #define DRIVER_WARN_EXTRA(node, EXTRA, ...) ROS_WARN_##EXTRA(__VA_ARGS__)
 #define DRIVER_ERROR_EXTRA(node, EXTRA, ...) ROS_ERROR_##EXTRA(__VA_ARGS__)
 #define DRIVER_FATAL_EXTRA(node, EXTRA, ...) ROS_FATAL_##EXTRA(__VA_ARGS__)
-
 
 #endif // ROS1_HEADERS_H_

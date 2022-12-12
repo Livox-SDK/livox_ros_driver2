@@ -1,7 +1,7 @@
 //
 // The MIT License (MIT)
 //
-// Copyright (c) 2019 Livox. All rights reserved.
+// Copyright (c) 2022 Livox. All rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -22,12 +22,6 @@
 // SOFTWARE.
 //
 
-#include "lds_lvx.h"
-
-#include "livox_sdk_common.h"
-#include "livox_def_common.h"
-#include "livox_def.h"
-
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
@@ -36,6 +30,8 @@
 #include <thread>
 #include <condition_variable>
 #include <mutex>
+
+#include "lds_lvx.h"
 
 namespace livox_ros {
 
@@ -56,21 +52,16 @@ int LdsLvx::Init(const char *lvx_path) {
   }
 
 #ifdef BUILDING_ROS2
-  DisableConsoleLogger();
+  DisableLivoxSdkConsoleLogger();
 #endif
 
   printf("Lds lvx init lvx_path:%s.\n", lvx_path);
-
-  if (!SetLvxConvertPointFrameDir(lvx_path)) {
-    printf("Set lvx convert point frame dir failed, the path:%s.\n", lvx_path);
-    return -1;
-  }
  
   is_initialized_ = true;
   return 0;
 }
 
-void LdsLvx::OnPointCloudsFrameCallback(uint32_t frame_index, uint32_t total_frame, PointCloudFrame *point_cloud_frame, void *client_data) {
+void LdsLvx::OnPointCloudsFrameCallback(uint32_t frame_index, uint32_t total_frame, PointFrame *point_cloud_frame, void *client_data) {
   if (!point_cloud_frame) {
     printf("Point clouds frame call back failed, point cloud frame is nullptr.\n");
     return;
@@ -79,6 +70,7 @@ void LdsLvx::OnPointCloudsFrameCallback(uint32_t frame_index, uint32_t total_fra
   LdsLvx* lds = static_cast<LdsLvx*>(client_data);
   if (lds == nullptr) {
     printf("Point clouds frame call back failed, client data is nullptr.\n");
+    return;
   }
 
   lds->StorageLvxPointData(point_cloud_frame);
@@ -89,9 +81,6 @@ void LdsLvx::OnPointCloudsFrameCallback(uint32_t frame_index, uint32_t total_fra
 }
 
 void LdsLvx::ReadLvxFile() {
-  ConvertToPointFrame(publish_freq_, LdsLvx::OnPointCloudsFrameCallback, this);
-  while(!is_file_end_.load());
-  StopLvxConvertToPointFrame();
 }
 
 }  // namespace livox_ros

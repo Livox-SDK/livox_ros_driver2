@@ -1,7 +1,7 @@
 //
 // The MIT License (MIT)
 //
-// Copyright (c) 2019 Livox. All rights reserved.
+// Copyright (c) 2022 Livox. All rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -23,7 +23,7 @@
 //
 
 #include "cache_index.h"
-#include "livox_def.h"
+#include "livox_lidar_def.h"
 
 namespace livox_ros {
 
@@ -62,11 +62,7 @@ int8_t CacheIndex::GetFreeIndex(const uint8_t livox_lidar_type, const uint32_t h
 }
 
 int8_t CacheIndex::GenerateIndexKey(const uint8_t livox_lidar_type, const uint32_t handle, std::string& key) {
-  if (livox_lidar_type == kIndustryLidarType) {
-    key = "industrial_lidar_" + std::to_string(handle);
-  } else if (livox_lidar_type == kVehicleLidarType) {
-    key = "vehicle_lidar_" + std::to_string(handle);
-  } else if (livox_lidar_type == kLivoxLidarType) {
+  if (livox_lidar_type == kLivoxLidarType) {
     key = "livox_lidar_" + std::to_string(handle);
   } else {
     printf("Can not generate index, the livox lidar type is unknown, the livox lidar type:%u\n", livox_lidar_type);

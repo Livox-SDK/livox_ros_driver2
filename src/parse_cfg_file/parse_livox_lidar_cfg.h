@@ -1,7 +1,7 @@
 //
 // The MIT License (MIT)
 //
-// Copyright (c) 2019 Livox. All rights reserved.
+// Copyright (c) 2022 Livox. All rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -21,11 +21,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 //
+
 #ifndef LIVOX_ROS_DRIVER_LIVOX_LIDAR_CFG_PARSER_H_
 #define LIVOX_ROS_DRIVER_LIVOX_LIDAR_CFG_PARSER_H_
 
-#include "timesync.h"
-#include "../comm/comm.h"
+#include "comm/comm.h"
 #include "livox_lidar_def.h"
 
 #include "rapidjson/document.h"
@@ -36,9 +36,8 @@
 #include <string>
 #include <vector>
 
-
 namespace livox_ros {
-
+  
 class LivoxLidarConfigParser {
  public:
   explicit LivoxLidarConfigParser(const std::string& path)  : path_(path) {}
@@ -49,11 +48,11 @@ class LivoxLidarConfigParser {
  private:
   bool ParseUserConfigs(const rapidjson::Document &doc,
                          std::vector<UserLivoxLidarConfig> &user_configs);
-  bool ParseExtrinsics(const rapidjson::Value &value, ExtrinsicParameter &param);
+  bool ParseExtrinsics(const rapidjson::Value &value, ExtParameter &param);
 
   const std::string path_;
 };
 
-} // namespace
+} // namespace livox_ros
 
 #endif // LIVOX_ROS_DRIVER_LIVOX_LIDAR_CFG_PARSER_H_

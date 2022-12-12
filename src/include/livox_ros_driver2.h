@@ -1,7 +1,7 @@
 //
 // The MIT License (MIT)
 //
-// Copyright (c) 2019 Livox. All rights reserved.
+// Copyright (c) 2022 Livox. All rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -25,9 +25,9 @@
 #ifndef LIVOX_ROS_DRIVER2_INClUDE_H_
 #define LIVOX_ROS_DRIVER2_INClUDE_H_
 
-#define LIVOX_ROS_DRIVER2_VER_MAJOR 0
-#define LIVOX_ROS_DRIVER2_VER_MINOR 1
-#define LIVOX_ROS_DRIVER2_VER_PATCH 2
+#define LIVOX_ROS_DRIVER2_VER_MAJOR 1
+#define LIVOX_ROS_DRIVER2_VER_MINOR 0
+#define LIVOX_ROS_DRIVER2_VER_PATCH 0
 
 #define GET_STRING(n) GET_STRING_DIRECT(n)
 #define GET_STRING_DIRECT(n) #n

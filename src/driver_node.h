@@ -1,7 +1,7 @@
 //
 // The MIT License (MIT)
 //
-// Copyright (c) 2019 Livox. All rights reserved.
+// Copyright (c) 2022 Livox. All rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -26,40 +26,53 @@
 #define LIVOX_DRIVER_NODE_H
 
 #include "include/ros_headers.h"
-// #include "lddc.h"
 
 namespace livox_ros {
 
-#ifdef BUILDING_ROS1
-class DriverNode : public ros::NodeHandle
-{
-public:
-    DriverNode& GetNode() noexcept;
-};
-#elif defined BUILDING_ROS2
 class Lddc;
 
-class DriverNode : public rclcpp::Node
-{
-public:
-  explicit DriverNode(const rclcpp::NodeOptions& options);
+#ifdef BUILDING_ROS1
+class DriverNode final : public ros::NodeHandle {
+ public:
+  DriverNode() = default;
+  DriverNode(const DriverNode &) = delete;
   ~DriverNode();
+  DriverNode &operator=(const DriverNode &) = delete;
 
   DriverNode& GetNode() noexcept;
 
-private:
-  void pollThread();
+  void PointCloudDataPollThread();
+  void ImuDataPollThread();
 
   std::unique_ptr<Lddc> lddc_ptr_;
-  std::shared_ptr<std::thread> poll_thread_;
+  std::shared_ptr<std::thread> pointclouddata_poll_thread_;
+  std::shared_ptr<std::thread> imudata_poll_thread_;
+  std::shared_future<void> future_;
+  std::promise<void> exit_signal_;
+};
+
+#elif defined BUILDING_ROS2
+class DriverNode final : public rclcpp::Node {
+ public:
+  explicit DriverNode(const rclcpp::NodeOptions& options);
+  DriverNode(const DriverNode &) = delete;
+  ~DriverNode();
+  DriverNode &operator=(const DriverNode &) = delete;
+
+  DriverNode& GetNode() noexcept;
+
+ private:
+  void PointCloudDataPollThread();
+  void ImuDataPollThread();
+
+  std::unique_ptr<Lddc> lddc_ptr_;
+  std::shared_ptr<std::thread> pointclouddata_poll_thread_;
+  std::shared_ptr<std::thread> imudata_poll_thread_;
   std::shared_future<void> future_;
   std::promise<void> exit_signal_;
 };
 #endif
 
-
 } // namespace livox_ros
-
-
 
 #endif // LIVOX_DRIVER_NODE_H
