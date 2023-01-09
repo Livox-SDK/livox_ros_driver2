@@ -2,17 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.1] - 2023-01-09
+
+### Added
+
+- Offer valid line-number info in the point cloud data of MID-360 Lidar.
+- Enable IMU by default.
+
+### Changed
+
+- Update the README slightly.
+
+--- 
 ## [1.0.0] - 2022-12-12
 
 ### Added
 
-- support Mid-360 Lidar.
-- support for Ubuntu 22.04 ROS2 humble.
-- support multi-topic fuction, the suffix of the topic name corresponds to the ip address of each Lidar. 
+- Support Mid-360 Lidar.
+- Support for Ubuntu 22.04 ROS2 humble.
+- Support multi-topic fuction, the suffix of the topic name corresponds to the ip address of each Lidar. 
 
 ### Changed
 
-- remove the embedded SDK.
+- Remove the embedded SDK.
 - Constraint: Livox ROS Driver 2 for ROS2 does not support message passing with PCL native data types.
 
 ### Fixed
