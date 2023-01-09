@@ -104,6 +104,7 @@ void LivoxLidarCallback::LidarInfoChangeCallback(const uint32_t handle,
 
   std::cout << "begin to change work mode to 'Normal', handle: " << handle << std::endl;
   SetLivoxLidarWorkMode(handle, kLivoxLidarNormal, WorkModeChangedCallback, nullptr);
+  EnableLivoxLidarImuData(handle, LivoxLidarCallback::EnableLivoxLidarImuDataCallback, lds_lidar);
   return;
 }
 
@@ -282,6 +283,34 @@ void LivoxLidarCallback::SetAttitudeCallback(livox_status status, uint32_t handl
                                  LivoxLidarCallback::SetAttitudeCallback, lds_lidar);
   } else {
     std::cout << "failed to set lidar attitude, ip: " << IpNumToString(handle) << std::endl;
+  }
+}
+
+void LivoxLidarCallback::EnableLivoxLidarImuDataCallback(livox_status status, uint32_t handle,
+                                                         LivoxLidarAsyncControlResponse *response,
+                                                         void *client_data) {
+  LidarDevice* lidar_device =  GetLidarDevice(handle, client_data);
+  if (lidar_device == nullptr) {
+    std::cout << "failed to set pattern mode since no lidar device found, handle: "
+              << handle << std::endl;
+    return;
+  }
+  LdsLidar* lds_lidar = static_cast<LdsLidar*>(client_data);
+
+  if (response == nullptr) {
+    std::cout << "failed to get response since no lidar IMU sensor found, handle: "
+              << handle << std::endl;
+    return;
+  }
+
+  if (status == kLivoxLidarStatusSuccess) {
+    std::cout << "successfully enable Livox Lidar imu, ip: " << IpNumToString(handle) << std::endl;
+  } else if (status == kLivoxLidarStatusTimeout) {
+    std::cout << "enable Livox Lidar imu timeout, ip: " << IpNumToString(handle)
+              << ", try again..." << std::endl;
+    EnableLivoxLidarImuData(handle, LivoxLidarCallback::EnableLivoxLidarImuDataCallback, lds_lidar);
+  } else {
+    std::cout << "failed to enable Livox Lidar imu, ip: " << IpNumToString(handle) << std::endl;
   }
 }
 

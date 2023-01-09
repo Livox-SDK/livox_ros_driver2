@@ -185,6 +185,7 @@ DriverNode::DriverNode(const rclcpp::NodeOptions & node_options)
   pointclouddata_poll_thread_ = std::make_shared<std::thread>(&DriverNode::PointCloudDataPollThread, this);
   imudata_poll_thread_ = std::make_shared<std::thread>(&DriverNode::ImuDataPollThread, this);
 }
+
 }  // namespace livox_ros
 
 #include <rclcpp_components/register_node_macro.hpp>

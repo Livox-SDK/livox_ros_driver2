@@ -6,9 +6,9 @@ Livox ROS Driver 2 is the 2nd-generation driver package used to connect LiDAR pr
 
 ### 1.1 OS requirements
 
-  * Ubuntu 18.04 or above, for ROS Melodic;
-  * Ubuntu 20.04 or above, for ROS Noetic and ROS2 Foxy;
-  * Ubuntu 22.04 or above, for ROS2 Humble;
+  * Ubuntu 18.04 for ROS Melodic;
+  * Ubuntu 20.04 for ROS Noetic and ROS2 Foxy;
+  * Ubuntu 22.04 for ROS2 Humble;
 
   **Tips:**
 
