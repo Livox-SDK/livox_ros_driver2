@@ -122,7 +122,7 @@ void Lddc::DistributePointCloudData(void) {
   }
   
   while (!lds_->IsRequestExit()) {
-    lds_->semaphore_.Wait();
+    lds_->semaphore_lidar_.Wait();
     for (uint32_t i = 0; i < lds_->lidar_count_; i++) {
       uint32_t lidar_id = i;
       LidarDevice *lidar = &lds_->lidars_[lidar_id];
@@ -142,6 +142,7 @@ void Lddc::DistributeImuData(void) {
   }
   
   while (!lds_->IsRequestExit()) {    
+    lds_->semaphore_imu_.Wait();
     for (uint32_t i = 0; i < lds_->lidar_count_; i++) {
       uint32_t lidar_id = i;
       LidarDevice *lidar = &lds_->lidars_[lidar_id];
