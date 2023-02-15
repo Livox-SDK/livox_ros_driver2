@@ -74,8 +74,8 @@ int main(int argc, char **argv) {
 
   if (publish_freq > 100.0) {
     publish_freq = 100.0;
-  } else if (publish_freq < 0.1) {
-    publish_freq = 0.1;
+  } else if (publish_freq < 0.5) {
+    publish_freq = 0.5;
   } else {
     publish_freq = publish_freq;
   }
@@ -108,7 +108,7 @@ int main(int argc, char **argv) {
 
   livox_node.pointclouddata_poll_thread_ = std::make_shared<std::thread>(&DriverNode::PointCloudDataPollThread, &livox_node);
   livox_node.imudata_poll_thread_ = std::make_shared<std::thread>(&DriverNode::ImuDataPollThread, &livox_node);
-  while (ros::ok()) {}
+  while (ros::ok()) { usleep(10000); }
 
   return 0;
 }
@@ -148,8 +148,8 @@ DriverNode::DriverNode(const rclcpp::NodeOptions & node_options)
 
   if (publish_freq > 100.0) {
     publish_freq = 100.0;
-  } else if (publish_freq < 0.1) {
-    publish_freq = 0.1;
+  } else if (publish_freq < 0.5) {
+    publish_freq = 0.5;
   } else {
     publish_freq = publish_freq;
   }

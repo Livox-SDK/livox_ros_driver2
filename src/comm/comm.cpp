@@ -41,7 +41,7 @@ bool IsFilePathValid(const char *path_str) {
 
 uint32_t CalculatePacketQueueSize(const double publish_freq) {
   uint32_t queue_size = 10;
-  if (publish_freq > 1) {
+  if (publish_freq > 10.0) {
     queue_size = static_cast<uint32_t>(publish_freq) + 1;
   }
   return queue_size;

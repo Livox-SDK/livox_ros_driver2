@@ -59,8 +59,8 @@ void PubHandler::RequestExit() {
   is_quit_.store(true);
 }
 
-void PubHandler::SetPointCloudConfig(uint8_t publish_freq) {
-  publish_interval_ = kNsPerSecond / publish_freq;
+void PubHandler::SetPointCloudConfig(const double publish_freq) {
+  publish_interval_ = (kNsPerSecond / (publish_freq * 10)) * 10;
   if (!point_process_thread_) {
     point_process_thread_ = std::make_shared<std::thread>(&PubHandler::RawDataProcess, this);
   }

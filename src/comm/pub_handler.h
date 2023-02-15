@@ -86,7 +86,7 @@ class PubHandler {
   void Uninit();
   void RequestExit();
   void Init();
-  void SetPointCloudConfig(uint8_t publish_freq);
+  void SetPointCloudConfig(const double publish_freq);
   void SetPointCloudsCallback(PointCloudsCallback cb, void* client_data);
   void AddLidarsExtParam(LidarExtParameter& extrinsic_params);
   void ClearAllLidarsExtrinsicParams();
@@ -121,7 +121,7 @@ class PubHandler {
   std::deque<RawPacket> raw_packet_queue_;
 
   //pub config
-  uint32_t publish_interval_ = 100000000; //100 ms
+  uint64_t publish_interval_ = 100000000; //100 ms
   TimePoint last_pub_time_;
 
   std::map<uint32_t, std::unique_ptr<LidarPubHandler>> lidar_process_handlers_;

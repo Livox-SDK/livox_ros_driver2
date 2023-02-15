@@ -39,7 +39,6 @@ void LidarImuDataQueue::Push(ImuData* imu_data) {
   data.acc_x = imu_data->acc_x;
   data.acc_y = imu_data->acc_y;
   data.acc_z = imu_data->acc_z;
-  
 
   std::lock_guard<std::mutex> lock(mutex_);
   imu_data_queue_.push_back(std::move(data));

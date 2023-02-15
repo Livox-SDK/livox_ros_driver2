@@ -62,7 +62,7 @@ const int64_t kPacketTimeGap = 1000000;           /**< 1ms = 1000000ns */
 const int64_t kMaxPacketTimeGap = 1700000;
 /**< the threshold of device disconect */
 const int64_t kDeviceDisconnectThreshold = 1000000000;
-const int64_t kNsPerSecond = 1000000000; /**< 1s  = 1000000000ns */
+const uint32_t kNsPerSecond = 1000000000; /**< 1s  = 1000000000ns */
 
 const int kPathStrMinSize = 4;   /**< Must more than 4 char */
 const int kPathStrMaxSize = 256; /**< Must less than 256 char */
