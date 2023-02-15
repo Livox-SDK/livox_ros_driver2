@@ -2,15 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.2] - 2023-02-15
+
+### Changed
+- Change publish frequency range to [0.5Hz, 10 Hz];
+
+### Fixed
+- Fix a high CPU-Usage problem;
+
+
+--- 
 ## [1.1.1] - 2023-01-09
-
 ### Added
-
 - Offer valid line-number info in the point cloud data of MID-360 Lidar.
 - Enable IMU by default.
 
 ### Changed
-
 - Update the README slightly.
 
 --- 
