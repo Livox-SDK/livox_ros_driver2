@@ -123,7 +123,6 @@ if(ROS_EDITION STREQUAL "ROS1")
     PRIVATE
     src/driver_node.cpp
     src/lds.cpp
-    src/lds_lvx.cpp
     src/lds_lidar.cpp
     src/lddc.cpp
     src/livox_ros_driver2.cpp
@@ -265,7 +264,6 @@ else(ROS_EDITION STREQUAL "ROS2")
     src/driver_node.cpp
     src/lds.cpp
     src/lds_lidar.cpp
-    src/lds_lvx.cpp
 
     src/comm/comm.cpp
     src/comm/ldq.cpp

@@ -33,7 +33,6 @@
 #include "driver_node.h"
 #include "lddc.h"
 #include "lds_lidar.h"
-#include "lds_lvx.h"
 
 using namespace livox_ros;
 
@@ -200,7 +199,7 @@ void DriverNode::PointCloudDataPollThread()
   std::this_thread::sleep_for(std::chrono::seconds(3));
   do {
     lddc_ptr_->DistributePointCloudData();
-    status = future_.wait_for(std::chrono::seconds(0));
+    status = future_.wait_for(std::chrono::microseconds(0));
   } while (status == std::future_status::timeout);
 }
 
@@ -210,7 +209,7 @@ void DriverNode::ImuDataPollThread()
   std::this_thread::sleep_for(std::chrono::seconds(3));
   do {
     lddc_ptr_->DistributeImuData();
-    status = future_.wait_for(std::chrono::seconds(0));
+    status = future_.wait_for(std::chrono::microseconds(0));
   } while (status == std::future_status::timeout);
 }
 

@@ -35,7 +35,6 @@
 
 #include "driver_node.h"
 #include "lds_lidar.h"
-//#include "lds_lvx.h"
 
 namespace livox_ros {
 
@@ -125,7 +124,7 @@ void Lddc::DistributePointCloudData(void) {
     return;
   }
   
-  lds_->semaphore_.Wait();
+  lds_->pcd_semaphore_.Wait();
   for (uint32_t i = 0; i < lds_->lidar_count_; i++) {
     uint32_t lidar_id = i;
     LidarDevice *lidar = &lds_->lidars_[lidar_id];
@@ -145,7 +144,9 @@ void Lddc::DistributeImuData(void) {
   if (lds_->IsRequestExit()) {
     std::cout << "DistributeImuData is RequestExit" << std::endl;
     return;
-  }   
+  }
+  
+  lds_->imu_semaphore_.Wait();
   for (uint32_t i = 0; i < lds_->lidar_count_; i++) {
     uint32_t lidar_id = i;
     LidarDevice *lidar = &lds_->lidars_[lidar_id];
