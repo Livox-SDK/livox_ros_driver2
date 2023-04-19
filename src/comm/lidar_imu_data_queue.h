@@ -59,12 +59,20 @@ typedef struct {
   float acc_z;         /**< Accelerometer Z axis, Unit:g */
 } ImuData;
 
+typedef float TranslationVector[3]; /**< x, y, z translation, unit: mm. */
+typedef float RotationMatrix[3][3];
+
+typedef struct {
+  TranslationVector trans;
+  RotationMatrix rotation;
+} ExtParameterDetailed;
+
 class LidarImuDataQueue {
  public:
-  void Push(ImuData* imu_data);
-  bool Pop(ImuData& imu_data);
-  bool Empty();
-  void Clear();
+   void Push(ImuData *imu_data, const ExtParameterDetailed& detail);
+   bool Pop(ImuData &imu_data);
+   bool Empty();
+   void Clear();
 
  private:
   std::mutex mutex_;

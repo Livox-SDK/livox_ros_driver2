@@ -114,7 +114,7 @@ void Lds::StorageImuData(ImuData* imu_data) {
 
   LidarDevice *p_lidar = &lidars_[index];
   LidarImuDataQueue* imu_queue = &p_lidar->imu_data;
-  imu_queue->Push(imu_data);
+  imu_queue->Push(imu_data, p_lidar->livox_config.extrinsic_param.detail);
   if (!imu_queue->Empty()) {
     if (imu_semaphore_.GetCount() <= 0) {
       imu_semaphore_.Signal();
