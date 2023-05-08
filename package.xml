@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<package format="3">
+    <name>livox_ros_driver2</name>
+    <version>1.0.0</version>
+    <description>The ROS device driver for Livox 3D LiDARs</description>
+    <maintainer email="dev@livoxtech.com">feng</maintainer>
+    <license>MIT</license>
+
+    <!-- Common ROS 1 / ROS 2 dependencies -->
+    <build_depend>ros_environment</build_depend>
+
+    <!-- ROS1 dependencies -->
+    <buildtool_depend condition="$ROS_VERSION == 1">catkin</buildtool_depend>
+    <build_depend condition="$ROS_VERSION == 1">roscpp</build_depend>
+    <build_depend condition="$ROS_VERSION == 1">rospy</build_depend>
+    <build_depend condition="$ROS_VERSION == 1">message_generation</build_depend>
+    <exec_depend condition="$ROS_VERSION == 1">message_runtime</exec_depend>
+    <exec_depend condition="$ROS_VERSION == 1">rosbag</exec_depend>
+
+    <!-- ROS2 dependencies -->
+    <buildtool_depend condition="$ROS_VERSION == 2">ament_cmake_auto</buildtool_depend>
+    <build_depend condition="$ROS_VERSION == 2">rosidl_default_generators</build_depend>
+    <member_of_group condition="$ROS_VERSION == 2">rosidl_interface_packages</member_of_group>
+    <depend condition="$ROS_VERSION == 2">rclcpp</depend>
+    <depend condition="$ROS_VERSION == 2">rclcpp_components</depend>
+    <depend condition="$ROS_VERSION == 2">rcl_interfaces</depend>
+    <depend condition="$ROS_VERSION == 2">rcutils</depend>
+    <exec_depend condition="$ROS_VERSION == 2">rosbag2</exec_depend>
+    <exec_depend condition="$ROS_VERSION == 2">rosidl_default_runtime</exec_depend>
+    <test_depend condition="$ROS_VERSION == 2">ament_lint_auto</test_depend>
+    <test_depend condition="$ROS_VERSION == 2">ament_lint_common</test_depend>
+
+    <!-- ROS1/2 dependencies -->
+    <depend>std_msgs</depend>
+    <depend>sensor_msgs</depend>
+    <depend>pcl_conversions</depend>
+    <depend>pcl_ros</depend>
+    <depend>git</depend>
+    <depend>apr</depend>
+
+    <export>
+        <build_type condition="$ROS_VERSION == 2">ament_cmake</build_type>
+        <build_type condition="$ROS_VERSION == 1">catkin</build_type>
+    </export>
+</package>
