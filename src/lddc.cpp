@@ -28,6 +28,7 @@
 
 #include <inttypes.h>
 #include <iostream>
+#include <iomanip>
 #include <math.h>
 #include <stdint.h>
 
@@ -262,7 +263,7 @@ void Lddc::InitPointcloud2MsgHeader(PointCloud2& cloud) {
   cloud.header.frame_id.assign(frame_id_);
   cloud.height = 1;
   cloud.width = 0;
-  cloud.fields.resize(6);
+  cloud.fields.resize(7);
   cloud.fields[0].offset = 0;
   cloud.fields[0].name = "x";
   cloud.fields[0].count = 1;
@@ -287,13 +288,17 @@ void Lddc::InitPointcloud2MsgHeader(PointCloud2& cloud) {
   cloud.fields[5].name = "line";
   cloud.fields[5].count = 1;
   cloud.fields[5].datatype = PointField::UINT8;
-  cloud.point_step = sizeof(LivoxPointXyzrtl);
+  cloud.fields[6].offset = 18;
+  cloud.fields[6].name = "timestamp";
+  cloud.fields[6].count = 1;
+  cloud.fields[6].datatype = PointField::FLOAT64;
+  cloud.point_step = sizeof(LivoxPointXyzrtlt);
 }
 
 void Lddc::InitPointcloud2Msg(const StoragePacket& pkg, PointCloud2& cloud, uint64_t& timestamp) {
   InitPointcloud2MsgHeader(cloud);
 
-  cloud.point_step = sizeof(LivoxPointXyzrtl);
+  cloud.point_step = sizeof(LivoxPointXyzrtlt);
 
   cloud.width = pkg.points_num;
   cloud.row_step = cloud.width * cloud.point_step;
@@ -311,20 +316,20 @@ void Lddc::InitPointcloud2Msg(const StoragePacket& pkg, PointCloud2& cloud, uint
       cloud.header.stamp = rclcpp::Time(timestamp);
   #endif
 
-  std::vector<LivoxPointXyzrtl> points;
+  std::vector<LivoxPointXyzrtlt> points;
   for (size_t i = 0; i < pkg.points_num; ++i) {
-    LivoxPointXyzrtl point;
+    LivoxPointXyzrtlt point;
     point.x = pkg.points[i].x;
     point.y = pkg.points[i].y;
     point.z = pkg.points[i].z;
     point.reflectivity = pkg.points[i].intensity;
     point.tag = pkg.points[i].tag;
     point.line = pkg.points[i].line;
-
+    point.timestamp = static_cast<double>(pkg.points[i].offset_time);
     points.push_back(std::move(point));
   }
-  cloud.data.resize(pkg.points_num * sizeof(LivoxPointXyzrtl));
-  memcpy(cloud.data.data(), points.data(), pkg.points_num * sizeof(LivoxPointXyzrtl));
+  cloud.data.resize(pkg.points_num * sizeof(LivoxPointXyzrtlt));
+  memcpy(cloud.data.data(), points.data(), pkg.points_num * sizeof(LivoxPointXyzrtlt));
 }
 
 void Lddc::PublishPointcloud2Data(const uint8_t index, const uint64_t timestamp, const PointCloud2& cloud) {

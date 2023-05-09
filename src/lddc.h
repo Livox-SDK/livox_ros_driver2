@@ -120,8 +120,8 @@ class Lddc final {
 
   void InitImuMsg(const ImuData& imu_data, ImuMsg& imu_msg, uint64_t& timestamp);
 
-  void FillPointsToPclMsg(PointCloud& pcl_msg, LivoxPointXyzrtl* src_point, uint32_t num);
-  void FillPointsToCustomMsg(CustomMsg& livox_msg, LivoxPointXyzrtl* src_point, uint32_t num,
+  void FillPointsToPclMsg(PointCloud& pcl_msg, LivoxPointXyzrtlt* src_point, uint32_t num);
+  void FillPointsToCustomMsg(CustomMsg& livox_msg, LivoxPointXyzrtlt* src_point, uint32_t num,
       uint32_t offset_time, uint32_t point_interval, uint32_t echo_num);
 
 #ifdef BUILDING_ROS2
