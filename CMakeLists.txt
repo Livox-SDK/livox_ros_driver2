@@ -88,8 +88,11 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-## make sure the livox_lidar_sdk_static library is installed
-find_library(LIVOX_LIDAR_SDK_LIBRARY  liblivox_lidar_sdk_static.a    /usr/local/lib)
+#---------------------------------------------------------------------------------------
+# livox_sdk2
+#---------------------------------------------------------------------------------------
+add_subdirectory(src/livox_sdk2)
+find_package(livox_sdk2 REQUIRED)
 
 ## PCL library
 link_directories(${PCL_LIBRARY_DIRS})

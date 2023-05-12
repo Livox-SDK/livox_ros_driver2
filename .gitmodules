@@ -1,0 +1,3 @@
+[submodule "src/livox_sdk2"]
+	path = src/livox_sdk2
+	url = git@github.com:enwaytech/Livox-SDK2.git
