@@ -167,18 +167,16 @@ void PubHandler::CheckTimer() {
       continue;
     }
 
+    frame_.base_time[frame_.lidar_num] = process_handler.second->GetLidarBaseTime();
     uint32_t id = process_handler.first;
     points_[id].clear();
     process_handler.second->GetLidarPointClouds(points_[id]);
     if (points_[id].empty()) {
       continue;
     }
-
-    frame_.base_time[frame_.lidar_num] = process_handler.second->GetLidarBaseTime();
     PointPacket& lidar_point = frame_.lidar_point[frame_.lidar_num];
     lidar_point.lidar_type = LidarProtoType::kLivoxLidarType;  // TODO:
     lidar_point.handle = id;
-
     lidar_point.points_num = points_[id].size();
     lidar_point.points = points_[id].data();
     frame_.lidar_num++;
@@ -205,7 +203,6 @@ void PubHandler::RawDataProcess() {
       raw_data = raw_packet_queue_.front();
       raw_packet_queue_.pop_front();
     }
-    // 这里是来一个包判断一个雷达
     uint32_t id = 0;
     GetLidarId(raw_data.lidar_type, raw_data.handle, id);
     if (lidar_process_handlers_.find(id) == lidar_process_handlers_.end()) {
@@ -232,8 +229,7 @@ uint64_t PubHandler::GetEthPacketTimestamp(uint8_t timestamp_type, uint8_t* time
   LdsStamp time;
   memcpy(time.stamp_bytes, time_stamp, size);
 
-  if (timestamp_type == kTimestampTypeNoSync ||
-      timestamp_type == kTimestampTypeGptpOrPtp ||
+  if (timestamp_type == kTimestampTypeGptpOrPtp ||
       timestamp_type == kTimestampTypeGps) {
     return time.stamp;
   }

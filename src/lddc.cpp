@@ -307,7 +307,7 @@ void Lddc::InitPointcloud2Msg(const StoragePacket& pkg, PointCloud2& cloud, uint
   cloud.is_dense     = true;
 
   if (!pkg.points.empty()) {
-    timestamp = pkg.base_time + pkg.points[0].offset_time;
+    timestamp = pkg.base_time;
   }
 
   #ifdef BUILDING_ROS1
@@ -362,7 +362,7 @@ void Lddc::InitCustomMsg(CustomMsg& livox_msg, const StoragePacket& pkg, uint8_t
 
   uint64_t timestamp = 0;
   if (!pkg.points.empty()) {
-    timestamp = pkg.base_time + pkg.points[0].offset_time;
+    timestamp = pkg.base_time;
   }
   livox_msg.timebase = timestamp;
 
@@ -392,7 +392,7 @@ void Lddc::FillPointsToCustomMsg(CustomMsg& livox_msg, const StoragePacket& pkg)
     point.reflectivity = points[i].intensity;
     point.tag = points[i].tag;
     point.line = points[i].line;
-    point.offset_time = static_cast<uint32_t>(points[i].offset_time);
+    point.offset_time = static_cast<uint32_t>(points[i].offset_time - pkg.base_time);
 
     livox_msg.points.push_back(std::move(point));
   }
@@ -423,7 +423,7 @@ void Lddc::InitPclMsg(const StoragePacket& pkg, PointCloud& cloud, uint64_t& tim
   cloud.width = pkg.points_num;
 
   if (!pkg.points.empty()) {
-    timestamp = pkg.base_time + pkg.points[0].offset_time;
+    timestamp = pkg.base_time;
   }
   cloud.header.stamp = timestamp / 1000.0;  // to pcl ros time stamp
 #elif defined BUILDING_ROS2
