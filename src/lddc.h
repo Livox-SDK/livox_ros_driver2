@@ -26,6 +26,7 @@
 #define LIVOX_ROS_DRIVER2_LDDC_H_
 
 #include "include/livox_ros_driver2.h"
+#include "include/livox_ros_types.h"
 
 #include "driver_node.h"
 #include "lds.h"
@@ -148,7 +149,7 @@ class Lddc final {
   bool enable_lidar_bag_;
   bool enable_imu_bag_;
   bool enable_dust_filter_;
-  std::optional<dust_filter_livox::DustFilter<LivoxPointXyzrtl>> dust_filter_;
+  std::optional<dust_filter_livox::DustFilter<livox_ros::PCLLivoxPointXyzrtl>> dust_filter_;
   PublisherPtr private_pub_[kMaxSourceLidar];
   PublisherPtr global_pub_;
   PublisherPtr private_imu_pub_[kMaxSourceLidar];

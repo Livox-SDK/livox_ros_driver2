@@ -23,8 +23,9 @@
 //
 
 #include "lddc.h"
-#include "comm/ldq.h"
 #include "comm/comm.h"
+#include "comm/ldq.h"
+
 
 #include <inttypes.h>
 #include <iostream>
@@ -60,16 +61,20 @@ Lddc::Lddc(int format, int multi_topic, int data_src, int output_type,
   global_imu_pub_ = nullptr;
   cur_node_ = nullptr;
   bag_ = nullptr;
+  if (enable_dust_filter_)
+  {
+    dust_filter_.emplace();
+  }
 }
 #elif defined BUILDING_ROS2
-Lddc::Lddc(int format, int multi_topic, int data_src, int output_type,
-           double frq, std::string &frame_id)
-    : transfer_format_(format),
-      use_multi_topic_(multi_topic),
-      data_src_(data_src),
-      output_type_(output_type),
-      publish_frq_(frq),
-      frame_id_(frame_id) {
+Lddc::Lddc(int format, int multi_topic, int data_src, int output_type, double frq, std::string& frame_id)
+  : transfer_format_(format)
+  , use_multi_topic_(multi_topic)
+  , data_src_(data_src)
+  , output_type_(output_type)
+  , publish_frq_(frq)
+  , frame_id_(frame_id)
+{
   publish_period_ns_ = kNsPerSecond / publish_frq_;
   lds_ = nullptr;
 #if 0
@@ -211,6 +216,22 @@ void Lddc::PublishPointcloud2(LidarDataQueue *queue, uint8_t index, const std::s
     PointCloud2 cloud;
     uint64_t timestamp = 0;
     InitPointcloud2Msg(pkg, cloud, timestamp, frame_id);
+#if 1
+    // Apply enway dust filtering
+    if (enable_dust_filter_ && dust_filter_)
+    {
+      dust_filter_->startNewPointCloud(pcl_conversions::toPCL(cloud.header), cloud.height * cloud.width);
+      pcl::PointCloud<livox_ros::PCLLivoxPointXyzrtl>::Ptr pcl_cloud(
+          new pcl::PointCloud<livox_ros::PCLLivoxPointXyzrtl>());
+      pcl::fromROSMsg(cloud, *pcl_cloud);
+      for (const auto& point : pcl_cloud->points)
+      {
+        dust_filter_->addMeasurement(point);
+      }
+      pcl::toROSMsg(dust_filter_->getFilteredPointCloud(), cloud);
+      // cloud = dust_filter_->getFilteredPointCloud();
+    }
+#endif
     PublishPointcloud2Data(index, timestamp, cloud);
   }
 }

@@ -74,6 +74,7 @@
   <depend>sensor_msgs</depend>
   <depend>git</depend>
   <depend>apr</depend>
+  <depend>pcl_conversions</depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
