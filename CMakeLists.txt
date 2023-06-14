@@ -36,6 +36,7 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   rosbag
   pcl_ros
+  dust_filter_livox
 )
 
 ## Find pcl lib
@@ -84,7 +85,7 @@ endif()
 #---------------------------------------------------------------------------------------
 # Compiler config
 #---------------------------------------------------------------------------------------
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 

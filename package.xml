@@ -56,6 +56,7 @@
   <build_depend>message_generation</build_depend>
   <build_depend>rosbag</build_depend>
   <build_depend>pcl_ros</build_depend>
+  <build_depend>dust_filter_livox</build_depend>
 
   <build_export_depend>roscpp</build_export_depend>
   <build_export_depend>rospy</build_export_depend>

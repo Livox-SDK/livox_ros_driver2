@@ -60,7 +60,7 @@ int main(int argc, char **argv) {
   std::string frame_id = "livox_frame";
   bool lidar_bag = true;
   bool imu_bag   = false;
-
+  bool dust_filter = false;
   nh.getParam("xfer_format", xfer_format);
   nh.getParam("multi_topic", multi_topic);
   nh.getParam("data_src", data_src);
@@ -69,7 +69,7 @@ int main(int argc, char **argv) {
   nh.getParam("frame_id", frame_id);
   nh.getParam("enable_lidar_bag", lidar_bag);
   nh.getParam("enable_imu_bag", imu_bag);
-
+  nh.getParam("enable_dust_filter", dust_filter);
   printf("data source:%u.\n", data_src);
 
   if (publish_freq > 100.0) {
@@ -84,7 +84,7 @@ int main(int argc, char **argv) {
 
   /** Lidar data distribute control and lidar data source set */
   livox_node.lddc_ptr_ = std::make_unique<Lddc>(xfer_format, multi_topic, data_src, output_type,
-                        publish_freq, frame_id, lidar_bag, imu_bag);
+                        publish_freq, frame_id, lidar_bag, imu_bag, dust_filter);
   livox_node.lddc_ptr_->SetRosNode(&livox_node);
 
   if (data_src == kSourceRawLidar) {
