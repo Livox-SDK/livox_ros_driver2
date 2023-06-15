@@ -48,7 +48,7 @@ POINT_CLOUD_REGISTER_POINT_STRUCT(livox_ros::PCLLivoxPointXyzrtl,
   (float, x, x)
   (float, y, y)
   (float, z, z)
-  (float, reflectivity, reflectivity)
+  (float, reflectivity, intensity)
   (std::uint8_t, tag, tag)
   (std::uint8_t, line, line)
 );

@@ -215,23 +215,66 @@ void Lddc::PublishPointcloud2(LidarDataQueue *queue, uint8_t index, const std::s
 
     PointCloud2 cloud;
     uint64_t timestamp = 0;
-    InitPointcloud2Msg(pkg, cloud, timestamp, frame_id);
-#if 1
+
     // Apply enway dust filtering
-    if (enable_dust_filter_ && dust_filter_)
+    if (enable_dust_filter_ && dust_filter_ && index == 0)
     {
-      dust_filter_->startNewPointCloud(pcl_conversions::toPCL(cloud.header), cloud.height * cloud.width);
-      pcl::PointCloud<livox_ros::PCLLivoxPointXyzrtl>::Ptr pcl_cloud(
-          new pcl::PointCloud<livox_ros::PCLLivoxPointXyzrtl>());
-      pcl::fromROSMsg(cloud, *pcl_cloud);
-      for (const auto& point : pcl_cloud->points)
+      cloud.point_step = sizeof(LivoxPointXyzrtl);
+      InitPointcloud2MsgHeader(cloud, frame_id);
+      dust_filter_->startNewPointCloud(pcl_conversions::toPCL(cloud.header), pkg.points_num);
+
+      // Add measurement to dust filtering
+      for (const auto& point : pkg.points)
       {
-        dust_filter_->addMeasurement(point);
+        livox_ros::PCLLivoxPointXyzrtl livox_point;
+        livox_point.x = point.x;
+        livox_point.y = point.y;
+        livox_point.z = point.z;
+        livox_point.reflectivity = point.intensity;
+        livox_point.tag = point.tag;
+        livox_point.line = point.line;
+        dust_filter_->addMeasurement(livox_point);
       }
-      pcl::toROSMsg(dust_filter_->getFilteredPointCloud(), cloud);
-      // cloud = dust_filter_->getFilteredPointCloud();
+      // Get result cloud without dust
+      pcl::PointCloud<livox_ros::PCLLivoxPointXyzrtl> dust_filtered_cloud = dust_filter_->getFilteredPointCloud();
+      // Assemble PointCloud2
+      cloud.point_step = sizeof(LivoxPointXyzrtl);
+
+      cloud.width = dust_filtered_cloud.points.size();
+      cloud.row_step = cloud.width * cloud.point_step;
+
+      cloud.is_bigendian = false;
+      cloud.is_dense = true;
+
+      if (!pkg.points.empty())
+      {
+        timestamp = pkg.base_time + pkg.points[0].offset_time;
+      }
+      cloud.header.stamp = ros::Time(timestamp / 1000000000.0);
+
+
+      std::vector<LivoxPointXyzrtl> points;
+      for (size_t i = 0; i < dust_filtered_cloud.points.size(); ++i)
+      {
+        LivoxPointXyzrtl point;
+        point.x = dust_filtered_cloud.points.at(i).x;
+        point.y = dust_filtered_cloud.points.at(i).y;
+        point.z = dust_filtered_cloud.points.at(i).z;
+        point.reflectivity = dust_filtered_cloud.points.at(i).reflectivity;
+        point.tag = dust_filtered_cloud.points.at(i).tag;
+        point.line = dust_filtered_cloud.points.at(i).line;
+
+        points.push_back(std::move(point));
+      }
+      cloud.data.resize(dust_filtered_cloud.points.size() * sizeof(LivoxPointXyzrtl));
+      memcpy(cloud.data.data(), points.data(), points.size() * sizeof(LivoxPointXyzrtl));
+      //cloud.data.resize(dust_filtered_cloud.points.size() * sizeof(LivoxPointXyzrtl));
+      //memcpy(cloud.data.data(), dust_filtered_cloud.points.data(), dust_filtered_cloud.points.size() * sizeof(LivoxPointXyzrtl));
     }
-#endif
+    else
+    {
+      InitPointcloud2Msg(pkg, cloud, timestamp, frame_id);
+    }
     PublishPointcloud2Data(index, timestamp, cloud);
   }
 }

@@ -95,7 +95,10 @@ int main(int argc, char **argv) {
     DRIVER_INFO(livox_node, "Config file : %s", user_config_path.c_str());
 
     LdsLidar *read_lidar = LdsLidar::GetInstance(publish_freq);
-    livox_node.lddc_ptr_->RegisterLds(static_cast<Lds *>(read_lidar));
+
+    Lds* lds = static_cast<Lds *>(read_lidar);
+    livox_node.lddc_ptr_->RegisterLds(lds);
+    DRIVER_ERROR(livox_node, "Lds lidar count : %i" , lds->lidar_count_);
 
     if ((read_lidar->InitLdsLidar(user_config_path))) {
       DRIVER_INFO(livox_node, "Init lds lidar successfully!");
@@ -106,7 +109,14 @@ int main(int argc, char **argv) {
     DRIVER_ERROR(livox_node, "Invalid data src (%d), please check the launch file", data_src);
   }
 
+  // spawn n threads for n sensors
+  for (size_t i = 0; i < lds->lidar_count_; i++)
+  {
+    DRIVER_ERROR(livox_node, "Spawn thread for lidar %i", i);
+  }
+
   livox_node.pointclouddata_poll_thread_ = std::make_shared<std::thread>(&DriverNode::PointCloudDataPollThread, &livox_node);
+
   livox_node.imudata_poll_thread_ = std::make_shared<std::thread>(&DriverNode::ImuDataPollThread, &livox_node);
   while (ros::ok()) { usleep(10000); }
 
@@ -181,7 +191,6 @@ DriverNode::DriverNode(const rclcpp::NodeOptions & node_options)
   } else {
     DRIVER_ERROR(*this, "Invalid data src (%d), please check the launch file", data_src);
   }
-
   pointclouddata_poll_thread_ = std::make_shared<std::thread>(&DriverNode::PointCloudDataPollThread, this);
   imudata_poll_thread_ = std::make_shared<std::thread>(&DriverNode::ImuDataPollThread, this);
 }
