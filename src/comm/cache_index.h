@@ -29,6 +29,7 @@
 #include <array>
 #include <map>
 #include <string>
+#include <vector>
 
 #include "comm/comm.h"
 
@@ -42,6 +43,7 @@ class CacheIndex {
   int8_t GenerateIndexKey(const uint8_t livox_lidar_type, const uint32_t handle, std::string& key);
   int8_t LvxGetIndex(const uint8_t livox_lidar_type, const uint32_t handle, uint8_t& index);
   void ResetIndex(LidarDevice *lidar);
+  std::vector<int8_t> GetIndices() const;
 
  private:
   std::mutex index_mutex_;

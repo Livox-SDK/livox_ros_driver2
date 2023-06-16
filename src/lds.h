@@ -68,7 +68,7 @@ class Lds {
  public:
   uint8_t lidar_count_;                 /**< Lidar access handle. */
   LidarDevice lidars_[kMaxSourceLidar]; /**< The index is the handle */
-  Semaphore pcd_semaphore_;
+  Semaphore pcd_semaphore_[kMaxSourceLidar];
   Semaphore imu_semaphore_;
   static CacheIndex cache_index_;
  protected:

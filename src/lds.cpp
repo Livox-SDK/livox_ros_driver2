@@ -39,7 +39,6 @@ CacheIndex Lds::cache_index_;
 /* Member function --------------------------------------------------------- */
 Lds::Lds(const double publish_freq, const uint8_t data_src)
     : lidar_count_(kMaxSourceLidar),
-      pcd_semaphore_(0),
       imu_semaphore_(0),
       publish_freq_(publish_freq),
       data_src_(data_src),
@@ -184,13 +183,13 @@ void Lds::PushLidarData(PointPacket* lidar_data, const uint8_t index, const uint
   if (!QueueIsFull(queue)) {
     QueuePushAny(queue, (uint8_t *)lidar_data, base_time);
     if (!QueueIsEmpty(queue)) {
-      if (pcd_semaphore_.GetCount() <= 0) {
-        pcd_semaphore_.Signal();
+      if (pcd_semaphore_[index].GetCount() <= 0) {
+        pcd_semaphore_[index].Signal();
       }
     }
   } else {
-    if (pcd_semaphore_.GetCount() <= 0) {
-        pcd_semaphore_.Signal();
+    if (pcd_semaphore_[index].GetCount() <= 0) {
+        pcd_semaphore_[index].Signal();
     }
   }
 }

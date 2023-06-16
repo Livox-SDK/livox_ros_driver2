@@ -98,8 +98,6 @@ int main(int argc, char **argv) {
 
     Lds* lds = static_cast<Lds *>(read_lidar);
     livox_node.lddc_ptr_->RegisterLds(lds);
-    DRIVER_ERROR(livox_node, "Lds lidar count : %i" , lds->lidar_count_);
-
     if ((read_lidar->InitLdsLidar(user_config_path))) {
       DRIVER_INFO(livox_node, "Init lds lidar successfully!");
     } else {
@@ -109,13 +107,12 @@ int main(int argc, char **argv) {
     DRIVER_ERROR(livox_node, "Invalid data src (%d), please check the launch file", data_src);
   }
 
-  // spawn n threads for n sensors
-  for (size_t i = 0; i < lds->lidar_count_; i++)
+  std::vector<int8_t> indices = livox_node.lddc_ptr_->lds_->cache_index_.GetIndices();
+  DRIVER_INFO(livox_node, "Number of sensors %d", static_cast<int>(indices.size()));
+  for (auto index : indices)
   {
-    DRIVER_ERROR(livox_node, "Spawn thread for lidar %i", i);
+    livox_node.pointclouddata_poll_threads_.emplace_back(std::make_shared<std::thread>(&DriverNode::PointCloudDataPollThread, &livox_node, static_cast<unsigned int>(index)));
   }
-
-  livox_node.pointclouddata_poll_thread_ = std::make_shared<std::thread>(&DriverNode::PointCloudDataPollThread, &livox_node);
 
   livox_node.imudata_poll_thread_ = std::make_shared<std::thread>(&DriverNode::ImuDataPollThread, &livox_node);
   while (ros::ok()) { usleep(10000); }
@@ -203,12 +200,12 @@ RCLCPP_COMPONENTS_REGISTER_NODE(livox_ros::DriverNode)
 #endif  // defined BUILDING_ROS2
 
 
-void DriverNode::PointCloudDataPollThread()
+void DriverNode::PointCloudDataPollThread(unsigned int index)
 {
   std::future_status status;
   std::this_thread::sleep_for(std::chrono::seconds(3));
   do {
-    lddc_ptr_->DistributePointCloudData();
+    lddc_ptr_->DistributePointCloudData(index);
     status = future_.wait_for(std::chrono::microseconds(0));
   } while (status == std::future_status::timeout);
 }
