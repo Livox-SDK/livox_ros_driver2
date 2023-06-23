@@ -74,6 +74,8 @@ endif (APR_FOUND)
 catkin_package(CATKIN_DEPENDS
   roscpp rospy std_msgs message_runtime
   pcl_ros
+  INCLUDE_DIRS
+    include
 )
 
 #---------------------------------------------------------------------------------------
@@ -149,6 +151,7 @@ target_sources(${PROJECT_NAME}_node
 #---------------------------------------------------------------------------------------
 target_include_directories(${PROJECT_NAME}_node
   PUBLIC
+  include
   ${catkin_INCLUDE_DIRS}
   ${PCL_INCLUDE_DIRS}
   ${APR_INCLUDE_DIRS}
@@ -182,6 +185,13 @@ install(DIRECTORY launch_ROS1/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch_ROS1
 )
 
+install(
+  DIRECTORY
+    include/${PROJECT_NAME}/
+  DESTINATION
+    ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
+)
 #---------------------------------------------------------------------------------------
 # end of CMakeList.txt
 #---------------------------------------------------------------------------------------

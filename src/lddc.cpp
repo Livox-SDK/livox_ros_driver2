@@ -33,8 +33,8 @@
 #include <stdint.h>
 #include <string>
 
-#include "include/livox_ros_types.h"
-#include "include/ros_headers.h"
+#include "livox_ros_driver2/livox_ros_types.h"
+#include "livox_ros_driver2/ros_headers.h"
 
 
 #include "driver_node.h"

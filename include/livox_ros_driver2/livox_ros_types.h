@@ -12,7 +12,7 @@
 
 #include <vector>
 
-#include "../src/comm/comm.h"
+#include "comm/comm.h"
 
 namespace livox_ros 
 {
