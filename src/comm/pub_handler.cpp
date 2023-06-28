@@ -25,9 +25,9 @@
 #include "pub_handler.h"
 
 #include <chrono>
+#include <cmath>
 #include <iostream>
 #include <limits>
-
 namespace livox_ros {
 
 PubHandler &pub_handler() {
@@ -423,11 +423,11 @@ void LidarPubHandler::ProcessSphericalPoint(RawPacket& pkt) {
     double src_x = radius * sin(theta) * cos(phi);
     double src_y = radius * sin(theta) * sin(phi);
     double src_z = radius * cos(theta);
-    if (pkt.extrinsic_enable) {
-      point.x = src_x;
-      point.y = src_y;
-      point.z = src_z;
-    } else {
+    //if (pkt.extrinsic_enable) {
+    point.x = src_x;
+    point.y = src_y;
+    point.z = src_z;
+    /*} else {
       point.x = src_x * extrinsic_.rotation[0][0] +
                 src_y * extrinsic_.rotation[0][1] +
                 src_z * extrinsic_.rotation[0][2] + (extrinsic_.trans[0] / 1000.0);
@@ -437,12 +437,49 @@ void LidarPubHandler::ProcessSphericalPoint(RawPacket& pkt) {
       point.z = src_x * extrinsic_.rotation[2][0] +
                 src_y * extrinsic_.rotation[2][1] +
                 src_z * extrinsic_.rotation[2][2] + (extrinsic_.trans[2] / 1000.0);
-    }
+    }*/
+    // rotation base frame:
+    PointXyzlt base_point = {};
+    base_point.x = src_x * extrinsic_.rotation[0][0] +
+                   src_y * extrinsic_.rotation[0][1] +
+                   src_z * extrinsic_.rotation[0][2] + (extrinsic_.trans[0] / 1000.0);
+    base_point.y = src_x * extrinsic_.rotation[1][0] +
+                   src_y * extrinsic_.rotation[1][1] +
+                   src_z * extrinsic_.rotation[1][2] + (extrinsic_.trans[1] / 1000.0);
+    base_point.z = src_x * extrinsic_.rotation[2][0] +
+                   src_y * extrinsic_.rotation[2][1] +
+                   src_z * extrinsic_.rotation[2][2] + (extrinsic_.trans[2] / 1000.0);
 
     point.intensity = raw[i].reflectivity;
     point.line = i % pkt.line_num;
     point.tag = raw[i].tag;
     point.offset_time = pkt.time_stamp + i * pkt.point_interval;
+
+    // use orientation from base link to lidar frame and calculate phi and theta afterwards
+    // range stays the same
+  
+    // calculate phi and theta with orientation from base_link
+    //theta = -1.88959  -108.265532°
+    //theta: 0.937591 53.720007°
+    // phi = 0.998322 57.199637°
+    // phi: 4.47537   256.419813°
+    point.phi = std::acos(base_point.z / radius); // azimuth
+
+    if (base_point.y >= 0.0)
+    {
+      point.theta = std::acos(base_point.x / std::sqrt(base_point.x * base_point.x + base_point.y * base_point.y));
+    }
+    else 
+    {
+      point.theta = -std::acos(base_point.x / std::sqrt(base_point.x * base_point.x + base_point.y * base_point.y));
+    }
+
+    // Georg
+    point.range = radius;
+    //theta = -1.88959 theta: 0.937591 phi = 0.998322 phi: 4.47537
+    //std::cout << "theta = " << point.theta << " theta: " << theta << " phi = " << point.phi << " phi: " << phi << std::endl;
+    //point.theta = theta;
+    //point.phi = phi;
     std::lock_guard<std::mutex> lock(mutex_);
     points_clouds_.push_back(point);
   }
