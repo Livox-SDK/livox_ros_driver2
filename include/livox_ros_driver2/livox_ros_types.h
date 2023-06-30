@@ -1,4 +1,3 @@
-
 /*
  * Enway GmbH - All Rights reserved.
  * Proprietary & confidential.
@@ -12,7 +11,7 @@
 
 #include <vector>
 
-#include "comm/comm.h"
+#include "livox_ros_driver2/livox_point.h"
 
 namespace livox_ros 
 {
