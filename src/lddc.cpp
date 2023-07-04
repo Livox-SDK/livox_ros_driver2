@@ -68,11 +68,18 @@ Lddc::Lddc(int format, int multi_topic, int data_src, int output_type,
 
   if (enable_dust_filter_)
   {
-    std::cout << "Dustfiltering is enabled" << std::endl;
-    dust_filters_.emplace();
-    for (size_t i = 0; i < kMaxSourceLidar; i++)
+    if (transfer_format_ == kPointCloud2Msg || transfer_format_ == kPclPxyziMsg)
     {
-      dust_filters_->push_back(dust_filter_livox::DustFilter<livox_ros::PCLLivoxPointXyzrtl>{});
+      std::cout << "Dustfilter is enabled" << std::endl;
+      dust_filters_.emplace();
+      for (size_t i = 0; i < kMaxSourceLidar; i++)
+      {
+        dust_filters_->push_back(dust_filter_livox::DustFilter<livox_ros::PCLLivoxPointXyzrtl>{});
+      }
+    }
+    else
+    {
+      throw std::runtime_error("Dustfilter is not supported with the selected xfer_format.");
     }
   }
 }
@@ -226,7 +233,6 @@ void Lddc::PublishPointcloud2(LidarDataQueue *queue, uint8_t index, const std::s
     // Apply enway dust filtering
     if (enable_dust_filter_ && dust_filters_)
     {
-      cloud.point_step = sizeof(LivoxPointXyzrtl);
       InitPointcloud2MsgHeader(cloud, frame_id);
       auto dust_filter = dust_filters_->at(index);
       dust_filter.startNewPointCloud(pcl_conversions::toPCL(cloud.header), pkg.points_num);
@@ -247,8 +253,6 @@ void Lddc::PublishPointcloud2(LidarDataQueue *queue, uint8_t index, const std::s
       // Get result cloud without dust
       pcl::PointCloud<livox_ros::PCLLivoxPointXyzrtl> dust_filtered_cloud = dust_filter.getFilteredPointCloud();
       // Assemble PointCloud2
-      cloud.point_step = sizeof(LivoxPointXyzrtl);
-
       cloud.width = dust_filtered_cloud.points.size();
       cloud.row_step = cloud.width * cloud.point_step;
 
@@ -326,7 +330,45 @@ void Lddc::PublishPclMsg(LidarDataQueue *queue, uint8_t index, const std::string
     PointCloud cloud;
     uint64_t timestamp = 0;
     InitPclMsg(pkg, cloud, timestamp, frame_id);
-    FillPointsToPclMsg(pkg, cloud);
+    // Apply enway dust filtering
+    if (enable_dust_filter_ && dust_filters_)
+    {
+      if (pkg.points.empty()) {
+        return;
+      }
+      auto dust_filter = dust_filters_->at(index);
+      dust_filter.startNewPointCloud(cloud.header, pkg.points_num);
+
+      // Add measurement to dust filtering
+      for (const auto& point : pkg.points)
+      {
+        livox_ros::PCLLivoxPointXyzrtl livox_point;
+        livox_point.x = point.x;
+        livox_point.y = point.y;
+        livox_point.z = point.z;
+        livox_point.reflectivity = point.intensity;
+        livox_point.tag = point.tag;
+        livox_point.line = point.line;
+        dust_filter.addMeasurement(livox_point);
+      }
+
+      // Get result cloud without dust
+      pcl::PointCloud<livox_ros::PCLLivoxPointXyzrtl> dust_filtered_cloud = dust_filter.getFilteredPointCloud();
+      cloud.width = dust_filtered_cloud.points.size();
+      for (size_t i = 0; i < dust_filtered_cloud.points.size(); ++i)
+      {
+        pcl::PointXYZI point;
+        point.x = dust_filtered_cloud.points.at(i).x;
+        point.y = dust_filtered_cloud.points.at(i).y;
+        point.z = dust_filtered_cloud.points.at(i).z;
+        point.intensity = dust_filtered_cloud.points.at(i).reflectivity;
+        cloud.points.push_back(std::move(point));
+      }
+    }
+    else
+    {
+      FillPointsToPclMsg(pkg, cloud);
+    }
     PublishPclData(index, timestamp, cloud);
   }
   return;
