@@ -84,6 +84,18 @@ void PubHandler::ClearAllLidarsExtrinsicParams() {
   lidar_extrinsics_.clear();
 }
 
+void PubHandler::AddLidarsFilterParam(LidarFilterParameter& filter_param) {
+  std::unique_lock<std::mutex> lock(packet_mutex_);
+  uint32_t id = 0;
+  GetLidarId(filter_param.lidar_type, filter_param.handle, id);
+  lidar_filters_[id] = filter_param;
+}
+
+void PubHandler::ClearAllLidarsFilterParams() {
+  std::unique_lock<std::mutex> lock(packet_mutex_);
+  lidar_filters_.clear();
+}
+
 void PubHandler::SetPointCloudsCallback(PointCloudsCallback cb, void* client_data) {
   pub_client_data_ = client_data;
   points_callback_ = cb;

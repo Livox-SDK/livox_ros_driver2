@@ -227,6 +227,28 @@ typedef struct {
   ExtParameter param;
 } LidarExtParameter;
 
+typedef struct {
+  float roll;  /**< Roll angle, unit: degree. */
+  float pitch; /**< Pitch angle, unit: degree. */
+  float yaw;   /**< Yaw angle, unit: degree. */
+} FilterTransformParameter;
+
+typedef struct {
+  std::string filter_frame_id;  /**< Frame */
+  float filter_yaw_min;  /**< Min yaw angle, unit: degree. */
+  float filter_yaw_max;  /**< Max yaw angle, unit: degree. */
+  float filter_pitch_min;  /**< Min pitch angle, unit: degree. */
+  float filter_pitch_max;  /**< Max pitch angle, unit: degree. */
+} FilterParameter;
+
+typedef struct {
+  LidarProtoType lidar_type;
+  uint32_t handle;
+  FilterTransformParameter transform;
+  FilterParameter param;
+} LidarFilterParameter;
+
+
 /** Configuration in json config file for livox lidar */
 typedef struct {
   char broadcast_code[16];
@@ -258,6 +280,7 @@ typedef struct {
   int8_t dual_emit_en;
   std::string frame_id;
   ExtParameter extrinsic_param;
+  FilterParameter filter_param;
   volatile uint32_t set_bits;
   volatile uint32_t get_bits;
 } UserLivoxLidarConfig;

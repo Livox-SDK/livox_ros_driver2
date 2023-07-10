@@ -109,6 +109,17 @@ bool LivoxLidarConfigParser::ParseUserConfigs(const rapidjson::Document &doc,
                   << IpNumToString(user_config.handle) << std::endl;
       }
     }
+
+    if (!config.HasMember("filter_parameter")) {
+      memset(&user_config.filter_param, 0, sizeof(user_config.filter_param));
+    } else {
+      auto &value = config["filter_parameter"];
+      if (!ParseFilterParameters(value, user_config.filter_param)) {
+        memset(&user_config.filter_param, 0, sizeof(user_config.filter_param));
+        std::cout << "failed to parse filter parameters, ip: "
+                  << IpNumToString(user_config.handle) << std::endl;
+      }
+    }
     user_config.set_bits = 0;
     user_config.get_bits = 0;
 
@@ -160,4 +171,35 @@ bool LivoxLidarConfigParser::ParseExtrinsics(const rapidjson::Value &value,
   return true;
 }
 
+bool LivoxLidarConfigParser::ParseFilterParameters(const rapidjson::Value &value,
+                                                   FilterParameter &param) {
+
+  if (!value.HasMember("filter_frame_id")) {
+    param.filter_frame_id = "";
+  } else {
+    param.filter_frame_id = static_cast<std::string>(value["filter_frame_id"].GetString());
+  }
+  if (!value.HasMember("filter_yaw_min")) {
+    param.filter_yaw_min = 0.0f;
+  } else {
+    param.filter_yaw_min = static_cast<float>(value["filter_yaw_min"].GetFloat());
+  }
+  if (!value.HasMember("filter_yaw_max")) {
+    param.filter_yaw_max = 0.0f;
+  } else {
+    param.filter_yaw_max = static_cast<float>(value["filter_yaw_max"].GetFloat());
+  }
+  if (!value.HasMember("filter_pitch_min")) {
+    param.filter_pitch_min = 0.0f;
+  } else {
+    param.filter_pitch_min = static_cast<float>(value["filter_pitch_min"].GetFloat());
+  }
+  if (!value.HasMember("filter_pitch_max")) {
+    param.filter_pitch_max = 0.0f;
+  } else {
+    param.filter_pitch_max = static_cast<float>(value["filter_pitch_max"].GetFloat());
+  }
+  std::cout << "Filter Yaw Min: " << param.filter_yaw_min << std::endl;
+  return true;
+}
 } // namespace livox_ros
