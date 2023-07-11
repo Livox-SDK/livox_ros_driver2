@@ -237,8 +237,6 @@ typedef struct {
   std::string filter_frame_id;  /**< Frame */
   float filter_yaw_min;  /**< Min yaw angle, unit: degree. */
   float filter_yaw_max;  /**< Max yaw angle, unit: degree. */
-  float filter_pitch_min;  /**< Min pitch angle, unit: degree. */
-  float filter_pitch_max;  /**< Max pitch angle, unit: degree. */
 } FilterParameter;
 
 typedef struct {

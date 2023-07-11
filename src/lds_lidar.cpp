@@ -50,6 +50,10 @@
 #include "call_back/lidar_common_callback.h"
 #include "call_back/livox_lidar_callback.h"
 
+#include <tf2_ros/buffer.h>
+#include <tf2_ros/transform_listener.h>
+#include <tf2/utils.h>
+
 using namespace std;
 
 namespace livox_ros {
@@ -144,6 +148,9 @@ bool LdsLidar::InitLivoxLidar() {
     return false;
   }
 
+  tf2_ros::Buffer buffer_;
+  tf2_ros::TransformListener listener_{buffer_};
+
   // fill in lidar devices
   for (auto& config : user_configs) {
     uint8_t index = 0;
@@ -177,6 +184,39 @@ bool LdsLidar::InitLivoxLidar() {
       lidar_param.param.z     = config.extrinsic_param.z;
     }
     pub_handler().AddLidarsExtParam(lidar_param);
+
+    LidarFilterParameter filter_param;
+    filter_param.handle = config.handle;
+    filter_param.lidar_type = kLivoxLidarType;
+    filter_param.param = config.filter_param;
+    filter_param.param.filter_frame_id = config.filter_param.filter_frame_id;
+    filter_param.param.filter_yaw_max = config.filter_param.filter_yaw_max;
+    filter_param.param.filter_yaw_min = config.filter_param.filter_yaw_min;
+
+    if(!buffer_.canTransform(config.filter_param.filter_frame_id, config.frame_id, ros::Time(0), ros::Duration(5.0)))
+    {
+      std::cout << "Timout wait for Transformation" << std::endl;
+    }
+
+    geometry_msgs::TransformStamped transform;
+    try
+    {
+      transform = buffer_.lookupTransform(config.filter_param.filter_frame_id, config.frame_id, ros::Time(0));
+    }
+    catch (const tf2::TransformException& e)
+    {
+      std::cout << "All Frames as String:" << buffer_.allFramesAsString() << std::endl;
+      std::cout << "TransformException: " << e.what() << std::endl;
+    }
+
+    double roll, pitch, yaw;
+    tf2::getEulerYPR(transform.transform.rotation, yaw, pitch, roll);
+    filter_param.transform.yaw = static_cast<float>(yaw);
+    filter_param.transform.pitch = static_cast<float>(pitch);
+    filter_param.transform.roll = static_cast<float>(roll);
+
+    std::cout << "Transform found: " << " Roll: " << filter_param.transform.roll << " Pitch" << filter_param.transform.pitch <<  "Yaw: " << filter_param.transform.yaw << std::endl;
+    pub_handler().AddLidarsFilterParam(filter_param);
   }
 
   SetLivoxLidarInfoChangeCallback(LivoxLidarCallback::LidarInfoChangeCallback, g_lds_ldiar);

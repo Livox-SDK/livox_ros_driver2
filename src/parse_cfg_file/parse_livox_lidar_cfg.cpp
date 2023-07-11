@@ -189,17 +189,6 @@ bool LivoxLidarConfigParser::ParseFilterParameters(const rapidjson::Value &value
   } else {
     param.filter_yaw_max = static_cast<float>(value["filter_yaw_max"].GetFloat());
   }
-  if (!value.HasMember("filter_pitch_min")) {
-    param.filter_pitch_min = 0.0f;
-  } else {
-    param.filter_pitch_min = static_cast<float>(value["filter_pitch_min"].GetFloat());
-  }
-  if (!value.HasMember("filter_pitch_max")) {
-    param.filter_pitch_max = 0.0f;
-  } else {
-    param.filter_pitch_max = static_cast<float>(value["filter_pitch_max"].GetFloat());
-  }
-  std::cout << "Filter Yaw Min: " << param.filter_yaw_min << std::endl;
   return true;
 }
 } // namespace livox_ros
