@@ -67,20 +67,18 @@ class LidarPubHandler {
     {0, 0, 0},
     {
       {1, 0, 0},
-      {0, 1, 1},
+      {0, 1, 0},
       {0, 0, 1}
     }
   };
-  ExtParameterDetailed filter_transform_ = {
-    {0, 0, 0},
-    {
+  RotationMatrix filter_rotation_ = {
       {1, 0, 0},
-      {0, 1, 1},
+      {0, 1, 0},
       {0, 0, 1}
-    }
   };
-  float filter_yaw_max_;
-  float filter_yaw_min_;
+
+  float filter_yaw_start_;
+  float filter_yaw_end_;
   std::mutex mutex_;
   std::atomic_bool is_set_extrinsic_params_;
   std::atomic_bool is_set_filter_params_;

@@ -29,6 +29,7 @@
 
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <vector>
 
 #include "lds.h"
@@ -76,6 +77,7 @@ class LdsLidar final : public Lds {
   bool IsAutoConnectMode(void) { return auto_connect_mode_; }
 
   virtual void PrepareExit(void);
+  std::optional<std::tuple<float, float, float>> GetTransformation(const std::string target_frame, const std::string source_frame);
 
  public:
   std::mutex config_mutex_;

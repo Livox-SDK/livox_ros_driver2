@@ -235,8 +235,8 @@ typedef struct {
 
 typedef struct {
   std::string filter_frame_id;  /**< Frame */
-  float filter_yaw_min;  /**< Min yaw angle, unit: degree. */
-  float filter_yaw_max;  /**< Max yaw angle, unit: degree. */
+  float filter_yaw_start;  /**< Start yaw angle, unit: degree. */
+  float filter_yaw_end;  /**< End yaw angle, unit: degree. */
 } FilterParameter;
 
 typedef struct {
@@ -278,6 +278,7 @@ typedef struct {
   int8_t dual_emit_en;
   std::string frame_id;
   ExtParameter extrinsic_param;
+  bool enable_yaw_filter;
   FilterParameter filter_param;
   volatile uint32_t set_bits;
   volatile uint32_t get_bits;

@@ -384,20 +384,20 @@ void LidarPubHandler::SetLidarsFilterParam(LidarFilterParameter param) {
   double sin_pitch = sin(static_cast<double>(param.transform.pitch));
   double sin_yaw = sin(static_cast<double>(param.transform.yaw));
 
-  filter_transform_.rotation[0][0] = cos_pitch * cos_yaw;
-  filter_transform_.rotation[0][1] = sin_roll * sin_pitch * cos_yaw - cos_roll * sin_yaw;
-  filter_transform_.rotation[0][2] = cos_roll * sin_pitch * cos_yaw + sin_roll * sin_yaw;
+  filter_rotation_[0][0] = cos_pitch * cos_yaw;
+  filter_rotation_[0][1] = sin_roll * sin_pitch * cos_yaw - cos_roll * sin_yaw;
+  filter_rotation_[0][2] = cos_roll * sin_pitch * cos_yaw + sin_roll * sin_yaw;
 
-  filter_transform_.rotation[1][0] = cos_pitch * sin_yaw;
-  filter_transform_.rotation[1][1] = sin_roll * sin_pitch * sin_yaw + cos_roll * cos_yaw;
-  filter_transform_.rotation[1][2] = cos_roll * sin_pitch * sin_yaw - sin_roll * cos_yaw;
+  filter_rotation_[1][0] = cos_pitch * sin_yaw;
+  filter_rotation_[1][1] = sin_roll * sin_pitch * sin_yaw + cos_roll * cos_yaw;
+  filter_rotation_[1][2] = cos_roll * sin_pitch * sin_yaw - sin_roll * cos_yaw;
 
-  filter_transform_.rotation[2][0] = -sin_pitch;
-  filter_transform_.rotation[2][1] = sin_roll * cos_pitch;
-  filter_transform_.rotation[2][2] = cos_roll * cos_pitch;
+  filter_rotation_[2][0] = -sin_pitch;
+  filter_rotation_[2][1] = sin_roll * cos_pitch;
+  filter_rotation_[2][2] = cos_roll * cos_pitch;
 
-  filter_yaw_max_ = param.param.filter_yaw_max * PI / 180.0;
-  filter_yaw_min_ = param.param.filter_yaw_min * PI / 180.0;
+  filter_yaw_start_ = param.param.filter_yaw_start * PI / 180.0;
+  filter_yaw_end_ = param.param.filter_yaw_end * PI / 180.0;
   is_set_filter_params_ = true;
 }
 
@@ -512,36 +512,48 @@ void LidarPubHandler::ProcessSphericalPoint(RawPacket& pkt) {
 
 bool LidarPubHandler::FilterYawPoint(const PointXyzlt& point)
 {
-    // rotation to base frame
-    PointXyzlt base_point = {};
-    base_point.x = point.x * filter_transform_.rotation[0][0] +
-                   point.y * filter_transform_.rotation[0][1] +
-                   point.z * filter_transform_.rotation[0][2];
-    base_point.y = point.x * filter_transform_.rotation[1][0] +
-                   point.y * filter_transform_.rotation[1][1] +
-                   point.z * filter_transform_.rotation[1][2];
-    base_point.z = point.x * filter_transform_.rotation[2][0] +
-                   point.y * filter_transform_.rotation[2][1] +
-                   point.z * filter_transform_.rotation[2][2];
-    if (base_point.z > 0.5)
-    {
-      return true;;
-    }
-    double theta;
-    if (base_point.y >= 0.0)
-    {
-      theta = std::acos(base_point.x / std::sqrt(base_point.x * base_point.x + base_point.y * base_point.y));
-    }
-    else 
-    {
-      theta = -std::acos(base_point.x / std::sqrt(base_point.x * base_point.x + base_point.y * base_point.y));
-    }
+  if (!is_set_filter_params_)
+  {
+    return false;
+  }
+  // rotation to base frame
+  PointXyzlt base_point = {};
+  base_point.x = point.x * filter_rotation_[0][0] +
+                  point.y * filter_rotation_[0][1] +
+                  point.z * filter_rotation_[0][2];
+  base_point.y = point.x * filter_rotation_[1][0] +
+                  point.y * filter_rotation_[1][1] +
+                  point.z * filter_rotation_[1][2];
+  base_point.z = point.x * filter_rotation_[2][0] +
+                  point.y * filter_rotation_[2][1] +
+                  point.z * filter_rotation_[2][2];
 
-    if (theta < filter_yaw_min_ || theta > filter_yaw_max_)
+  double yaw;
+  if (base_point.y >= 0.0)
+  {
+    yaw = std::acos(base_point.x / std::sqrt(base_point.x * base_point.x + base_point.y * base_point.y));
+  }
+  else
+  {
+    yaw = 2.0 * M_PI - std::acos(base_point.x / std::sqrt(base_point.x * base_point.x + base_point.y * base_point.y));
+  }
+
+  if (filter_yaw_end_ >= filter_yaw_start_)
+  {
+    if (yaw >= filter_yaw_start_ && yaw <= filter_yaw_end_)
+    {
+      return false;
+    }
+    return true;
+  }
+  else
+  {
+    if (yaw >= filter_yaw_end_ && yaw <= filter_yaw_start_)
     {
       return true;
     }
     return false;
+  }
 }
 
 } // namespace livox_ros

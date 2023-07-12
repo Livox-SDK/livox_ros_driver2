@@ -185,38 +185,28 @@ bool LdsLidar::InitLivoxLidar() {
     }
     pub_handler().AddLidarsExtParam(lidar_param);
 
-    LidarFilterParameter filter_param;
-    filter_param.handle = config.handle;
-    filter_param.lidar_type = kLivoxLidarType;
-    filter_param.param = config.filter_param;
-    filter_param.param.filter_frame_id = config.filter_param.filter_frame_id;
-    filter_param.param.filter_yaw_max = config.filter_param.filter_yaw_max;
-    filter_param.param.filter_yaw_min = config.filter_param.filter_yaw_min;
+    if (config.enable_yaw_filter) {
+      LidarFilterParameter filter_param;
+      filter_param.handle = config.handle;
+      filter_param.lidar_type = kLivoxLidarType;
+      filter_param.param = config.filter_param;
+      filter_param.param.filter_frame_id = config.filter_param.filter_frame_id;
+      filter_param.param.filter_yaw_start = config.filter_param.filter_yaw_start;
+      filter_param.param.filter_yaw_end = config.filter_param.filter_yaw_end;
 
-    if(!buffer_.canTransform(config.filter_param.filter_frame_id, config.frame_id, ros::Time(0), ros::Duration(5.0)))
-    {
-      std::cout << "Timout wait for Transformation" << std::endl;
+      auto rotation = GetTransformation(config.filter_param.filter_frame_id, config.frame_id);
+      if (rotation)
+      {
+        filter_param.transform.roll = std::get<0>(*rotation);
+        filter_param.transform.pitch = std::get<1>(*rotation);
+        filter_param.transform.yaw = std::get<2>(*rotation);
+        pub_handler().AddLidarsFilterParam(filter_param);
+      }
+      else
+      {
+        throw std::runtime_error("Failed to lookup transformation between " + config.frame_id + " and " + config.filter_param.filter_frame_id);
+      }
     }
-
-    geometry_msgs::TransformStamped transform;
-    try
-    {
-      transform = buffer_.lookupTransform(config.filter_param.filter_frame_id, config.frame_id, ros::Time(0));
-    }
-    catch (const tf2::TransformException& e)
-    {
-      std::cout << "All Frames as String:" << buffer_.allFramesAsString() << std::endl;
-      std::cout << "TransformException: " << e.what() << std::endl;
-    }
-
-    double roll, pitch, yaw;
-    tf2::getEulerYPR(transform.transform.rotation, yaw, pitch, roll);
-    filter_param.transform.yaw = static_cast<float>(yaw);
-    filter_param.transform.pitch = static_cast<float>(pitch);
-    filter_param.transform.roll = static_cast<float>(roll);
-
-    std::cout << "Transform found: " << " Roll: " << filter_param.transform.roll << " Pitch" << filter_param.transform.pitch <<  "Yaw: " << filter_param.transform.yaw << std::endl;
-    pub_handler().AddLidarsFilterParam(filter_param);
   }
 
   SetLivoxLidarInfoChangeCallback(LivoxLidarCallback::LidarInfoChangeCallback, g_lds_ldiar);
@@ -250,4 +240,31 @@ int LdsLidar::DeInitLdsLidar(void) {
 }
 
 void LdsLidar::PrepareExit(void) { DeInitLdsLidar(); }
+
+std::optional<std::tuple<float, float, float>> LdsLidar::GetTransformation(const std::string target_frame, const std::string source_frame)
+{
+  tf2_ros::Buffer buffer_;
+  tf2_ros::TransformListener listener_{buffer_};
+
+  constexpr double transform_timeout {1.0};
+  if(!buffer_.canTransform(target_frame, source_frame, ros::Time(0), ros::Duration(transform_timeout)))
+  {
+    std::cout << "Timout wait for Transformation" << std::endl;
+    return std::nullopt;
+  }
+
+  geometry_msgs::TransformStamped transform;
+  try
+  {
+    transform = buffer_.lookupTransform(target_frame, source_frame, ros::Time(0));
+  }
+  catch (const tf2::TransformException& e)
+  {
+    std::cout << "TransformException: " << e.what() << std::endl;
+    return std::nullopt;
+  }
+  double roll, pitch, yaw;
+  tf2::getEulerYPR(transform.transform.rotation, yaw, pitch, roll);
+  return std::tuple(static_cast<float>(roll), static_cast<float>(pitch), static_cast<float>(yaw));
+}
 }  // namespace livox_ros

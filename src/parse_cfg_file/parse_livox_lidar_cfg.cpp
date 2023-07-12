@@ -109,13 +109,17 @@ bool LivoxLidarConfigParser::ParseUserConfigs(const rapidjson::Document &doc,
                   << IpNumToString(user_config.handle) << std::endl;
       }
     }
-
-    if (!config.HasMember("filter_parameter")) {
-      memset(&user_config.filter_param, 0, sizeof(user_config.filter_param));
+    if (!config.HasMember("enable_yaw_filter")) {
+      user_config.enable_yaw_filter = false;
+    } else {
+      user_config.enable_yaw_filter = static_cast<bool>(config["enable_yaw_filter"].GetBool());
+    }
+    if (!config.HasMember("filter_parameter") || !user_config.enable_yaw_filter) {
+      user_config.filter_param = FilterParameter{};
     } else {
       auto &value = config["filter_parameter"];
       if (!ParseFilterParameters(value, user_config.filter_param)) {
-        memset(&user_config.filter_param, 0, sizeof(user_config.filter_param));
+        user_config.filter_param = FilterParameter{};
         std::cout << "failed to parse filter parameters, ip: "
                   << IpNumToString(user_config.handle) << std::endl;
       }
@@ -179,15 +183,15 @@ bool LivoxLidarConfigParser::ParseFilterParameters(const rapidjson::Value &value
   } else {
     param.filter_frame_id = static_cast<std::string>(value["filter_frame_id"].GetString());
   }
-  if (!value.HasMember("filter_yaw_min")) {
-    param.filter_yaw_min = 0.0f;
+  if (!value.HasMember("filter_yaw_start")) {
+    param.filter_yaw_start = 0.0f;
   } else {
-    param.filter_yaw_min = static_cast<float>(value["filter_yaw_min"].GetFloat());
+    param.filter_yaw_start = static_cast<float>(value["filter_yaw_start"].GetFloat());
   }
-  if (!value.HasMember("filter_yaw_max")) {
-    param.filter_yaw_max = 0.0f;
+  if (!value.HasMember("filter_yaw_end")) {
+    param.filter_yaw_end = 360.0f;
   } else {
-    param.filter_yaw_max = static_cast<float>(value["filter_yaw_max"].GetFloat());
+    param.filter_yaw_end = static_cast<float>(value["filter_yaw_end"].GetFloat());
   }
   return true;
 }
