@@ -55,8 +55,7 @@ Lddc::Lddc(int format, int multi_topic, int data_src, int output_type,
       publish_frq_(frq),
       frame_id_(frame_id),
       enable_lidar_bag_(lidar_bag),
-      enable_imu_bag_(imu_bag),
-      enable_dust_filter_ {dust_filter} {
+      enable_imu_bag_(imu_bag) {
   publish_period_ns_ = kNsPerSecond / publish_frq_;
   lds_ = nullptr;
   memset(private_pub_, 0, sizeof(private_pub_));
@@ -66,7 +65,7 @@ Lddc::Lddc(int format, int multi_topic, int data_src, int output_type,
   cur_node_ = nullptr;
   bag_ = nullptr;
 
-  if (enable_dust_filter_)
+  if (dust_filter)
   {
     if (transfer_format_ == kPointCloud2Msg || transfer_format_ == kPclPxyziMsg)
     {
@@ -231,7 +230,7 @@ void Lddc::PublishPointcloud2(LidarDataQueue *queue, uint8_t index, const std::s
     uint64_t timestamp = 0;
 
     // Apply enway dust filtering
-    if (enable_dust_filter_ && dust_filters_)
+    if (dust_filters_)
     {
       InitPointcloud2MsgHeader(cloud, frame_id);
       auto dust_filter = dust_filters_->at(index);
@@ -331,7 +330,7 @@ void Lddc::PublishPclMsg(LidarDataQueue *queue, uint8_t index, const std::string
     uint64_t timestamp = 0;
     InitPclMsg(pkg, cloud, timestamp, frame_id);
     // Apply enway dust filtering
-    if (enable_dust_filter_ && dust_filters_)
+    if (dust_filters_)
     {
       if (pkg.points.empty()) {
         return;
