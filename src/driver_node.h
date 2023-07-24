@@ -25,7 +25,9 @@
 #ifndef LIVOX_DRIVER_NODE_H
 #define LIVOX_DRIVER_NODE_H
 
-#include "include/ros_headers.h"
+#include "livox_ros_driver2/ros_headers.h"
+
+#include <vector>
 
 namespace livox_ros {
 
@@ -41,11 +43,11 @@ class DriverNode final : public ros::NodeHandle {
 
   DriverNode& GetNode() noexcept;
 
-  void PointCloudDataPollThread();
+  void PointCloudDataPollThread(unsigned int index);
   void ImuDataPollThread();
 
   std::unique_ptr<Lddc> lddc_ptr_;
-  std::shared_ptr<std::thread> pointclouddata_poll_thread_;
+  std::vector<std::shared_ptr<std::thread>> pointclouddata_poll_threads_;
   std::shared_ptr<std::thread> imudata_poll_thread_;
   std::shared_future<void> future_;
   std::promise<void> exit_signal_;

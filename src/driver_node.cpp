@@ -34,7 +34,10 @@ DriverNode& DriverNode::GetNode() noexcept {
 DriverNode::~DriverNode() {
   lddc_ptr_->lds_->RequestExit();
   exit_signal_.set_value();
-  pointclouddata_poll_thread_->join();
+  for (const auto &thread : pointclouddata_poll_threads_)
+  {
+    thread->join();
+  }
   imudata_poll_thread_->join();
 }
 

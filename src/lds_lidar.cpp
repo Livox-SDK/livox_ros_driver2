@@ -210,5 +210,4 @@ int LdsLidar::DeInitLdsLidar(void) {
 }
 
 void LdsLidar::PrepareExit(void) { DeInitLdsLidar(); }
-
 }  // namespace livox_ros

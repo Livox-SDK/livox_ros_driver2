@@ -25,11 +25,15 @@
 #ifndef LIVOX_ROS_DRIVER2_LDDC_H_
 #define LIVOX_ROS_DRIVER2_LDDC_H_
 
-#include "include/livox_ros_driver2.h"
+#include "livox_ros_driver2/livox_ros_driver2.h"
+#include "livox_ros_driver2/livox_ros_types.h"
 
 #include "driver_node.h"
 #include "lds.h"
 #include <string>
+#include <optional>
+
+#include <dust_filter_livox/dust_filter.h>
 
 namespace livox_ros {
 
@@ -74,7 +78,7 @@ class Lddc final {
  public:
 #ifdef BUILDING_ROS1
   Lddc(int format, int multi_topic, int data_src, int output_type, double frq,
-      std::string &frame_id, bool lidar_bag, bool imu_bag);
+      std::string &frame_id, bool lidar_bag, bool imu_bag, bool dust_filter);
 #elif defined BUILDING_ROS2
   Lddc(int format, int multi_topic, int data_src, int output_type, double frq,
       std::string &frame_id);
@@ -82,7 +86,7 @@ class Lddc final {
   ~Lddc();
 
   int RegisterLds(Lds *lds);
-  void DistributePointCloudData(void);
+  void DistributePointCloudData(unsigned int index);
   void DistributeImuData(void);
   void CreateBagFile(const std::string &file_name);
   void PrepareExit(void);
@@ -144,11 +148,13 @@ class Lddc final {
 #ifdef BUILDING_ROS1
   bool enable_lidar_bag_;
   bool enable_imu_bag_;
+  std::optional<std::vector<dust_filter_livox::DustFilter<livox_ros::PCLLivoxPointXyzrtl>>> dust_filters_;
   PublisherPtr private_pub_[kMaxSourceLidar];
   PublisherPtr global_pub_;
   PublisherPtr private_imu_pub_[kMaxSourceLidar];
   PublisherPtr global_imu_pub_;
   rosbag::Bag *bag_;
+
 #elif defined BUILDING_ROS2
   PublisherPtr private_pub_[kMaxSourceLidar];
   PublisherPtr global_pub_;

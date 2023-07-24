@@ -36,6 +36,8 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   rosbag
   pcl_ros
+  dust_filter_livox
+  pcl_conversions
 )
 
 ## Find pcl lib
@@ -72,6 +74,8 @@ endif (APR_FOUND)
 catkin_package(CATKIN_DEPENDS
   roscpp rospy std_msgs message_runtime
   pcl_ros
+  INCLUDE_DIRS
+    include
 )
 
 #---------------------------------------------------------------------------------------
@@ -84,7 +88,7 @@ endif()
 #---------------------------------------------------------------------------------------
 # Compiler config
 #---------------------------------------------------------------------------------------
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -147,11 +151,16 @@ target_sources(${PROJECT_NAME}_node
 #---------------------------------------------------------------------------------------
 target_include_directories(${PROJECT_NAME}_node
   PUBLIC
+  include
   ${catkin_INCLUDE_DIRS}
   ${PCL_INCLUDE_DIRS}
   ${APR_INCLUDE_DIRS}
   3rdparty
   src
+)
+
+include_directories(
+  include
 )
 
 #---------------------------------------------------------------------------------------
@@ -180,6 +189,13 @@ install(DIRECTORY launch_ROS1/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch_ROS1
 )
 
+install(
+  DIRECTORY
+    include/${PROJECT_NAME}/
+  DESTINATION
+    ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
+)
 #---------------------------------------------------------------------------------------
 # end of CMakeList.txt
 #---------------------------------------------------------------------------------------

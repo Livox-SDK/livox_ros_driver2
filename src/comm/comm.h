@@ -37,6 +37,7 @@
 #include <map>
 
 #include "lidar_imu_data_queue.h"
+#include "livox_ros_driver2/livox_point.h"
 
 namespace livox_ros {
 
@@ -147,15 +148,6 @@ typedef union {
 } LdsStamp;
 
 #pragma pack(1)
-
-typedef struct {
-  float x;            /**< X axis, Unit:m */
-  float y;            /**< Y axis, Unit:m */
-  float z;            /**< Z axis, Unit:m */
-  float reflectivity; /**< Reflectivity   */
-  uint8_t tag;        /**< Livox point tag   */
-  uint8_t line;       /**< Laser line id     */
-} LivoxPointXyzrtl;
 
 typedef struct {
   float x;

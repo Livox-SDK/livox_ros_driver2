@@ -118,4 +118,13 @@ void CacheIndex::ResetIndex(LidarDevice *lidar) {
   }
 }
 
+std::vector<int8_t> CacheIndex::GetIndices() const {
+  std::vector<int8_t> indices;
+  for (auto index : map_index_)
+  {
+    indices.push_back(index.second);
+  }
+  return indices;
+}
+
 } // namespace

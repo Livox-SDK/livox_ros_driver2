@@ -28,8 +28,8 @@
 #include <csignal>
 #include <thread>
 
-#include "include/livox_ros_driver2.h"
-#include "include/ros_headers.h"
+#include "livox_ros_driver2/livox_ros_driver2.h"
+#include "livox_ros_driver2/ros_headers.h"
 #include "driver_node.h"
 #include "lddc.h"
 #include "lds_lidar.h"
@@ -60,7 +60,7 @@ int main(int argc, char **argv) {
   std::string frame_id = "livox_frame";
   bool lidar_bag = true;
   bool imu_bag   = false;
-
+  bool dust_filter = false;
   nh.getParam("xfer_format", xfer_format);
   nh.getParam("multi_topic", multi_topic);
   nh.getParam("data_src", data_src);
@@ -69,7 +69,7 @@ int main(int argc, char **argv) {
   nh.getParam("frame_id", frame_id);
   nh.getParam("enable_lidar_bag", lidar_bag);
   nh.getParam("enable_imu_bag", imu_bag);
-
+  nh.getParam("enable_dust_filter", dust_filter);
   printf("data source:%u.\n", data_src);
 
   if (publish_freq > 100.0) {
@@ -84,7 +84,7 @@ int main(int argc, char **argv) {
 
   /** Lidar data distribute control and lidar data source set */
   livox_node.lddc_ptr_ = std::make_unique<Lddc>(xfer_format, multi_topic, data_src, output_type,
-                        publish_freq, frame_id, lidar_bag, imu_bag);
+                        publish_freq, frame_id, lidar_bag, imu_bag, dust_filter);
   livox_node.lddc_ptr_->SetRosNode(&livox_node);
 
   if (data_src == kSourceRawLidar) {
@@ -95,8 +95,9 @@ int main(int argc, char **argv) {
     DRIVER_INFO(livox_node, "Config file : %s", user_config_path.c_str());
 
     LdsLidar *read_lidar = LdsLidar::GetInstance(publish_freq);
-    livox_node.lddc_ptr_->RegisterLds(static_cast<Lds *>(read_lidar));
 
+    Lds* lds = static_cast<Lds *>(read_lidar);
+    livox_node.lddc_ptr_->RegisterLds(lds);
     if ((read_lidar->InitLdsLidar(user_config_path))) {
       DRIVER_INFO(livox_node, "Init lds lidar successfully!");
     } else {
@@ -106,7 +107,13 @@ int main(int argc, char **argv) {
     DRIVER_ERROR(livox_node, "Invalid data src (%d), please check the launch file", data_src);
   }
 
-  livox_node.pointclouddata_poll_thread_ = std::make_shared<std::thread>(&DriverNode::PointCloudDataPollThread, &livox_node);
+  std::vector<int8_t> indices = livox_node.lddc_ptr_->lds_->cache_index_.GetIndices();
+  DRIVER_INFO(livox_node, "Number of sensors %d", static_cast<int>(indices.size()));
+  for (auto index : indices)
+  {
+    livox_node.pointclouddata_poll_threads_.emplace_back(std::make_shared<std::thread>(&DriverNode::PointCloudDataPollThread, &livox_node, static_cast<unsigned int>(index)));
+  }
+
   livox_node.imudata_poll_thread_ = std::make_shared<std::thread>(&DriverNode::ImuDataPollThread, &livox_node);
   while (ros::ok()) { usleep(10000); }
 
@@ -181,7 +188,6 @@ DriverNode::DriverNode(const rclcpp::NodeOptions & node_options)
   } else {
     DRIVER_ERROR(*this, "Invalid data src (%d), please check the launch file", data_src);
   }
-
   pointclouddata_poll_thread_ = std::make_shared<std::thread>(&DriverNode::PointCloudDataPollThread, this);
   imudata_poll_thread_ = std::make_shared<std::thread>(&DriverNode::ImuDataPollThread, this);
 }
@@ -194,12 +200,12 @@ RCLCPP_COMPONENTS_REGISTER_NODE(livox_ros::DriverNode)
 #endif  // defined BUILDING_ROS2
 
 
-void DriverNode::PointCloudDataPollThread()
+void DriverNode::PointCloudDataPollThread(unsigned int index)
 {
   std::future_status status;
   std::this_thread::sleep_for(std::chrono::seconds(3));
   do {
-    lddc_ptr_->DistributePointCloudData();
+    lddc_ptr_->DistributePointCloudData(index);
     status = future_.wait_for(std::chrono::microseconds(0));
   } while (status == std::future_status::timeout);
 }

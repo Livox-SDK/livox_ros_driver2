@@ -22,35 +22,22 @@
 // SOFTWARE.
 //
 
-#ifndef LIVOX_ROS_DRIVER_CACHE_INDEX_H_
-#define LIVOX_ROS_DRIVER_CACHE_INDEX_H_
+#pragma once
 
-#include <mutex>
-#include <array>
-#include <map>
-#include <string>
-#include <vector>
+namespace livox_ros 
+{
 
-#include "comm/comm.h"
+#pragma pack(1)
 
-namespace livox_ros {
+typedef struct {
+  float x;            /**< X axis, Unit:m */
+  float y;            /**< Y axis, Unit:m */
+  float z;            /**< Z axis, Unit:m */
+  float reflectivity; /**< Reflectivity   */
+  uint8_t tag;        /**< Livox point tag   */
+  uint8_t line;       /**< Laser line id     */
+} LivoxPointXyzrtl;
 
-class CacheIndex {
- public:
-  CacheIndex();
-  int8_t GetFreeIndex(const uint8_t livox_lidar_type, const uint32_t handle, uint8_t& index);
-  int8_t GetIndex(const uint8_t livox_lidar_type, const uint32_t handle, uint8_t& index);
-  int8_t GenerateIndexKey(const uint8_t livox_lidar_type, const uint32_t handle, std::string& key);
-  int8_t LvxGetIndex(const uint8_t livox_lidar_type, const uint32_t handle, uint8_t& index);
-  void ResetIndex(LidarDevice *lidar);
-  std::vector<int8_t> GetIndices() const;
+#pragma pack()
 
- private:
-  std::mutex index_mutex_;
-  std::map<std::string, uint8_t> map_index_; /* key:handle/slot, val:index */
-  std::array<bool, kMaxSourceLidar> index_cache_;
-};
-
-} // namespace livox_ros
-
-# endif // LIVOX_ROS_DRIVER_CACHE_INDEX_H_
+}
