@@ -542,17 +542,17 @@ bool LidarPubHandler::FilterYawPoint(const PointXyzlt& point)
   {
     if (yaw >= filter_yaw_start_ && yaw <= filter_yaw_end_)
     {
-      return false;
+      return true;
     }
-    return true;
+    return false;
   }
   else
   {
     if (yaw >= filter_yaw_end_ && yaw <= filter_yaw_start_)
     {
-      return true;
+      return false;
     }
-    return false;
+    return true;
   }
 }
 
