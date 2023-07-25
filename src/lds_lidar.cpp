@@ -50,6 +50,10 @@
 #include "call_back/lidar_common_callback.h"
 #include "call_back/livox_lidar_callback.h"
 
+#include <tf2_ros/buffer.h>
+#include <tf2_ros/transform_listener.h>
+#include <tf2/utils.h>
+
 using namespace std;
 
 namespace livox_ros {
@@ -144,6 +148,9 @@ bool LdsLidar::InitLivoxLidar() {
     return false;
   }
 
+  tf2_ros::Buffer buffer_;
+  tf2_ros::TransformListener listener_{buffer_};
+
   // fill in lidar devices
   for (auto& config : user_configs) {
     uint8_t index = 0;
@@ -177,6 +184,29 @@ bool LdsLidar::InitLivoxLidar() {
       lidar_param.param.z     = config.extrinsic_param.z;
     }
     pub_handler().AddLidarsExtParam(lidar_param);
+
+    if (config.enable_yaw_filter) {
+      LidarFilterParameter filter_param;
+      filter_param.handle = config.handle;
+      filter_param.lidar_type = kLivoxLidarType;
+      filter_param.param = config.filter_param;
+      filter_param.param.filter_frame_id = config.filter_param.filter_frame_id;
+      filter_param.param.filter_yaw_start = config.filter_param.filter_yaw_start;
+      filter_param.param.filter_yaw_end = config.filter_param.filter_yaw_end;
+
+      auto rotation = GetTransformation(config.filter_param.filter_frame_id, config.frame_id);
+      if (rotation)
+      {
+        filter_param.transform.roll = std::get<0>(*rotation);
+        filter_param.transform.pitch = std::get<1>(*rotation);
+        filter_param.transform.yaw = std::get<2>(*rotation);
+        pub_handler().AddLidarsFilterParam(filter_param);
+      }
+      else
+      {
+        throw std::runtime_error("Failed to lookup transformation between " + config.frame_id + " and " + config.filter_param.filter_frame_id);
+      }
+    }
   }
 
   SetLivoxLidarInfoChangeCallback(LivoxLidarCallback::LidarInfoChangeCallback, g_lds_ldiar);
@@ -210,4 +240,31 @@ int LdsLidar::DeInitLdsLidar(void) {
 }
 
 void LdsLidar::PrepareExit(void) { DeInitLdsLidar(); }
+
+std::optional<std::tuple<float, float, float>> LdsLidar::GetTransformation(const std::string target_frame, const std::string source_frame)
+{
+  tf2_ros::Buffer buffer_;
+  tf2_ros::TransformListener listener_{buffer_};
+
+  constexpr double transform_timeout {1.0};
+  if(!buffer_.canTransform(target_frame, source_frame, ros::Time(0), ros::Duration(transform_timeout)))
+  {
+    std::cout << "Timout wait for Transformation" << std::endl;
+    return std::nullopt;
+  }
+
+  geometry_msgs::TransformStamped transform;
+  try
+  {
+    transform = buffer_.lookupTransform(target_frame, source_frame, ros::Time(0));
+  }
+  catch (const tf2::TransformException& e)
+  {
+    std::cout << "TransformException: " << e.what() << std::endl;
+    return std::nullopt;
+  }
+  double roll, pitch, yaw;
+  tf2::getEulerYPR(transform.transform.rotation, yaw, pitch, roll);
+  return std::tuple(static_cast<float>(roll), static_cast<float>(pitch), static_cast<float>(yaw));
+}
 }  // namespace livox_ros
