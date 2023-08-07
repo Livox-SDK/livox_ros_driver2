@@ -31,6 +31,8 @@
 
 namespace livox_ros {
 
+std::atomic<bool> PubHandler::is_timestamp_sync_;
+
 PubHandler &pub_handler() {
   static PubHandler handler;
   return handler;
@@ -100,6 +102,12 @@ void PubHandler::OnLivoxLidarPointCloudCallback(uint32_t handle, const uint8_t d
     return;
   }
 
+  if (data->time_type != kTimestampTypeNoSync) {
+    is_timestamp_sync_.store(true);
+  } else {
+    is_timestamp_sync_.store(false);
+  }
+
   if (data->data_type == kLivoxLidarImuData) {
     if (self->imu_callback_) {
       RawImuPoint* imu = (RawImuPoint*) data->data;
@@ -139,8 +147,8 @@ void PubHandler::OnLivoxLidarPointCloudCallback(uint32_t handle, const uint8_t d
   {
     std::unique_lock<std::mutex> lock(self->packet_mutex_);
     self->raw_packet_queue_.push_back(packet);
-    self->packet_condition_.notify_one();
   }
+    self->packet_condition_.notify_one();
 
   return;
 }
@@ -153,26 +161,25 @@ void PubHandler::PublishPointCloud() {
   return;
 }
 
-void PubHandler::CheckTimer() {
-  uint8_t lidar_number = lidar_process_handlers_.size();
+void PubHandler::CheckTimer(uint32_t id) {
 
-  for (auto &process_handler : lidar_process_handlers_) {
-    uint64_t recent_time_ms = process_handler.second->GetRecentTimeStamp() / kRatioOfMsToNs;
+  if (PubHandler::is_timestamp_sync_.load()) { // Enable time synchronization
+    auto& process_handler = lidar_process_handlers_[id];
+    uint64_t recent_time_ms = process_handler->GetRecentTimeStamp() / kRatioOfMsToNs;
     if ((recent_time_ms % publish_interval_ms_ != 0) || recent_time_ms == 0) {
-      continue;
+      return;
     }
 
-    uint64_t diff = process_handler.second->GetRecentTimeStamp() - process_handler.second->GetLidarBaseTime();
+    uint64_t diff = process_handler->GetRecentTimeStamp() - process_handler->GetLidarBaseTime();
     if (diff < publish_interval_tolerance_) {
-      continue;
+      return;
     }
 
-    frame_.base_time[frame_.lidar_num] = process_handler.second->GetLidarBaseTime();
-    uint32_t id = process_handler.first;
+    frame_.base_time[frame_.lidar_num] = process_handler->GetLidarBaseTime();
     points_[id].clear();
-    process_handler.second->GetLidarPointClouds(points_[id]);
+    process_handler->GetLidarPointClouds(points_[id]);
     if (points_[id].empty()) {
-      continue;
+      return;
     }
     PointPacket& lidar_point = frame_.lidar_point[frame_.lidar_num];
     lidar_point.lidar_type = LidarProtoType::kLivoxLidarType;  // TODO:
@@ -180,9 +187,39 @@ void PubHandler::CheckTimer() {
     lidar_point.points_num = points_[id].size();
     lidar_point.points = points_[id].data();
     frame_.lidar_num++;
-  }
-
-  if (frame_.lidar_num == lidar_number) {
+    
+    if (frame_.lidar_num != 0) {
+      PublishPointCloud();
+      frame_.lidar_num = 0;
+    }
+  } else { // Disable time synchronization
+    auto now_time = std::chrono::high_resolution_clock::now();
+    //First Set
+    static bool first = true;
+    if (first) {
+      last_pub_time_ = now_time;
+      first = false;
+      return;
+    }
+    if (now_time - last_pub_time_ < std::chrono::nanoseconds(publish_interval_)) {
+      return;
+    }
+    last_pub_time_ += std::chrono::nanoseconds(publish_interval_);
+    for (auto &process_handler : lidar_process_handlers_) {
+      frame_.base_time[frame_.lidar_num] = process_handler.second->GetLidarBaseTime();
+      uint32_t handle = process_handler.first;
+      points_[handle].clear();
+      process_handler.second->GetLidarPointClouds(points_[handle]);
+      if (points_[handle].empty()) {
+        continue;
+      }
+      PointPacket& lidar_point = frame_.lidar_point[frame_.lidar_num];
+      lidar_point.lidar_type = LidarProtoType::kLivoxLidarType;  // TODO:
+      lidar_point.handle = handle;
+      lidar_point.points_num = points_[handle].size();
+      lidar_point.points = points_[handle].data();
+      frame_.lidar_num++;
+    }
     PublishPointCloud();
     frame_.lidar_num = 0;
   }
@@ -195,13 +232,13 @@ void PubHandler::RawDataProcess() {
     {
       std::unique_lock<std::mutex> lock(packet_mutex_);
       if (raw_packet_queue_.empty()) {
-        packet_condition_.wait_for(lock, std::chrono::milliseconds(500));
-        if (raw_packet_queue_.empty()) {
-          continue;
-        } 
+        packet_condition_.wait_for(lock, std::chrono::milliseconds(500), [this](){return !(this->raw_packet_queue_.empty());});
       }
       raw_data = raw_packet_queue_.front();
       raw_packet_queue_.pop_front();
+      if (raw_packet_queue_.size() < 3) { // reduce CPU usage
+        std::this_thread::sleep_for(std::chrono::microseconds(50));
+      }
     }
     uint32_t id = 0;
     GetLidarId(raw_data.lidar_type, raw_data.handle, id);
@@ -213,9 +250,9 @@ void PubHandler::RawDataProcess() {
         lidar_process_handlers_[id]->SetLidarsExtParam(lidar_extrinsics_[id]);
     }
     process_handler->PointCloudProcess(raw_data);
-    CheckTimer();
+    CheckTimer(id);
   }
-} 
+}
 
 bool PubHandler::GetLidarId(LidarProtoType lidar_type, uint32_t handle, uint32_t& id) {
   if (lidar_type == kLivoxLidarType) {
