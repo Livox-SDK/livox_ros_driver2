@@ -38,19 +38,11 @@
 namespace livox_ros
 {
 
-livox_ros::Nodelet::Nodelet()
-{
-
-}
-
-
 void
 livox_ros::Nodelet::onInit()
 {
   const ros::NodeHandle nh = getPrivateNodeHandle();
   livox_node_ = std::make_shared<livox_ros::DriverNode>(nh);
-  //livox_ros::DriverNode livox_node;//(nh);
-  //livox_node_ = livox_ros::DriverNode{nh};
   DRIVER_INFO(livox_node_, "Livox Ros Driver2 Version: %s", LIVOX_ROS_DRIVER2_VERSION_STRING);
   DRIVER_INFO(livox_node_, "Livox Node NameSpace: %s ", nh.getNamespace().c_str()); 
 
@@ -70,12 +62,9 @@ livox_ros::Nodelet::onInit()
   nh.getParam("publish_freq", publish_freq);
   nh.getParam("output_data_type", output_type);
   nh.getParam("frame_id", frame_id);
-  DRIVER_INFO(livox_node_, "frame_id: %s", frame_id.c_str());
-  DRIVER_INFO(nh, "NameSpace: %s ", nh.getNamespace().c_str()); 
   nh.getParam("enable_lidar_bag", lidar_bag);
   nh.getParam("enable_imu_bag", imu_bag);
   nh.getParam("enable_dust_filter", dust_filter);
-  printf("data source:%u.\n", data_src);
 
   if (publish_freq > 100.0) {
     publish_freq = 100.0;
@@ -120,8 +109,6 @@ livox_ros::Nodelet::onInit()
   }
 
   livox_node_->imudata_poll_thread_ = std::make_shared<std::thread>(&DriverNode::ImuDataPollThread, livox_node_.get());
-  //while (ros::ok()) { usleep(10000); }
-
 }
 
 void DriverNode::PointCloudDataPollThread(unsigned int index)

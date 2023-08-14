@@ -38,7 +38,7 @@ class DriverNode final : public ros::NodeHandle {
 
  public:
   DriverNode() = default;
-  DriverNode(const NodeHandle& rhs) : ros::NodeHandle(rhs) {}; //= default;
+  DriverNode(const NodeHandle& rhs) : ros::NodeHandle(rhs) {};
   ~DriverNode();
   DriverNode &operator=(const DriverNode& rhs) = default;
   DriverNode& GetNode() noexcept;

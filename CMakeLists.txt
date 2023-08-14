@@ -121,9 +121,6 @@ target_compile_options(${PROJECT_NAME}_node
   PRIVATE $<$<CXX_COMPILER_ID:GNU>:-Wall>
 )
 
-#target_compile_options(${PROJECT_NAME}_nodelet
-#  PRIVATE $<$<CXX_COMPILER_ID:GNU>:-Wall>
-#)
 #---------------------------------------------------------------------------------------
 # add projects that depend on
 #---------------------------------------------------------------------------------------

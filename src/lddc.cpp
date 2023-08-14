@@ -146,6 +146,7 @@ void Lddc::DistributePointCloudData(unsigned int index) {
     std::cout << "DistributePointCloudData is RequestExit" << std::endl;
     return;
   }
+
   lds_->pcd_semaphore_[index].Wait();
   uint32_t lidar_id = index;
   LidarDevice *lidar = &lds_->lidars_[lidar_id];
@@ -217,7 +218,6 @@ void Lddc::PrepareExit(void) {
 }
 
 void Lddc::PublishPointcloud2(LidarDataQueue *queue, uint8_t index, const std::string& frame_id) {
-  DRIVER_INFO(*cur_node_, "Publishing point cloud2 data, please wait for a moment ...");
   while(!QueueIsEmpty(queue)) {
     StoragePacket pkg;
     QueuePop(queue, &pkg);
