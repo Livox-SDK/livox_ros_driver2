@@ -232,7 +232,10 @@ void PubHandler::RawDataProcess() {
     {
       std::unique_lock<std::mutex> lock(packet_mutex_);
       if (raw_packet_queue_.empty()) {
-        packet_condition_.wait_for(lock, std::chrono::milliseconds(500), [this](){return !(this->raw_packet_queue_.empty());});
+        packet_condition_.wait_for(lock, std::chrono::milliseconds(500));
+        if (raw_packet_queue_.empty()) {
+          continue;
+        }
       }
       raw_data = raw_packet_queue_.front();
       raw_packet_queue_.pop_front();
