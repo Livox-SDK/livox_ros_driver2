@@ -43,7 +43,6 @@ class DriverNode final : public ros::NodeHandle {
   DriverNode &operator=(const DriverNode& rhs) = default;
   DriverNode& GetNode() noexcept;
 
-
   void PointCloudDataPollThread(unsigned int index);
   void ImuDataPollThread();
 

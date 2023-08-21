@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include <memory>
+
 #include <nodelet/nodelet.h>
 #include "driver_node.h"
 

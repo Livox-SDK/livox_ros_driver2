@@ -57,8 +57,6 @@
   <build_depend>rosbag</build_depend>
   <build_depend>pcl_ros</build_depend>
   <build_depend>dust_filter_livox</build_depend>
-  <build_depend>nodelet</build_depend>
-  <build_depend>pluginlib</build_depend>
 
   <build_export_depend>roscpp</build_export_depend>
   <build_export_depend>rospy</build_export_depend>
@@ -72,13 +70,13 @@
   <exec_depend>message_runtime</exec_depend>
   <exec_depend>rosbag</exec_depend>
   <exec_depend>pcl_ros</exec_depend>
-  <exec_depend>nodelet</exec_depend>
-  <exec_depend>pluginlib</exec_depend>
 
   <depend>sensor_msgs</depend>
   <depend>git</depend>
   <depend>apr</depend>
   <depend>pcl_conversions</depend>
+  <depend>nodelet</depend>
+  <depend>pluginlib</depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
