@@ -37,6 +37,7 @@ find_package(catkin REQUIRED COMPONENTS
   rosbag
   pcl_ros
   dust_filter_livox
+  nodelet
   pcl_conversions
 )
 
@@ -72,7 +73,7 @@ endif (APR_FOUND)
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also n    eed
 catkin_package(CATKIN_DEPENDS
-  roscpp rospy std_msgs message_runtime
+  roscpp rospy std_msgs message_runtime nodelet
   pcl_ros
   INCLUDE_DIRS
     include
@@ -109,6 +110,10 @@ add_executable(${PROJECT_NAME}_node
   ""
 )
 
+add_library(${PROJECT_NAME}_nodelet
+  ""
+)
+
 #---------------------------------------------------------------------------------------
 # precompile macro and compile option
 #---------------------------------------------------------------------------------------
@@ -120,6 +125,7 @@ target_compile_options(${PROJECT_NAME}_node
 # add projects that depend on
 #---------------------------------------------------------------------------------------
 add_dependencies(${PROJECT_NAME}_node ${PROJECT_NAME}_generate_messages_cpp)
+add_dependencies(${PROJECT_NAME}_nodelet ${PROJECT_NAME}_generate_messages_cpp)
 
 #---------------------------------------------------------------------------------------
 # source file
@@ -131,6 +137,28 @@ target_sources(${PROJECT_NAME}_node
   src/lds_lidar.cpp
   src/lddc.cpp
   src/livox_ros_driver2.cpp
+
+  src/comm/comm.cpp
+  src/comm/ldq.cpp
+  src/comm/semaphore.cpp
+  src/comm/lidar_imu_data_queue.cpp
+  src/comm/cache_index.cpp
+  src/comm/pub_handler.cpp
+
+  src/parse_cfg_file/parse_cfg_file.cpp
+  src/parse_cfg_file/parse_livox_lidar_cfg.cpp
+
+  src/call_back/lidar_common_callback.cpp
+  src/call_back/livox_lidar_callback.cpp
+)
+
+target_sources(${PROJECT_NAME}_nodelet
+  PRIVATE
+  src/driver_node.cpp
+  src/lds.cpp
+  src/lds_lidar.cpp
+  src/lddc.cpp
+  src/nodelet.cpp
 
   src/comm/comm.cpp
   src/comm/ldq.cpp
@@ -159,6 +187,16 @@ target_include_directories(${PROJECT_NAME}_node
   src
 )
 
+target_include_directories(${PROJECT_NAME}_nodelet
+  PUBLIC
+  include
+  ${catkin_INCLUDE_DIRS}
+  ${PCL_INCLUDE_DIRS}
+  ${APR_INCLUDE_DIRS}
+  3rdparty
+  src
+)
+
 include_directories(
   include
 )
@@ -173,7 +211,17 @@ target_link_libraries(${PROJECT_NAME}_node
   ${PCL_LIBRARIES}
   ${APR_LIBRARIES}
 )
+#---------------------------------------------------------------------------------------
+# nodelet libraries
+#---------------------------------------------------------------------------------------
 
+target_link_libraries(${PROJECT_NAME}_nodelet
+   ${LIVOX_LIDAR_SDK_LIBRARY}
+   ${Boost_LIBRARY}
+   ${catkin_LIBRARIES}
+   ${PCL_LIBRARIES}
+   ${APR_LIBRARIES}
+)
 
 #---------------------------------------------------------------------------------------
 # Install
@@ -184,6 +232,14 @@ install(TARGETS ${PROJECT_NAME}_node
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
+
+install(TARGETS ${PROJECT_NAME}_nodelet
+   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+)
+
+install(FILES nodelets.xml DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
 install(DIRECTORY launch_ROS1/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch_ROS1

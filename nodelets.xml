@@ -1,0 +1,9 @@
+<library path="lib/liblivox_ros_driver2_nodelet">
+  <class name="livox_ros_driver2/Nodelet"
+          type="livox_ros::Nodelet"
+          base_class_type="nodelet::Nodelet">
+    <description>
+      The ROS device driver for Livox 3D LiDARs
+    </description>
+  </class>
+</library>

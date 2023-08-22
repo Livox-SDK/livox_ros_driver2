@@ -146,7 +146,7 @@ void Lddc::DistributePointCloudData(unsigned int index) {
     std::cout << "DistributePointCloudData is RequestExit" << std::endl;
     return;
   }
-  
+
   lds_->pcd_semaphore_[index].Wait();
   uint32_t lidar_id = index;
   LidarDevice *lidar = &lds_->lidars_[lidar_id];

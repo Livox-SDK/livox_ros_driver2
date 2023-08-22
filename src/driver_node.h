@@ -35,12 +35,12 @@ class Lddc;
 
 #ifdef BUILDING_ROS1
 class DriverNode final : public ros::NodeHandle {
+
  public:
   DriverNode() = default;
-  DriverNode(const DriverNode &) = delete;
+  DriverNode(const NodeHandle& rhs) : ros::NodeHandle(rhs) {};
   ~DriverNode();
-  DriverNode &operator=(const DriverNode &) = delete;
-
+  DriverNode &operator=(const DriverNode& rhs) = default;
   DriverNode& GetNode() noexcept;
 
   void PointCloudDataPollThread(unsigned int index);

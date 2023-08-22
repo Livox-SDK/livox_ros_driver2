@@ -75,10 +75,11 @@
   <depend>git</depend>
   <depend>apr</depend>
   <depend>pcl_conversions</depend>
+  <depend>nodelet</depend>
+  <depend>pluginlib</depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
-    <!-- Other tools can request additional information be placed here -->
-
+    <nodelet plugin="${prefix}/nodelets.xml"/>
   </export>
 </package>
