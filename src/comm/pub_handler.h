@@ -90,7 +90,7 @@ class PubHandler {
   using ImuDataCallback = std::function<void(ImuData*, void*)>;
   using TimePoint = std::chrono::high_resolution_clock::time_point;
 
-  PubHandler() {}
+  PubHandler();
 
   ~ PubHandler() { Uninit(); }
 
@@ -145,6 +145,7 @@ class PubHandler {
   std::map<uint32_t, LidarFilterParameter> lidar_filters_;
 
   uint16_t lidar_listen_id_ = 0;
+  bool time_is_steady_ = false;
 };
 
 PubHandler &pub_handler();

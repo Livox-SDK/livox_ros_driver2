@@ -30,6 +30,19 @@
 #include <limits>
 namespace livox_ros {
 
+PubHandler::PubHandler() {
+  time_is_steady_ = std::chrono::high_resolution_clock::is_steady;
+
+  if (time_is_steady_)
+  {
+    std::cout << "Time is steady." << std::endl;
+  }
+  else
+  {
+    std::cout << "Time is not steady." << std::endl;
+  }
+}
+
 PubHandler &pub_handler() {
   static PubHandler handler;
   return handler;
@@ -201,6 +214,13 @@ void PubHandler::CheckTimer() {
     return;
   }
   last_pub_time_ += std::chrono::nanoseconds(publish_interval_);
+
+  if (!time_is_steady_) {
+    if (now_time - last_pub_time_ > std::chrono::nanoseconds(publish_interval_)) {
+      std::cerr << "Detected a jump in time, setting last pub time to now" << std::endl;
+      last_pub_time_ = now_time;
+    }
+  }
 
   PublishPointCloud();
 
