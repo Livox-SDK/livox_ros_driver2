@@ -26,19 +26,38 @@
 
 namespace livox_ros {
 
-void LidarImuDataQueue::Push(ImuData* imu_data) {
+void LidarImuDataQueue::Push(ImuData *imu_data,
+                             const ExtParameterDetailed &detail) {
   ImuData data;
   data.lidar_type = imu_data->lidar_type;
   data.handle = imu_data->handle;
   data.time_stamp = imu_data->time_stamp;
 
-  data.gyro_x = imu_data->gyro_x;
-  data.gyro_y = imu_data->gyro_y;
-  data.gyro_z = imu_data->gyro_z;
+  data.acc_x = imu_data->acc_x * detail.rotation[0][0] +
+               imu_data->acc_y * detail.rotation[0][1] +
+               imu_data->acc_z * detail.rotation[0][2] +
+               detail.trans[0] * 1000.0;
+  data.acc_y = imu_data->acc_x * detail.rotation[1][0] +
+               imu_data->acc_y * detail.rotation[1][1] +
+               imu_data->acc_z * detail.rotation[1][2] +
+               detail.trans[1] * 1000.0;
+  data.acc_z = imu_data->acc_x * detail.rotation[2][0] +
+               imu_data->acc_y * detail.rotation[2][1] +
+               imu_data->acc_z * detail.rotation[2][2] +
+               detail.trans[2] * 1000.0;
 
-  data.acc_x = imu_data->acc_x;
-  data.acc_y = imu_data->acc_y;
-  data.acc_z = imu_data->acc_z;
+  data.gyro_x = imu_data->gyro_x * detail.rotation[0][0] +
+                imu_data->gyro_y * detail.rotation[0][1] +
+                imu_data->gyro_z * detail.rotation[0][2] +
+                detail.trans[0] * 1000.0;
+  data.gyro_y = imu_data->gyro_x * detail.rotation[1][0] +
+                imu_data->gyro_y * detail.rotation[1][1] +
+                imu_data->gyro_z * detail.rotation[1][2] +
+                detail.trans[1] * 1000.0;
+  data.gyro_z = imu_data->gyro_x * detail.rotation[2][0] +
+                imu_data->gyro_y * detail.rotation[2][1] +
+                imu_data->gyro_z * detail.rotation[2][2] +
+                detail.trans[2] * 1000.0;
 
   std::lock_guard<std::mutex> lock(mutex_);
   imu_data_queue_.push_back(std::move(data));

@@ -149,6 +149,7 @@ bool LivoxLidarConfigParser::ParseExtrinsics(const rapidjson::Value &value,
   } else {
     param.z = static_cast<int32_t>(value["z"].GetInt());
   }
+  param.UpdateRotationTrans();
 
   return true;
 }

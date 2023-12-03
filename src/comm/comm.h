@@ -219,15 +219,42 @@ typedef struct {
   int32_t x;   /**< X translation, unit: mm. */
   int32_t y;   /**< Y translation, unit: mm. */
   int32_t z;   /**< Z translation, unit: mm. */
+  ExtParameterDetailed detail;
+  void UpdateRotationTrans() {
+    detail.trans[0] = x;
+    detail.trans[1] = y;
+    detail.trans[2] = z;
+
+    double cos_roll =
+        cos(static_cast<double>(roll * PI / 180.0));
+    double cos_pitch =
+        cos(static_cast<double>(pitch * PI / 180.0));
+    double cos_yaw =
+        cos(static_cast<double>(yaw * PI / 180.0));
+    double sin_roll =
+        sin(static_cast<double>(roll * PI / 180.0));
+    double sin_pitch =
+        sin(static_cast<double>(pitch * PI / 180.0));
+    double sin_yaw =
+        sin(static_cast<double>(yaw * PI / 180.0));
+
+    detail.rotation[0][0] = cos_pitch * cos_yaw;
+    detail.rotation[0][1] =
+        sin_roll * sin_pitch * cos_yaw - cos_roll * sin_yaw;
+    detail.rotation[0][2] =
+        cos_roll * sin_pitch * cos_yaw + sin_roll * sin_yaw;
+
+    detail.rotation[1][0] = cos_pitch * sin_yaw;
+    detail.rotation[1][1] =
+        sin_roll * sin_pitch * sin_yaw + cos_roll * cos_yaw;
+    detail.rotation[1][2] =
+        cos_roll * sin_pitch * sin_yaw - sin_roll * cos_yaw;
+
+    detail.rotation[2][0] = -sin_pitch;
+    detail.rotation[2][1] = sin_roll * cos_pitch;
+    detail.rotation[2][2] = cos_roll * cos_pitch;
+  }
 } ExtParameter;
-
-typedef float TranslationVector[3]; /**< x, y, z translation, unit: mm. */
-typedef float RotationMatrix[3][3];
-
-typedef struct {
-  TranslationVector trans;
-  RotationMatrix rotation;
-} ExtParameterDetailed;
 
 typedef struct {
   LidarProtoType lidar_type;
