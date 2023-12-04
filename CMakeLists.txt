@@ -18,14 +18,6 @@ if(ROS_EDITION STREQUAL "ROS1")
   #---------------------------------------------------------------------------------------
   add_definitions(-DBUILDING_ROS1)
 
-  #---------------------------------------------------------------------------------------
-  # find package and the dependecy
-  #---------------------------------------------------------------------------------------
-  find_package(Boost 1.54 REQUIRED COMPONENTS
-    system
-    thread
-    chrono
-  )
 
   ## Find catkin macros and libraries
   ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -158,7 +150,6 @@ if(ROS_EDITION STREQUAL "ROS1")
   #---------------------------------------------------------------------------------------
   target_link_libraries(${PROJECT_NAME}_node
     ${LIVOX_LIDAR_SDK_LIBRARY}
-    ${Boost_LIBRARY}
     ${catkin_LIBRARIES}
     ${PCL_LIBRARIES}
     ${APR_LIBRARIES}
@@ -307,7 +298,6 @@ else(ROS_EDITION STREQUAL "ROS2")
     ${LIVOX_LIDAR_SDK_LIBRARY}
     ${LIVOX_INTERFACE_TARGET}   # for custom msgs
     ${PPT_LIBRARY}
-    ${Boost_LIBRARY}
     ${PCL_LIBRARIES}
     ${APR_LIBRARIES}
   )
