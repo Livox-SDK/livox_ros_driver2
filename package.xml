@@ -11,9 +11,9 @@
 
     <!-- ROS1 dependencies -->
     <buildtool_depend condition="$ROS_VERSION == 1">catkin</buildtool_depend>
-    <depend condition="$ROS_VERSION == 1">roscpp</build_depend>
-    <depend condition="$ROS_VERSION == 1">rospy</build_depend>
-    <depend condition="$ROS_VERSION == 1">message_generation</build_depend>
+    <depend condition="$ROS_VERSION == 1">roscpp</depend>
+    <depend condition="$ROS_VERSION == 1">rospy</depend>
+    <depend condition="$ROS_VERSION == 1">message_generation</depend>
     <exec_depend condition="$ROS_VERSION == 1">message_runtime</exec_depend>
     <exec_depend condition="$ROS_VERSION == 1">rosbag</exec_depend>
 
