@@ -100,7 +100,7 @@ class PubHandler {
   std::condition_variable packet_condition_;
 
   //publish callback
-  void CheckTimer();
+  void CheckTimer(uint32_t id);
   void PublishPointCloud();
   static void OnLivoxLidarPointCloudCallback(uint32_t handle, const uint8_t dev_type,
                                              LivoxLidarEthernetPacket *data, void *client_data);
@@ -119,14 +119,15 @@ class PubHandler {
   std::deque<RawPacket> raw_packet_queue_;
 
   //pub config
-  uint64_t publish_interval_ = 100000000; //100 ns
-  uint64_t publish_interval_tolerance_ = 100000000; //100 ns
+  uint64_t publish_interval_ = 100000000; //100 ms
+  uint64_t publish_interval_tolerance_ = 100000000; //100 ms
   uint64_t publish_interval_ms_ = 100; //100 ms
   TimePoint last_pub_time_;
 
   std::map<uint32_t, std::unique_ptr<LidarPubHandler>> lidar_process_handlers_;
   std::map<uint32_t, std::vector<PointXyzlt>> points_;
   std::map<uint32_t, LidarExtParameter> lidar_extrinsics_;
+  static std::atomic<bool> is_timestamp_sync_;
   uint16_t lidar_listen_id_ = 0;
 };
 

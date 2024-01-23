@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.4]
+### Fixed
+- Optimize framing performance
+
+## [1.2.3]
+### Fixed
+- Optimize framing logic and reduce CPU usage
+- Fixed some known issues
+
 ## [1.2.1]
 ### Fixed
 - Fix offset time error regarding CustomMsg format message publishment.

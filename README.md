@@ -2,6 +2,10 @@
 
 Livox ROS Driver 2 is the 2nd-generation driver package used to connect LiDAR products produced by Livox, applicable for ROS (noetic recommended) and ROS2 (foxy or humble recommended).
 
+  **Note :**
+
+  As a debugging tool, Livox ROS Driver is not recommended for mass production but limited to test scenarios. You should optimize the code based on the original source to meet your various needs.
+
 ## 1. Preparation
 
 ### 1.1 OS requirements
