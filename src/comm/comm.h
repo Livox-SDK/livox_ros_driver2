@@ -63,6 +63,8 @@ const int64_t kMaxPacketTimeGap = 1700000;
 /**< the threshold of device disconect */
 const int64_t kDeviceDisconnectThreshold = 1000000000;
 const uint32_t kNsPerSecond = 1000000000; /**< 1s  = 1000000000ns */
+const uint32_t kNsTolerantFrameTimeDeviation = 1000000; /**< 1ms  = 1000000ns */
+const uint32_t kRatioOfMsToNs = 1000000; /**< 1ms  = 1000000ns */
 
 const int kPathStrMinSize = 4;   /**< Must more than 4 char */
 const int kPathStrMaxSize = 256; /**< Must less than 256 char */
@@ -92,11 +94,8 @@ typedef enum {
 /** Timestamp sync mode define. */
 typedef enum {
   kTimestampTypeNoSync = 0, /**< No sync signal mode. */
-  kTimestampTypePtp = 1,    /**< 1588v2.0 PTP sync mode. */
-  kTimestampTypeRsvd = 2,   /**< Reserved use. */
-  kTimestampTypePpsGps = 3, /**< pps+gps sync mode. */
-  kTimestampTypePps = 4,    /**< pps only sync mode. */
-  kTimestampTypeUnknown = 5 /**< Unknown mode. */
+  kTimestampTypeGptpOrPtp = 1,    /**< gPTP or PTP sync mode */
+  kTimestampTypeGps = 2   /**< GPS sync mode. */
 } TimestampType;
 
 /** Lidar connect state */
@@ -155,7 +154,8 @@ typedef struct {
   float reflectivity; /**< Reflectivity   */
   uint8_t tag;        /**< Livox point tag   */
   uint8_t line;       /**< Laser line id     */
-} LivoxPointXyzrtl;
+  double timestamp;   /**< Timestamp of point*/
+} LivoxPointXyzrtlt;
 
 typedef struct {
   float x;
@@ -175,7 +175,7 @@ typedef struct {
 } PointPacket;
 
 typedef struct {
-  uint64_t base_time {};
+  uint64_t base_time[kMaxSourceLidar] {};
   uint8_t lidar_num {};
   PointPacket lidar_point[kMaxSourceLidar] {};
 } PointFrame;

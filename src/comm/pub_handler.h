@@ -50,10 +50,9 @@ class LidarPubHandler {
   void SetLidarsExtParam(LidarExtParameter param);
   void GetLidarPointClouds(std::vector<PointXyzlt>& points_clouds);
 
+  uint64_t GetRecentTimeStamp();
   uint32_t GetLidarPointCloudsSize();
-
   uint64_t GetLidarBaseTime();
-  void SetLidarOffsetTime(uint64_t base_time);
 
  private:
   void LivoxLidarPointCloudProcess(RawPacket & pkt);
@@ -101,14 +100,13 @@ class PubHandler {
   std::condition_variable packet_condition_;
 
   //publish callback
-  void CheckTimer();
+  void CheckTimer(uint32_t id);
   void PublishPointCloud();
   static void OnLivoxLidarPointCloudCallback(uint32_t handle, const uint8_t dev_type,
                                              LivoxLidarEthernetPacket *data, void *client_data);
   
   static bool GetLidarId(LidarProtoType lidar_type, uint32_t handle, uint32_t& id);
   static uint64_t GetEthPacketTimestamp(uint8_t timestamp_type, uint8_t* time_stamp, uint8_t size);
-  static uint64_t GetDirectEthPacketTimestamp(uint8_t timestamp_type, uint8_t* time_stamp, uint8_t size);
 
   PointCloudsCallback points_callback_;
   void* pub_client_data_ = nullptr;
@@ -122,11 +120,14 @@ class PubHandler {
 
   //pub config
   uint64_t publish_interval_ = 100000000; //100 ms
+  uint64_t publish_interval_tolerance_ = 100000000; //100 ms
+  uint64_t publish_interval_ms_ = 100; //100 ms
   TimePoint last_pub_time_;
 
   std::map<uint32_t, std::unique_ptr<LidarPubHandler>> lidar_process_handlers_;
   std::map<uint32_t, std::vector<PointXyzlt>> points_;
   std::map<uint32_t, LidarExtParameter> lidar_extrinsics_;
+  static std::atomic<bool> is_timestamp_sync_;
   uint16_t lidar_listen_id_ = 0;
 };
 
