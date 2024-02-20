@@ -56,22 +56,9 @@ git clone https://github.com/Livox-SDK/livox_ros_driver2.git ws_livox/src/livox_
 
 ### 2.3 Build the Livox ROS Driver 2:
 
-#### For ROS (take Noetic as an example):
-```shell
-source /opt/ros/noetic/setup.sh
-./build.sh ROS1
-```
-
-#### For ROS2 Foxy:
-```shell
-source /opt/ros/foxy/setup.sh
-./build.sh ROS2
-```
-
-#### For ROS2 Humble:
-```shell
-source /opt/ros/humble/setup.sh
-./build.sh humble
+```bash
+rosdep install --from-paths src --ignore-src -y
+colcon build --symlink-install
 ```
 
 ### 2.4 Run Livox ROS Driver 2:
