@@ -571,9 +571,9 @@ PublisherPtr Lddc::GetCurrentPublisher(uint8_t index) {
     char name_str[48];
     memset(name_str, 0, sizeof(name_str));
     if (use_multi_topic_) {
-      std::string ip_string = IpNumToString(lds_->lidars_[index].handle);
+      std::string nickName = lds_->lidars_[index].livox_config.nickName; 
       snprintf(name_str, sizeof(name_str), "livox/lidar_%s",
-               ReplacePeriodByUnderline(ip_string).c_str());
+               ReplacePeriodByUnderline(nickName).c_str()); 
       DRIVER_INFO(*cur_node_, "Support multi topics.");
     } else {
       DRIVER_INFO(*cur_node_, "Support only one topic.");
