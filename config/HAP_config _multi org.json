@@ -13,7 +13,7 @@
     "host_net_info" : {
       "cmd_data_ip" : "192.168.1.2",
       "cmd_data_port": 56000,
-      "push_msg_ip": "192.168.1.2",
+      "push_msg_ip": "",
       "push_msg_port": 0,
       "point_data_ip": "192.168.1.2",
       "point_data_port": 57000,
@@ -23,27 +23,7 @@
       "log_data_port": 59000
     }
   },
-  "HAP": {
-    "lidar_net_info" : {
-      "cmd_data_port": 56000,
-      "push_msg_port": 0,
-      "point_data_port": 57000,
-      "imu_data_port": 58000,
-      "log_data_port": 59000
-    },
-    "host_net_info" : {
-      "cmd_data_ip" : "192.168.1.2",
-      "cmd_data_port": 56002,
-      "push_msg_ip": "192.168.1.2",
-      "push_msg_port": 2,
-      "point_data_ip": "192.168.1.2",
-      "point_data_port": 57002,
-      "imu_data_ip" : "192.168.1.2",
-      "imu_data_port": 58002,
-      "log_data_ip" : "",
-      "log_data_port": 59002
-    }
-  },
+  
   
   "lidar_configs" : [
     {
@@ -55,7 +35,7 @@
       "extrinsic_parameter" : {
         "roll": 0.0,
         "pitch": 0.0,
-        "yaw": -120.0,
+        "yaw": 0.0,
         "x": 0,
         "y": 0,
         "z": 0
@@ -67,23 +47,7 @@
       "nickName" : "L",
       "pcl_data_type" : 1,
       "pattern_mode" : 0,
-      "frame_id" : "lslidar",
-      "extrinsic_parameter" : {
-        "roll": 0.0,
-        "pitch": 0.0,
-        "yaw": 120.0,
-        "x": 0,
-        "y": 0,
-        "z": 0
-      }
-    }
-    ,
-    {
-      "ip" : "192.168.1.100",
-      "nickName" : "F",
-      "pcl_data_type" : 1,
-      "pattern_mode" : 0,
-      "frame_id" : "fslidar",
+      "frame_id" : "rslidar",
       "extrinsic_parameter" : {
         "roll": 0.0,
         "pitch": 0.0,

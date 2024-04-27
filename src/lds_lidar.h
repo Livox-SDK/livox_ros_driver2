@@ -54,6 +54,7 @@ class LdsLidar final : public Lds {
 
   int DeInitLdsLidar(void);
  private:
+  std::vector<UserLivoxLidarConfig> user_configs;
   LdsLidar(double publish_freq);
   LdsLidar(const LdsLidar &) = delete;
   ~LdsLidar();
