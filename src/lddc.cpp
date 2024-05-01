@@ -572,12 +572,12 @@ PublisherPtr Lddc::GetCurrentPublisher(uint8_t index) {
     memset(name_str, 0, sizeof(name_str));
     if (use_multi_topic_) {
       std::string nickName = lds_->lidars_[index].livox_config.nickName; 
-      snprintf(name_str, sizeof(name_str), "livox/lidar_%s",
+      snprintf(name_str, sizeof(name_str), "livox/lidar_%s/points",
                ReplacePeriodByUnderline(nickName).c_str()); 
       DRIVER_INFO(*cur_node_, "Support multi topics.");
     } else {
       DRIVER_INFO(*cur_node_, "Support only one topic.");
-      snprintf(name_str, sizeof(name_str), "livox/lidar");
+      snprintf(name_str, sizeof(name_str), "livox/lidar/points");
     }
 
     *pub = new ros::Publisher;
@@ -622,12 +622,12 @@ PublisherPtr Lddc::GetCurrentImuPublisher(uint8_t handle) {
     memset(name_str, 0, sizeof(name_str));
     if (use_multi_topic_) {
       DRIVER_INFO(*cur_node_, "Support multi topics.");
-      std::string ip_string = IpNumToString(lds_->lidars_[handle].handle);
-      snprintf(name_str, sizeof(name_str), "livox/imu_%s",
-               ReplacePeriodByUnderline(ip_string).c_str());
+      std::string nickName = lds_->lidars_[handle].livox_config.nickName; 
+      snprintf(name_str, sizeof(name_str), "livox/lidar_%s/imu",
+               ReplacePeriodByUnderline(nickName).c_str());
     } else {
       DRIVER_INFO(*cur_node_, "Support only one topic.");
-      snprintf(name_str, sizeof(name_str), "livox/imu");
+      snprintf(name_str, sizeof(name_str), "livox/lidar/imu");
     }
 
     *pub = new ros::Publisher;
