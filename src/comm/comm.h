@@ -265,7 +265,7 @@ typedef struct {
   int32_t blind_spot_set;
   int8_t dual_emit_en;
   ExtParameter extrinsic_param;
-  std::string nickName;
+  std::string ldName;
   volatile uint32_t set_bits;
   volatile uint32_t get_bits;
 } UserLivoxLidarConfig;

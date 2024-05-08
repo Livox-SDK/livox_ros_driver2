@@ -48,10 +48,9 @@
   "lidar_configs" : [
     {
       "ip" : "192.168.1.101",
-      "nickName" : "R",
+      "name" : "Right",
       "pcl_data_type" : 1,
       "pattern_mode" : 0,
-      "frame_id" : "rslidar",
       "extrinsic_parameter" : {
         "roll": 0.0,
         "pitch": 0.0,
@@ -64,10 +63,9 @@
     ,
     {
       "ip" : "192.168.1.102",
-      "nickName" : "L",
+      "name" : "Left",
       "pcl_data_type" : 1,
       "pattern_mode" : 0,
-      "frame_id" : "lslidar",
       "extrinsic_parameter" : {
         "roll": 0.0,
         "pitch": 0.0,
@@ -80,10 +78,9 @@
     ,
     {
       "ip" : "192.168.1.100",
-      "nickName" : "F",
+      "name" : "Front",
       "pcl_data_type" : 1,
       "pattern_mode" : 0,
-      "frame_id" : "fslidar",
       "extrinsic_parameter" : {
         "roll": 0.0,
         "pitch": 0.0,

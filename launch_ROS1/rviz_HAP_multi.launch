@@ -8,7 +8,7 @@
 	<arg name="data_src" default="0"/>
 	<arg name="publish_freq" default="10.0"/>
 	<arg name="output_type" default="0"/>
-	<arg name="rviz_enable" default="true"/>
+	<arg name="rviz_enable" default="false"/>
 	<arg name="rosbag_enable" default="false"/>
 	<arg name="cmdline_arg" default="$(arg bd_list)"/>
 	<arg name="msg_frame_id" default="livox_frame"/>
