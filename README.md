@@ -496,7 +496,7 @@ For more infomation about the HAP config, please refer to:
     <param name="enable_lidar_bag" type="bool" value="$(arg lidar_bag)"/>
     <param name="enable_imu_bag" type="bool" value="$(arg imu_bag)"/>
 
-    <node name="livox_lidar_publisher1" pkg="livox_ros_driver2"
+    <node name="livox_lidar_publisher2" pkg="livox_ros_driver2"
           type="livox_ros_driver2_node" required="true"
           output="screen" args="$(arg cmdline_arg)"/>
 
