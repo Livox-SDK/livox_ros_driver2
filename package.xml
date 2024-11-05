@@ -4,7 +4,7 @@
   <name>livox_ros_driver2</name>
   <version>1.0.0</version>
   <description>The ROS device driver for Livox 3D LiDARs, for ROS2</description>
-  <maintainer email="dev@livoxtech.com">feng</maintainer>
+  <maintainer email="lichtenfeld@sim.tu-darmstadt.de">Jonathan Lichtenfeld</maintainer>
   <license>MIT</license>
 
   <buildtool_depend>ament_cmake_auto</buildtool_depend>
@@ -19,6 +19,7 @@
   <depend>pcl_conversions</depend>
   <depend>rcl_interfaces</depend>
   <depend>libpcl-all-dev</depend>
+  <depend>livox_sdk2</depend>
 
   <exec_depend>rosbag2</exec_depend>
   <exec_depend>rosidl_default_runtime</exec_depend>

@@ -1,6 +1,6 @@
 # Copyright(c) 2020 livoxtech limited.
 
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.5)
 project(livox_ros_driver2)
 
 # Default to C99
@@ -39,6 +39,7 @@ find_package(PCL REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(builtin_interfaces REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
+find_package(livox_sdk2 REQUIRED)
 
 # check apr
 find_package(PkgConfig)
@@ -57,13 +58,14 @@ rosidl_generate_interfaces(${LIVOX_INTERFACES}
   LIBRARY_NAME ${PROJECT_NAME}
 )
 
-## make sure the livox_lidar_sdk_shared library is installed
-find_library(LIVOX_LIDAR_SDK_LIBRARY liblivox_lidar_sdk_shared.so /usr/local/lib REQUIRED)
+# ## make sure the livox_lidar_sdk_shared library is installed
+# find_library(LIVOX_LIDAR_SDK_LIBRARY liblivox_lidar_sdk_shared.so /usr/local/lib REQUIRED)
+find_library(LIVOX_SDK_LIBRARY NAMES livox_lidar_sdk_shared PATHS "${CMAKE_INSTALL_PREFIX}/lib" REQUIRED)
 
-##
-find_path(LIVOX_LIDAR_SDK_INCLUDE_DIR
-  NAMES "livox_lidar_api.h" "livox_lidar_def.h"
-  REQUIRED)
+# find_path(LIVOX_SDK_INCLUDE_DIR
+#   NAMES "livox_lidar_api.h" "livox_lidar_def.h"
+#   #PATHS "${CMAKE_INSTALL_PREFIX}/include/${PROJECT_NAME}"
+#   REQUIRED)
 
 ## PCL library
 link_directories(${PCL_LIBRARY_DIRS})
@@ -111,7 +113,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 
 # link libraries
 target_link_libraries(${PROJECT_NAME}
-  ${LIVOX_LIDAR_SDK_LIBRARY}
+  ${LIVOX_SDK_LIBRARY}
   ${LIVOX_INTERFACE_TARGET}   # for custom msgs
   ${PPT_LIBRARY}
   ${Boost_LIBRARY}
