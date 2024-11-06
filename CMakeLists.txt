@@ -30,9 +30,6 @@ message(STATUS "${PROJECT_NAME} version: ${LIVOX_ROS_DRIVER2_VERSION}")
 add_definitions(-DBUILDING_ROS2)
 
 # find dependencies
-# uncomment the following section in order to fill in
-# further dependencies manually.
-# find_package(<dependency> REQUIRED)
 find_package(ament_cmake_auto REQUIRED)
 ament_auto_find_build_dependencies()
 find_package(PCL REQUIRED)
@@ -57,15 +54,6 @@ rosidl_generate_interfaces(${LIVOX_INTERFACES}
   DEPENDENCIES builtin_interfaces std_msgs
   LIBRARY_NAME ${PROJECT_NAME}
 )
-
-# ## make sure the livox_lidar_sdk_shared library is installed
-# find_library(LIVOX_LIDAR_SDK_LIBRARY liblivox_lidar_sdk_shared.so /usr/local/lib REQUIRED)
-find_library(LIVOX_SDK_LIBRARY NAMES livox_lidar_sdk_shared PATHS "${CMAKE_INSTALL_PREFIX}/lib" REQUIRED)
-
-# find_path(LIVOX_SDK_INCLUDE_DIR
-#   NAMES "livox_lidar_api.h" "livox_lidar_def.h"
-#   #PATHS "${CMAKE_INSTALL_PREFIX}/include/${PROJECT_NAME}"
-#   REQUIRED)
 
 ## PCL library
 link_directories(${PCL_LIBRARY_DIRS})
@@ -93,19 +81,16 @@ ament_auto_add_library(${PROJECT_NAME} SHARED
   src/call_back/livox_lidar_callback.cpp
 )
 
-target_include_directories(${PROJECT_NAME} PRIVATE ${livox_sdk_INCLUDE_DIRS})
-
-# # get include directories of custom msg headers
+# get include directories of custom msg headers
 rosidl_get_typesupport_target(cpp_typesupport_target
 ${LIVOX_INTERFACES} "rosidl_typesupport_cpp")
 target_link_libraries(${PROJECT_NAME} "${cpp_typesupport_target}")
-
 
 # include file direcotry
 target_include_directories(${PROJECT_NAME} PUBLIC
   ${PCL_INCLUDE_DIRS}
   ${APR_INCLUDE_DIRS}
-  ${LIVOX_LIDAR_SDK_INCLUDE_DIR}
+  ${livox_sdk2_INCLUDE_DIRS}
   ${LIVOX_INTERFACES_INCLUDE_DIRECTORIES}   # for custom msgs
   3rdparty
   src
@@ -113,7 +98,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 
 # link libraries
 target_link_libraries(${PROJECT_NAME}
-  ${LIVOX_SDK_LIBRARY}
+  ${livox_sdk2_LIBRARIES}
   ${LIVOX_INTERFACE_TARGET}   # for custom msgs
   ${PPT_LIBRARY}
   ${Boost_LIBRARY}
@@ -128,12 +113,6 @@ rclcpp_components_register_node(${PROJECT_NAME}
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
-  # the following line skips the linter which checks for copyrights
-  # uncomment the line when a copyright and license is not present in all source files
-  #set(ament_cmake_copyright_FOUND TRUE)
-  # the following line skips cpplint (only works in a git repo)
-  # uncomment the line when this package is not in a git repo
-  #set(ament_cmake_cpplint_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
 endif()
 

@@ -1,4 +1,5 @@
 .vscode
 .idea
 build
+cmake-build-debug
 __pycache__
