@@ -1,6 +1,9 @@
 import os
 from ament_index_python.packages import get_package_share_directory
+from launch.actions import DeclareLaunchArgument
 from launch import LaunchDescription
+from launch.substitutions import LaunchConfiguration
+
 from launch_ros.actions import Node
 import launch
 
@@ -33,16 +36,23 @@ livox_ros2_params = [
 
 
 def generate_launch_description():
+    namespace = LaunchConfiguration('ns')
+    declare_ns_cmd = DeclareLaunchArgument(
+        'namespace', default_value='/',
+        description='namespace'
+    )
     livox_driver = Node(
         package='livox_ros_driver2',
         executable='livox_ros_driver2_node',
         name='livox_lidar_publisher',
         output='screen',
+        namespace=namespace,
         parameters=livox_ros2_params
         )
 
     return LaunchDescription([
         livox_driver,
+        declare_ns_cmd
         # launch.actions.RegisterEventHandler(
         #     event_handler=launch.event_handlers.OnProcessExit(
         #         target_action=livox_rviz,
