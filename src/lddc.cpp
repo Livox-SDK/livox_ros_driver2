@@ -649,7 +649,7 @@ std::shared_ptr<rclcpp::PublisherBase> Lddc::GetCurrentPublisher(uint8_t handle)
       memset(name_str, 0, sizeof(name_str));
 
       std::string ld_name = lds_->lidars_[handle].livox_config.ld_name;
-      snprintf(name_str, sizeof(name_str), "livox/%s/points",
+      snprintf(name_str, sizeof(name_str), "livox/ip_%s/points",
           ReplacePeriodByUnderline(ld_name).c_str());
       std::string topic_name(name_str);
       queue_size = queue_size * 2; // queue size is 64 for only one lidar
@@ -673,7 +673,7 @@ std::shared_ptr<rclcpp::PublisherBase> Lddc::GetCurrentImuPublisher(uint8_t hand
       char name_str[48];
       memset(name_str, 0, sizeof(name_str));
       std::string ld_name = lds_->lidars_[handle].livox_config.ld_name;
-      snprintf(name_str, sizeof(name_str), "livox/%s/imu",
+      snprintf(name_str, sizeof(name_str), "livox/ip_%s/imu",
           ReplacePeriodByUnderline(ld_name).c_str());
       std::string topic_name(name_str);
       queue_size = queue_size * 2; // queue size is 64 for only one lidar
