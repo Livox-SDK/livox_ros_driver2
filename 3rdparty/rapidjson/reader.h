@@ -44,9 +44,15 @@
 
 #ifdef __clang__
 RAPIDJSON_DIAG_PUSH
-RAPIDJSON_DIAG_OFF(old - style - cast)
+#if __has_warning("-Wold-style-cast")
+RAPIDJSON_DIAG_OFF(old-style-cast)
+#endif
+#if __has_warning("-Wpadded")
 RAPIDJSON_DIAG_OFF(padded)
-RAPIDJSON_DIAG_OFF(switch - enum)
+#endif
+#if __has_warning("-Wswitch-enum")
+RAPIDJSON_DIAG_OFF(switch-enum)
+#endif
 #elif defined(_MSC_VER)
 RAPIDJSON_DIAG_PUSH
 RAPIDJSON_DIAG_OFF(4127)  // conditional expression is constant

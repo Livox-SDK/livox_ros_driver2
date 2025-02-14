@@ -24,9 +24,15 @@
 
 #ifdef __clang__
 RAPIDJSON_DIAG_PUSH
+#if __has_warning("-Wpadded")
 RAPIDJSON_DIAG_OFF(padded)
-RAPIDJSON_DIAG_OFF(unreachable - code)
-RAPIDJSON_DIAG_OFF(missing - noreturn)
+#endif
+#if __has_warning("-Wunreachable-code")
+RAPIDJSON_DIAG_OFF(unreachable-code)
+#endif
+#if __has_warning("-Wmissing-noreturn")
+RAPIDJSON_DIAG_OFF(missing-noreturn)
+#endif
 #endif
 
 RAPIDJSON_NAMESPACE_BEGIN

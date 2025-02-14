@@ -227,6 +227,8 @@ else(ROS_EDITION STREQUAL "ROS2")
   find_package(std_msgs REQUIRED)
   find_package(builtin_interfaces REQUIRED)
   find_package(rosidl_default_generators REQUIRED)
+  find_package(pcl_conversions REQUIRED)
+
 
   # check apr
   find_package(PkgConfig)
@@ -246,7 +248,7 @@ else(ROS_EDITION STREQUAL "ROS2")
   )
 
   ## make sure the livox_lidar_sdk_shared library is installed
-  find_library(LIVOX_LIDAR_SDK_LIBRARY liblivox_lidar_sdk_shared.so /usr/local/lib REQUIRED)
+  find_library(LIVOX_LIDAR_SDK_LIBRARY liblivox_lidar_sdk_shared.dylib /usr/local/lib REQUIRED)
 
   ##
   find_path(LIVOX_LIDAR_SDK_INCLUDE_DIR
@@ -283,24 +285,30 @@ else(ROS_EDITION STREQUAL "ROS2")
 
   # get include directories of custom msg headers
   if(HUMBLE_ROS STREQUAL "humble")
-    rosidl_get_typesupport_target(cpp_typesupport_target
+  rosidl_get_typesupport_target(cpp_typesupport_target
     ${LIVOX_INTERFACES} "rosidl_typesupport_cpp")
-    target_link_libraries(${PROJECT_NAME} "${cpp_typesupport_target}")
-  else()
-    set(LIVOX_INTERFACE_TARGET "${LIVOX_INTERFACES}__rosidl_typesupport_cpp")
-    add_dependencies(${PROJECT_NAME} ${LIVOX_INTERFACES})
-    get_target_property(LIVOX_INTERFACES_INCLUDE_DIRECTORIES ${LIVOX_INTERFACE_TARGET} INTERFACE_INCLUDE_DIRECTORIES)
-  endif()
+  target_link_libraries(${PROJECT_NAME} "${cpp_typesupport_target}")
+  get_target_property(LIVOX_INTERFACES_INCLUDE_DIRECTORIES ${LIVOX_INTERFACES} INTERFACE_INCLUDE_DIRECTORIES)
+else()
+  set(LIVOX_INTERFACE_TARGET "${LIVOX_INTERFACES}__rosidl_typesupport_cpp")
+  add_dependencies(${PROJECT_NAME} ${LIVOX_INTERFACES})
+  get_target_property(LIVOX_INTERFACES_INCLUDE_DIRECTORIES ${LIVOX_INTERFACE_TARGET} INTERFACE_INCLUDE_DIRECTORIES)
+endif()
 
-  # include file direcotry
-  target_include_directories(${PROJECT_NAME} PUBLIC
-    ${PCL_INCLUDE_DIRS}
-    ${APR_INCLUDE_DIRS}
-    ${LIVOX_LIDAR_SDK_INCLUDE_DIR}
-    ${LIVOX_INTERFACES_INCLUDE_DIRECTORIES}   # for custom msgs
-    3rdparty
-    src
-  )
+# もし LIVOX_INTERFACES_INCLUDE_DIRECTORIES が取得できなかった場合は、空文字列にする
+if(NOT LIVOX_INTERFACES_INCLUDE_DIRECTORIES)
+  set(LIVOX_INTERFACES_INCLUDE_DIRECTORIES "")
+endif()
+
+target_include_directories(${PROJECT_NAME} PUBLIC
+  ${PCL_INCLUDE_DIRS}
+  ${APR_INCLUDE_DIRS}
+  ${LIVOX_LIDAR_SDK_INCLUDE_DIR}
+  ${LIVOX_INTERFACES_INCLUDE_DIRECTORIES}   # for custom msgs (空の場合は無視される)
+  ${pcl_conversions_INCLUDE_DIRS}           # 追加：pcl_conversions のヘッダーをインクルード
+  3rdparty
+  src
+)
 
   # link libraries
   target_link_libraries(${PROJECT_NAME}

@@ -42,7 +42,9 @@ RAPIDJSON_DIAG_OFF(effc++)
 
 #ifdef __clang__
 RAPIDJSON_DIAG_PUSH
+#if __has_warning("-Wpadded")
 RAPIDJSON_DIAG_OFF(padded)
+#endif
 #endif
 
 struct DiyFp {

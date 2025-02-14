@@ -25,7 +25,9 @@
 
 #if defined(__clang__)
 RAPIDJSON_DIAG_PUSH
-RAPIDJSON_DIAG_OFF(c++ 98 - compat)
+#if __has_warning("-Wc++98-compat")
+RAPIDJSON_DIAG_OFF(c++98-compat)
+#endif
 #endif
 
 RAPIDJSON_NAMESPACE_BEGIN

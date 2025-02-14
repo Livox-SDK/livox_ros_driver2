@@ -43,9 +43,15 @@
 
 #ifdef __clang__
 RAPIDJSON_DIAG_PUSH
+#if __has_warning("-Wpadded")
 RAPIDJSON_DIAG_OFF(padded)
-RAPIDJSON_DIAG_OFF(unreachable - code)
-RAPIDJSON_DIAG_OFF(c++ 98 - compat)
+#endif
+#if __has_warning("-Wc++98-compat")
+RAPIDJSON_DIAG_OFF(c++98-compat)
+#endif
+#if __has_warning("-Wunreachable-code")
+RAPIDJSON_DIAG_OFF(unreachable-code)
+#endif
 #elif defined(_MSC_VER)
 RAPIDJSON_DIAG_PUSH
 RAPIDJSON_DIAG_OFF(4127)  // conditional expression is constant

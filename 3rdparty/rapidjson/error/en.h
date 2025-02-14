@@ -23,8 +23,12 @@
 
 #ifdef __clang__
 RAPIDJSON_DIAG_PUSH
-RAPIDJSON_DIAG_OFF(switch - enum)
-RAPIDJSON_DIAG_OFF(covered - switch - default)
+#if __has_warning("-Wswitch-enum")
+RAPIDJSON_DIAG_OFF(switch-enum)
+#endif
+#if __has_warning("-Wcovered-switch-default")
+RAPIDJSON_DIAG_OFF(covered-switch-default)
+#endif
 #endif
 
 RAPIDJSON_NAMESPACE_BEGIN
