@@ -227,6 +227,7 @@ else()
   find_package(std_msgs REQUIRED)
   find_package(builtin_interfaces REQUIRED)
   find_package(rosidl_default_generators REQUIRED)
+  find_package(livox_sdk2 REQUIRED)
 
   # check apr
   find_package(PkgConfig)
@@ -247,11 +248,6 @@ else()
 
   ## make sure the livox_lidar_sdk_shared library is installed
   find_library(LIVOX_LIDAR_SDK_LIBRARY liblivox_lidar_sdk_shared.so /usr/local/lib REQUIRED)
-
-  ##
-  find_path(LIVOX_LIDAR_SDK_INCLUDE_DIR
-    NAMES "livox_lidar_api.h" "livox_lidar_def.h"
-    REQUIRED)
 
   ## PCL library
   link_directories(${PCL_LIBRARY_DIRS})
@@ -291,7 +287,7 @@ else()
   target_include_directories(${PROJECT_NAME} PUBLIC
     ${PCL_INCLUDE_DIRS}
     ${APR_INCLUDE_DIRS}
-    ${LIVOX_LIDAR_SDK_INCLUDE_DIR}
+    ${livox_sdk2_INCLUDE_DIRS}
     ${LIVOX_INTERFACES_INCLUDE_DIRECTORIES}   # for custom msgs
     3rdparty
     src
@@ -299,7 +295,7 @@ else()
 
   # link libraries
   target_link_libraries(${PROJECT_NAME}
-    ${LIVOX_LIDAR_SDK_LIBRARY}
+    ${livox_sdk2_INCLUDE_DIRS}
     ${LIVOX_INTERFACE_TARGET}   # for custom msgs
     ${PPT_LIBRARY}
     ${Boost_LIBRARY}
