@@ -35,7 +35,7 @@ colcon build
 
 #### For ROS2 Jazzy:
 ```shell
-source ../../install/setup.sh
+source ../../install/setup.bash
 ros2 launch livox_ros_driver2 [launch file]
 ```
 
