@@ -1,100 +1,39 @@
 # Livox ROS Driver 2
 
-Livox ROS Driver 2 is the 2nd-generation driver package used to connect LiDAR products produced by Livox, applicable for ROS (noetic recommended) and ROS2 (foxy or humble recommended).
+Livox ROS Driver 2 jazzy bump is the 2nd-generation driver package used to connect LiDAR products produced by Livox, applicable for ROS 2 Jazzy.
 
   **Note :**
 
   As a debugging tool, Livox ROS Driver is not recommended for mass production but limited to test scenarios. You should optimize the code based on the original source to meet your various needs.
 
-## 1. Preparation
+## 1 Dependencies
 
-### 1.1 OS requirements
-
-  * Ubuntu 18.04 for ROS Melodic;
-  * Ubuntu 20.04 for ROS Noetic and ROS2 Foxy;
-  * Ubuntu 22.04 for ROS2 Humble;
-
-  **Tips:**
-
-  Colcon is a build tool used in ROS2.
-
-  How to install colcon: [Colcon installation instructions](https://docs.ros.org/en/foxy/Tutorials/Beginner-Client-Libraries/Colcon-Tutorial.html)
-
-### 1.2 Install ROS & ROS2
-
-For ROS Melodic installation, please refer to:
-[ROS Melodic installation instructions](https://wiki.ros.org/melodic/Installation)
-
-For ROS Noetic installation, please refer to:
-[ROS Noetic installation instructions](https://wiki.ros.org/noetic/Installation)
-
-For ROS2 Foxy installation, please refer to:
-[ROS Foxy installation instructions](https://docs.ros.org/en/foxy/Installation/Ubuntu-Install-Debians.html)
-
-For ROS2 Humble installation, please refer to:
-[ROS Humble installation instructions](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html)
-
-Desktop-Full installation is recommend.
+# Livox-SDK2 Library
+```shell
+cd src
+git clone git@github.com:piappl/Livox-SDK2.git -b jazzy
+```
 
 ## 2. Build & Run Livox ROS Driver 2
 
 ### 2.1 Clone Livox ROS Driver 2 source code:
 
 ```shell
-git clone https://github.com/Livox-SDK/livox_ros_driver2.git ws_livox/src/livox_ros_driver2
+cd src
+git clone git@github.com:piappl/livox_ros_driver2.git -b jazzy_bump
 ```
-
-  **Note :**
-
-  Be sure to clone the source code in a '[work_space]/src/' folder (as shown above), otherwise compilation errors will occur due to the compilation tool restriction.
-
-### 2.2 Build & install the Livox-SDK2
-
-  **Note :**
-
-  Please follow the guidance of installation in the [Livox-SDK2/README.md](https://github.com/Livox-SDK/Livox-SDK2/blob/master/README.md)
-
 ### 2.3 Build the Livox ROS Driver 2:
 
-#### For ROS (take Noetic as an example):
+#### For ROS2 Jazzy:
 ```shell
-source /opt/ros/noetic/setup.sh
-./build.sh ROS1
-```
-
-#### For ROS2 Foxy:
-```shell
-source /opt/ros/foxy/setup.sh
-./build.sh ROS2
-```
-
-#### For ROS2 Humble:
-```shell
-source /opt/ros/humble/setup.sh
-./build.sh humble
+source /opt/ros/jazzy/setup.sh
+cd ws
+colcon build
 ```
 
 ### 2.4 Run Livox ROS Driver 2:
 
-#### For ROS:
-
-```shell
-source ../../devel/setup.sh
-roslaunch livox_ros_driver2 [launch file]
-```
-
-in which,  
-
-* **livox_ros_driver2** : is the ROS package name of Livox ROS Driver 2;
-* **[launch file]** : is the ROS launch file you want to use; the 'launch_ROS1' folder contains several launch samples for your reference;  
-
-An rviz launch example for HAP LiDAR would be:
-
-```shell
-roslaunch livox_ros_driver2 rviz_HAP.launch
-```
-
-#### For ROS2:
+#### For ROS2 Jazzy:
 ```shell
 source ../../install/setup.sh
 ros2 launch livox_ros_driver2 [launch file]
@@ -104,10 +43,16 @@ in which,
 
 * **[launch file]** : is the ROS2 launch file you want to use; the 'launch_ROS2' folder contains several launch samples for your reference.
 
-A rviz launch example for HAP LiDAR would be:
+An rviz launch example for HAP LiDAR would be:
 
 ```shell
 ros2 launch livox_ros_driver2 rviz_HAP_launch.py
+```
+
+### Tips
+To determine LiDAR's fixed frame that you want to provide in rviz, run:
+```shell
+ros2 topic echo /livox/lidar --no-arr
 ```
 
 ## 3. Launch file and livox_ros_driver2 internal parameter configuration instructions
