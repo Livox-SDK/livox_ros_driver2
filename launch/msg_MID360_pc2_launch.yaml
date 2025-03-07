@@ -1,0 +1,28 @@
+# Launch file to load livox_ros_driver2 and livox_to_pointcloud2 as components into a component_container
+launch:
+  - node_container:
+      pkg: rclcpp_components
+      exec: component_container
+      name: livox_driver_container
+      namespace: ''
+      composable_node:
+        - pkg: livox_ros_driver2
+          plugin: livox_ros::DriverNode
+          name: livox_ros_driver2
+          param:
+            - name: user_config_path
+              value: '$(var user_config_path)'
+            - name: xfer_format
+              value: 1  # custom livox format as used in Fast-lio
+            - name: multi_topic
+              value: 1
+            - name: publish_freq
+              value: '$(var publish_freq)'
+        - pkg: livox_to_pointcloud2
+          plugin: livox_to_pointcloud2::LivoxToPointCloud2
+          name: livox_to_pointcloud2
+          param:
+            - name: input_topics
+              value: '$(var input_topics)'
+            - name: output_topics
+              value: '$(var output_topics)'
