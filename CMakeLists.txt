@@ -58,8 +58,7 @@ if(ROS_EDITION STREQUAL "ROS1")
   find_package(PkgConfig)
   pkg_check_modules(APR apr-1)
   if (APR_FOUND)
-    message(${APR_INCLUDE_DIRS})
-    message(${APR_LIBRARIES})
+    message(STATUS "APR found: ${APR_INCLUDE_DIRS}, ${APR_LIBRARIES}")
   endif (APR_FOUND)
 
   ###################################
@@ -189,6 +188,10 @@ else(ROS_EDITION STREQUAL "ROS2")
   # Copyright(c) 2020 livoxtech limited.
 
   cmake_minimum_required(VERSION 3.14)
+  if(POLICY CMP0144)
+    cmake_policy(SET CMP0144 NEW)
+  endif()
+
   project(livox_ros_driver2)
 
   # Default to C99
@@ -282,7 +285,11 @@ else(ROS_EDITION STREQUAL "ROS2")
   target_include_directories(${PROJECT_NAME} PRIVATE ${livox_sdk_INCLUDE_DIRS})
 
   # get include directories of custom msg headers
-  if(HUMBLE_ROS STREQUAL "humble")
+  if(DISTRO_ROS STREQUAL "humble")
+    rosidl_get_typesupport_target(cpp_typesupport_target
+    ${LIVOX_INTERFACES} "rosidl_typesupport_cpp")
+    target_link_libraries(${PROJECT_NAME} "${cpp_typesupport_target}")
+  elseif(DISTRO_ROS STREQUAL "jazzy")
     rosidl_get_typesupport_target(cpp_typesupport_target
     ${LIVOX_INTERFACES} "rosidl_typesupport_cpp")
     target_link_libraries(${PROJECT_NAME} "${cpp_typesupport_target}")

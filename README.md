@@ -34,6 +34,10 @@ For ROS2 Foxy installation, please refer to:
 For ROS2 Humble installation, please refer to:
 [ROS Humble installation instructions](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html)
 
+For ROS2 Jazzy installation, please refer to:
+[ROS Jazzy installation instructions](https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debians.html)
+
+
 Desktop-Full installation is recommend.
 
 ## 2. Build & Run Livox ROS Driver 2
@@ -73,6 +77,15 @@ source /opt/ros/foxy/setup.sh
 source /opt/ros/humble/setup.sh
 ./build.sh humble
 ```
+
+#### For ROS2 Jazzy:
+```shell
+source /opt/ros/humble/setup.sh
+./build.sh jazzy
+```
+
+Please follow [this instructions](https://github.com/Livox-SDK/Livox-SDK2/pull/85) for ```liblivox_lidar_sdk_shared not found``` error.
+
 
 ### 2.4 Run Livox ROS Driver 2:
 
