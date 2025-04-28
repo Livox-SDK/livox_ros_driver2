@@ -22,27 +22,39 @@
 // SOFTWARE.
 //
 
-#include "driver_node.h"
-#include "lddc.h"
+#include "lidar_info_data_queue.h"
 
 namespace livox_ros {
 
-DriverNode& DriverNode::GetNode() noexcept {
-  return *this;
+void LidarInfoDataQueue::Push(LidarInfoData* lidar_info_data) {
+  LidarInfoData data;
+  // data = &lidar_info_data;  // TODO !
+
+  std::lock_guard<std::mutex> lock(mutex_);
+  lidar_info_data_queue_.push_back(std::move(data));
 }
 
-DriverNode::~DriverNode() {
-  lddc_ptr_->lds_->RequestExit();
-  exit_signal_.set_value();
-  pointclouddata_poll_thread_->join();
-  imudata_poll_thread_->join();
-  lidarinfo_poll_thread_->join();
-  diagnostic_poll_thread_->join();
+bool LidarInfoDataQueue::Pop(LidarInfoData& lidar_info_data) {
+  std::lock_guard<std::mutex> lock(mutex_);
+  if (lidar_info_data_queue_.empty()) {
+    return false;
+  }
+  lidar_info_data = lidar_info_data_queue_.front();
+  lidar_info_data_queue_.pop_front();
+  return true;
+}
+
+bool LidarInfoDataQueue::Empty() {
+  std::lock_guard<std::mutex> lock(mutex_);
+  return lidar_info_data_queue_.empty();
+}
+
+void LidarInfoDataQueue::Clear() {
+  std::list<LidarInfoData> tmp_lidar_info_data_queue;
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+    lidar_info_data_queue_.swap(tmp_lidar_info_data_queue);
+  }
 }
 
 } // namespace livox_ros
-
-
-
-
-

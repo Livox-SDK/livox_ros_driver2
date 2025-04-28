@@ -1,4 +1,4 @@
-# judge which cmake codes to use 
+# judge which cmake codes to use
 if(ROS_EDITION STREQUAL "ROS1")
 
   # Copyright(c) 2019 livoxtech limited.
@@ -185,7 +185,7 @@ if(ROS_EDITION STREQUAL "ROS1")
 
 
 else()
-
+  # --- ROS 2 ---
   # Copyright(c) 2020 livoxtech limited.
 
   cmake_minimum_required(VERSION 3.14)
@@ -228,6 +228,7 @@ else()
   find_package(builtin_interfaces REQUIRED)
   find_package(rosidl_default_generators REQUIRED)
   find_package(livox_sdk2 REQUIRED)
+  find_package(diagnostic_updater REQUIRED)
 
   # check apr
   find_package(PkgConfig)
@@ -265,6 +266,7 @@ else()
     src/comm/ldq.cpp
     src/comm/semaphore.cpp
     src/comm/lidar_imu_data_queue.cpp
+    src/comm/lidar_info_data_queue.cpp
     src/comm/cache_index.cpp
     src/comm/pub_handler.cpp
 
@@ -289,6 +291,7 @@ else()
     ${APR_INCLUDE_DIRS}
     ${livox_sdk2_INCLUDE_DIRS}
     ${LIVOX_INTERFACES_INCLUDE_DIRECTORIES}   # for custom msgs
+    ${diagnostic_updater_INCLUDE_DIRS}
     3rdparty
     src
   )

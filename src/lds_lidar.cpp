@@ -62,7 +62,7 @@ LdsLidar *g_lds_ldiar = nullptr;
 
 /** Lds lidar function -------------------------------------------------------*/
 LdsLidar::LdsLidar(double publish_freq)
-    : Lds(publish_freq, kSourceRawLidar), 
+    : Lds(publish_freq, kSourceRawLidar),
       auto_connect_mode_(true),
       whitelist_count_(0),
       is_initialized_(false) {
@@ -186,6 +186,7 @@ bool LdsLidar::InitLivoxLidar() {
 void LdsLidar::SetLidarPubHandle() {
   pub_handler().SetPointCloudsCallback(LidarCommonCallback::OnLidarPointClounCb, g_lds_ldiar);
   pub_handler().SetImuDataCallback(LidarCommonCallback::LidarImuDataCallback, g_lds_ldiar);
+  pub_handler().SetLidarInfoCallback(LidarCommonCallback::LidarInfoCallback, g_lds_ldiar);
 
   double publish_freq = Lds::GetLdsFrequency();
   pub_handler().SetPointCloudConfig(publish_freq);

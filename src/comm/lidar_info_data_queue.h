@@ -22,27 +22,46 @@
 // SOFTWARE.
 //
 
-#include "driver_node.h"
-#include "lddc.h"
+#ifndef LIVOX_ROS_DRIVER_LIDAR_INFO_DATA_QUEUE_H_
+#define LIVOX_ROS_DRIVER_LIDAR_INFO_DATA_QUEUE_H_
+
+#include <list>
+#include <mutex>
+#include <cstdint>
 
 namespace livox_ros {
 
-DriverNode& DriverNode::GetNode() noexcept {
-  return *this;
-}
+// Based on the IMU Data Type in Livox communication protocol
+// TODO: add a link to the protocol
 
-DriverNode::~DriverNode() {
-  lddc_ptr_->lds_->RequestExit();
-  exit_signal_.set_value();
-  pointclouddata_poll_thread_->join();
-  imudata_poll_thread_->join();
-  lidarinfo_poll_thread_->join();
-  diagnostic_poll_thread_->join();
-}
-
-} // namespace livox_ros
+typedef struct LidarInfoData {
+  uint8_t lidar_type;
+  uint32_t handle;
 
 
+  uint64_t time_stamp;
+  LidarInfoData() {
+    lidar_type = 0;
+    handle = 0;
 
+    time_stamp = 0;
+  }
+} LidarInfoData;
+
+class LidarInfoDataQueue {
+ public:
+  void Push(LidarInfoData* imu_data);
+  bool Pop(LidarInfoData& imu_data);
+  bool Empty();
+  void Clear();
+
+ private:
+  std::mutex mutex_;
+  std::list<LidarInfoData> lidar_info_data_queue_;
+};
+
+} // namespace
+
+#endif // #define LIVOX_ROS_DRIVER_LIDAR_INFO_DATA_QUEUE_H_
 
 

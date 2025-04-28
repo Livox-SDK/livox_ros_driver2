@@ -77,6 +77,12 @@ void PubHandler::SetImuDataCallback(ImuDataCallback cb, void* client_data) {
   imu_callback_ = cb;
 }
 
+void PubHandler::SetLidarInfoCallback(LidarInfoCallback cb, void* client_data) {
+  lidar_info_data_ = client_data;
+  lidar_info_callback_ = cb;
+  LivoxLidarAddCmdObserver(OnLivoxLidarCmdObserverCallback, this);
+}
+
 void PubHandler::AddLidarsExtParam(LidarExtParameter& lidar_param) {
   std::unique_lock<std::mutex> lock(packet_mutex_);
   uint32_t id = 0;
@@ -129,7 +135,7 @@ void PubHandler::OnLivoxLidarPointCloudCallback(uint32_t handle, const uint8_t d
   RawPacket packet = {};
   packet.handle = handle;
   packet.lidar_type = LidarProtoType::kLivoxLidarType;
-  packet.extrinsic_enable = false; 
+  packet.extrinsic_enable = false;
   if (dev_type == LivoxLidarDeviceType::kLivoxLidarTypeIndustrialHAP) {
     packet.line_num = kLineNumberHAP;
   } else if (dev_type == LivoxLidarDeviceType::kLivoxLidarTypeMid360) {
@@ -150,6 +156,75 @@ void PubHandler::OnLivoxLidarPointCloudCallback(uint32_t handle, const uint8_t d
   }
     self->packet_condition_.notify_one();
 
+  return;
+}
+
+void PubHandler::OnLivoxLidarCmdObserverCallback(const uint32_t handle,
+                                                      const LivoxLidarCmdPacket* data,
+                                                      void* client_data) {
+  PubHandler* self = (PubHandler*)client_data;
+  if (!self) {
+    return;
+  }
+
+  if(self->is_quit_.load()) {
+    return;
+  }
+/*
+  static FastCRC16 crc_16;
+  static FastCRC32 crc_32;
+  static const uint8_t offset_of_crc16 = offsetof(LivoxLidarCmdPacket, crc16_h);
+  static const uint8_t offset_of_data  = offsetof(LivoxLidarCmdPacket, data);
+  struct in_addr tmp_addr;
+  tmp_addr.s_addr = handle;
+  if (crc_16.ccitt(reinterpret_cast<const uint8_t*>(data), offset_of_crc16) != data->crc16_h) {
+  std::cout << "error lidar: " << inet_ntoa(tmp_addr) << ", crc16 check failure." << std::endl;
+  return;
+  }
+  if (crc_32.crc32(reinterpret_cast<const uint8_t*>(data) + offset_of_data, data->length - offset_of_data) != data->crc32_d) {
+  std::cout << "error lidar: " << inet_ntoa(tmp_addr) << ", crc32 check failure." << std::endl;
+  return;
+  }
+*/
+  uint16_t cmd_id = data->cmd_id;
+/*
+  uint8_t cmd_type = data->cmd_type;
+*/
+  switch(cmd_id) {
+    case kCommandIDLidarSearch:
+      {
+      /*
+        if(cmd_type == kCommandTypeAck) {
+        const livox::lidar::DetectionData *dd = reinterpret_cast<const livox::lidar::DetectionData*>(data_);
+        }
+      */ // TODO !
+        QueryLivoxLidarInternalInfo(handle, QueryInternalInfoCallback, self);
+      }
+      break;
+    default:
+      break;
+  }
+  return;
+}
+
+void PubHandler::QueryInternalInfoCallback(livox_status status, uint32_t handle,
+                                                LivoxLidarDiagInternalInfoResponse* response,
+                                                void* client_data) {
+  PubHandler* self = (PubHandler*)client_data;
+  if (!self) {
+    return;
+  }
+
+  if(self->is_quit_.load()) {
+    return;
+  }
+  std::cout << " === QueryInternalInfoCallback() === " << std::endl;
+  LidarInfoData lidar_info_data;  // TODO !
+  lidar_info_data.lidar_type = kLivoxLidarType;
+  lidar_info_data.handle = handle;
+
+  lidar_info_data.time_stamp = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+  self->lidar_info_callback_(&lidar_info_data, self->lidar_info_data_);
   return;
 }
 
@@ -187,7 +262,7 @@ void PubHandler::CheckTimer(uint32_t id) {
     lidar_point.points_num = points_[id].size();
     lidar_point.points = points_[id].data();
     frame_.lidar_num++;
-    
+
     if (frame_.lidar_num != 0) {
       PublishPointCloud();
       frame_.lidar_num = 0;
@@ -252,6 +327,7 @@ void PubHandler::RawDataProcess() {
     process_handler->PointCloudProcess(raw_data);
     CheckTimer(id);
   }
+  std::cout << "finish 'RawDataProcess()'" << std::endl;
 }
 
 bool PubHandler::GetLidarId(LidarProtoType lidar_type, uint32_t handle, uint32_t& id) {
@@ -310,7 +386,7 @@ void LidarPubHandler::PointCloudProcess(RawPacket & pkt) {
     static bool flag = false;
     if (!flag) {
       std::cout << "error, unsupported protocol type: " << static_cast<int>(pkt.lidar_type) << std::endl;
-      flag = true;      
+      flag = true;
     }
   }
 }

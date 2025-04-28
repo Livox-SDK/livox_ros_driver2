@@ -37,6 +37,7 @@
 #include <map>
 
 #include "lidar_imu_data_queue.h"
+#include "lidar_info_data_queue.h"
 
 namespace livox_ros {
 
@@ -80,7 +81,7 @@ constexpr uint32_t kMaxBufferSize = 0x8000;  // 32k bytes
 /** Device Line Number **/
 const uint8_t kLineNumberDefault = 1;
 const uint8_t kLineNumberMid360 = 4;
-const uint8_t kLineNumberHAP = 6;    
+const uint8_t kLineNumberHAP = 6;
 
 // SDK related
 typedef enum {
@@ -133,6 +134,53 @@ typedef enum {
 typedef struct {
  uint8_t lidar_type {};
 } LidarSummaryInfo;
+
+
+typedef enum {
+  /**
+   * Lidar command set, set the working mode and sub working mode of a LiDAR.
+   */
+  kCommandIDLidarSearch = 0x0000,
+  // kCommandIDLidarPreconfig = 0x01,
+
+  kCommandIDLidarWorkModeControl = 0x0100,
+  kCommandIDLidarGetInternalInfo = 0x0101,
+  kCommandIDLidarPushMsg         = 0x0102,
+
+  kCommandIDLidarRebootDevice    = 0x0200,
+  kCommandIDLidarResetDevice     = 0x0201,
+  kCommandIDLidarSetPPSSync      = 0x0202,
+
+  kCommandIDLidarPushLog                = 0x0300,
+  kCommandIDLidarCollectionLog          = 0x0301,
+  kCommandIDLidarLogSysTimeSync         = 0x0302,
+  kCommandIDLidarDebugPointCloudControl = 0x0303,
+
+
+  kCommandIDGeneralRequestUpgrade         = 0x0400,
+  kCommandIDGeneralXferFirmware           = 0x0401,
+  kCommandIDGeneralCompleteXferFirmware   = 0x0402,
+  kCommandIDGeneralRequestUpgradeProgress = 0x0403,
+  kCommandIDGeneralRequestFirmwareInfo    = 0xFF,
+  kCommandIDLidarCommandCount
+} LidarCommandID;
+
+typedef enum {
+  /** command type, which requires response from the receiver. */
+  kCommandTypeCmd = 0,
+  /** acknowledge type, which is the response of command type. */
+  kCommandTypeAck = 1,
+} CommandType;
+
+/*
+typedef struct {
+  uint8_t ret_code;
+  uint8_t dev_type;
+  char sn[16];
+  uint8_t lidar_ip[4];
+  uint16_t cmd_port;
+} DetectionData;
+*/ // TODO !
 
 /** 8bytes stamp to uint64_t stamp */
 typedef union {
@@ -285,6 +333,7 @@ typedef struct {
 
   LidarDataQueue data;
   LidarImuDataQueue imu_data;
+  LidarInfoDataQueue lidar_info_data;
 
   uint32_t firmware_ver; /**< Firmware version of lidar  */
   UserLivoxLidarConfig livox_config;

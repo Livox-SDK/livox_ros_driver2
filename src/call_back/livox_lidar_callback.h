@@ -43,6 +43,12 @@ class LivoxLidarCallback {
                                       uint32_t handle,
                                       LivoxLidarAsyncControlResponse *response,
                                       void *client_data);
+  static void LidarCmdObserverCallback(const uint32_t handle,
+                                       const LivoxLidarCmdPacket* data,
+                                       void* client_data);
+  static void QueryInternalInfoCallback(livox_status status, uint32_t handle,
+                                        LivoxLidarDiagInternalInfoResponse* response,
+                                        void* client_data);
   static void SetDataTypeCallback(livox_status status, uint32_t handle,
                                   LivoxLidarAsyncControlResponse *response,
                                   void *client_data);

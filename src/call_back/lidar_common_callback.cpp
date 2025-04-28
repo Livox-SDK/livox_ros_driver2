@@ -47,7 +47,7 @@ void LidarCommonCallback::OnLidarPointClounCb(PointFrame* frame, void* client_da
   }
 
   LdsLidar *lds_lidar = static_cast<LdsLidar *>(client_data);
-  
+
   //printf("Lidar point cloud, lidar_num:%u.\n", frame->lidar_num);
 
   lds_lidar->StoragePointData(frame);
@@ -59,12 +59,26 @@ void LidarCommonCallback::LidarImuDataCallback(ImuData* imu_data, void *client_d
     return;
   }
   if (client_data == nullptr) {
-    printf("Lidar point cloud cb failed, client data is nullptr.\n");
+    printf("Lidar imu data cb failed, client data is nullptr.\n");
     return;
   }
 
   LdsLidar *lds_lidar = static_cast<LdsLidar *>(client_data);
   lds_lidar->StorageImuData(imu_data);
+}
+
+void LidarCommonCallback::LidarInfoCallback(LidarInfoData* lidar_info_data, void* client_data) {
+  if (lidar_info_data == nullptr) {
+    printf("Lidar info data is nullptr.\n");
+    return;
+  }
+  if (client_data == nullptr) {
+    printf("Lidar info data cb failed, client data is nullptr.\n");
+    return;
+  }
+
+  LdsLidar *lds_lidar = static_cast<LdsLidar *>(client_data);
+  lds_lidar->StorageLidarInfoData(lidar_info_data);
 }
 
 } // namespace livox_ros

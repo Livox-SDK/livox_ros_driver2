@@ -64,10 +64,14 @@ class DriverNode final : public rclcpp::Node {
  private:
   void PointCloudDataPollThread();
   void ImuDataPollThread();
+  void LidarInfoPollThread();
+  void DiagnosticPollThread();
 
   std::unique_ptr<Lddc> lddc_ptr_;
   std::shared_ptr<std::thread> pointclouddata_poll_thread_;
   std::shared_ptr<std::thread> imudata_poll_thread_;
+  std::shared_ptr<std::thread> lidarinfo_poll_thread_;
+  std::shared_ptr<std::thread> diagnostic_poll_thread_;
   std::shared_future<void> future_;
   std::promise<void> exit_signal_;
 };

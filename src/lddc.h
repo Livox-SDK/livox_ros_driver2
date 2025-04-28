@@ -83,12 +83,17 @@ class Lddc final {
   int RegisterLds(Lds *lds);
   void DistributePointCloudData(void);
   void DistributeImuData(void);
+  void DistributeLidarInfo(void);
   void CreateBagFile(const std::string &file_name);
   void PrepareExit(void);
 
   uint8_t GetTransferFormat(void) { return transfer_format_; }
   uint8_t IsMultiTopic(void) { return use_multi_topic_; }
   void SetRosNode(livox_ros::DriverNode *node) { cur_node_ = node; }
+  void SetRosDiagnostic(livox_ros::DriverNode *node, double period, const std::string& hardwareID) {
+    diagnostic_updater_ = std::make_unique<diagnostic_updater::Updater>(node, period);
+    diagnostic_updater_->setHardwareID(hardwareID);
+  }
 
   // void SetRosPub(ros::Publisher *pub) { global_pub_ = pub; };  // NOT USED
   void SetPublishFrq(uint32_t frq) { publish_frq_ = frq; }
@@ -99,12 +104,14 @@ class Lddc final {
  private:
   void PollingLidarPointCloudData(uint8_t index, LidarDevice *lidar);
   void PollingLidarImuData(uint8_t index, LidarDevice *lidar);
+  void PollingLidarInfoData(uint8_t index, LidarDevice *lidar);
 
   void PublishPointcloud2(LidarDataQueue *queue, uint8_t index, std::string& frame_id);
   void PublishCustomPointcloud(LidarDataQueue *queue, uint8_t index, std::string& frame_id);
   void PublishPclMsg(LidarDataQueue *queue, uint8_t index);
 
   void PublishImuData(LidarImuDataQueue& imu_data_queue, const uint8_t index, std::string& frame_id);
+  void PublishLidarInfoData(LidarInfoDataQueue& lidar_info_data_queue, const uint8_t index, std::string& frame_id);
 
   void InitPointcloud2MsgHeader(PointCloud2& cloud, std::string& frame_id);
   void InitPointcloud2Msg(const StoragePacket& pkg, PointCloud2& cloud, uint64_t& timestamp, std::string& frame_id);
@@ -119,6 +126,7 @@ class Lddc final {
   void PublishPclData(const uint8_t index, const uint64_t timestamp, const PointCloud& cloud);
 
   void InitImuMsg(const ImuData& imu_data, ImuMsg& imu_msg, uint64_t& timestamp, std::string& frame_id);
+  void InitDiagnostic();
 
   void FillPointsToPclMsg(PointCloud& pcl_msg, LivoxPointXyzrtlt* src_point, uint32_t num);
   void FillPointsToCustomMsg(CustomMsg& livox_msg, LivoxPointXyzrtlt* src_point, uint32_t num,
@@ -139,6 +147,7 @@ class Lddc final {
   double publish_frq_;
   uint32_t publish_period_ns_;
   std::string frame_id_;
+  LidarInfoData lidar_info_data_;
 
 #ifdef BUILDING_ROS1
   bool enable_lidar_bag_;
@@ -156,6 +165,7 @@ class Lddc final {
 #endif
 
   livox_ros::DriverNode *cur_node_;
+  std::unique_ptr<diagnostic_updater::Updater> diagnostic_updater_;
 };
 
 }  // namespace livox_ros

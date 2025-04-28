@@ -124,7 +124,7 @@ void Lddc::DistributePointCloudData(void) {
     std::cout << "DistributePointCloudData is RequestExit" << std::endl;
     return;
   }
-  
+
   lds_->pcd_semaphore_.Wait();
   for (uint32_t i = 0; i < lds_->lidar_count_; i++) {
     uint32_t lidar_id = i;
@@ -133,7 +133,7 @@ void Lddc::DistributePointCloudData(void) {
     if ((kConnectStateSampling != lidar->connect_state) || (p_queue == nullptr)) {
       continue;
     }
-    PollingLidarPointCloudData(lidar_id, lidar);    
+    PollingLidarPointCloudData(lidar_id, lidar);
   }
 }
 
@@ -146,7 +146,7 @@ void Lddc::DistributeImuData(void) {
     std::cout << "DistributeImuData is RequestExit" << std::endl;
     return;
   }
-  
+
   lds_->imu_semaphore_.Wait();
   for (uint32_t i = 0; i < lds_->lidar_count_; i++) {
     uint32_t lidar_id = i;
@@ -158,6 +158,52 @@ void Lddc::DistributeImuData(void) {
     PollingLidarImuData(lidar_id, lidar);
   }
 }
+
+void Lddc::DistributeLidarInfo(void) {
+  if (!lds_) {
+    std::cout << "lds is not registered" << std::endl;
+    return;
+  }
+  if (lds_->IsRequestExit()) {
+    std::cout << "DistributeLidarInfo is RequestExit" << std::endl;
+    return;
+  }
+
+  lds_->lidar_info_semaphore_.Wait();
+  for (uint32_t i = 0; i < lds_->lidar_count_; i++) {
+    uint32_t lidar_id = i;
+    LidarDevice *lidar = &lds_->lidars_[lidar_id];
+    LidarInfoDataQueue *p_queue = &lidar->lidar_info_data;
+    if ((kConnectStateSampling != lidar->connect_state) || (p_queue == nullptr)) {
+      continue;
+    }
+    // PollingLidarImuData(lidar_id, lidar); //TODO !
+  }
+}
+
+/*
+void Lddc::DistributeDiagnostic(void) {
+  if (!lds_) {
+    std::cout << "lds is not registered" << std::endl;
+    return;
+  }
+  if (lds_->IsRequestExit()) {
+    std::cout << "DistributeDiagnostic is RequestExit" << std::endl;
+    return;
+  }
+
+  lds_->lidar_info_semaphore_.Wait();
+  for (uint32_t i = 0; i < lds_->lidar_count_; i++) {
+    uint32_t lidar_id = i;
+    LidarDevice *lidar = &lds_->lidars_[lidar_id];
+    LidarInfoDataQueue *p_queue = &lidar->lidar_info_data;
+    if ((kConnectStateSampling != lidar->connect_state) || (p_queue == nullptr)) {
+      continue;
+    }
+    // PollingLidarImuData(lidar_id, lidar); //TODO !
+  }
+}
+*/
 
 void Lddc::PollingLidarPointCloudData(uint8_t index, LidarDevice *lidar) {
   LidarDataQueue *p_queue = &lidar->data;
@@ -182,6 +228,14 @@ void Lddc::PollingLidarImuData(uint8_t index, LidarDevice *lidar) {
   LidarImuDataQueue& p_queue = lidar->imu_data;
   while (!lds_->IsRequestExit() && !p_queue.Empty()) {
     PublishImuData(p_queue, index, lidar->livox_config.frame_id);
+  }
+}
+
+void Lddc::PollingLidarInfoData(uint8_t index, LidarDevice *lidar) {
+  LidarInfoDataQueue& p_queue = lidar->lidar_info_data;
+  while (!lds_->IsRequestExit() && !p_queue.Empty()) {
+    PublishLidarInfoData(p_queue, index, lidar->livox_config.frame_id);
+
   }
 }
 
@@ -442,7 +496,7 @@ void Lddc::InitPclMsg(const StoragePacket& pkg, PointCloud& cloud, uint64_t& tim
   cloud.header.stamp = timestamp / 1000.0;  // to pcl ros time stamp
 #elif defined BUILDING_ROS2
   std::cout << "warning: pcl::PointCloud is not supported in ROS2, "
-            << "please check code logic" 
+            << "please check code logic"
             << std::endl;
 #endif
   return;
@@ -467,7 +521,7 @@ void Lddc::FillPointsToPclMsg(const StoragePacket& pkg, PointCloud& pcl_msg) {
   }
 #elif defined BUILDING_ROS2
   std::cout << "warning: pcl::PointCloud is not supported in ROS2, "
-            << "please check code logic" 
+            << "please check code logic"
             << std::endl;
 #endif
   return;
@@ -485,7 +539,7 @@ void Lddc::PublishPclData(const uint8_t index, const uint64_t timestamp, const P
   }
 #elif defined BUILDING_ROS2
   std::cout << "warning: pcl::PointCloud is not supported in ROS2, "
-            << "please check code logic" 
+            << "please check code logic"
             << std::endl;
 #endif
   return;
@@ -543,6 +597,36 @@ void Lddc::PublishImuData(LidarImuDataQueue& imu_data_queue, const uint8_t index
     }
 #endif
   }
+}
+
+void Lddc::PublishLidarInfoData(LidarInfoDataQueue& lidar_info_data_queue, const uint8_t index, std::string& frame_id) {
+  LidarInfoData lidar_info_data;
+  if (!lidar_info_data_queue.Pop(lidar_info_data)) {
+    //printf("Publish lidar info data failed, lidar info data queue pop failed.\n");
+    return;
+  }
+#if 0
+  ImuMsg imu_msg;
+  uint64_t timestamp;
+  InitImuMsg(imu_data, imu_msg, timestamp, frame_id);
+
+#ifdef BUILDING_ROS1
+  PublisherPtr publisher_ptr = GetCurrentImuPublisher(index);
+#elif defined BUILDING_ROS2
+  Publisher<ImuMsg>::SharedPtr publisher_ptr = std::dynamic_pointer_cast<Publisher<ImuMsg>>(GetCurrentImuPublisher(index));
+#endif
+
+  if (kOutputToRos == output_type_) {
+    publisher_ptr->publish(imu_msg);
+  } else {
+#ifdef BUILDING_ROS1
+    if (bag_ && enable_imu_bag_) {
+      bag_->write(publisher_ptr->getTopic(), ros::Time(timestamp / 1000000000.0), imu_msg);
+    }
+#endif
+  }
+#endif
+  lidar_info_data = lidar_info_data;
 }
 
 #ifdef BUILDING_ROS2
