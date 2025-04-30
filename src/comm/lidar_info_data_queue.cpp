@@ -26,10 +26,8 @@
 
 namespace livox_ros {
 
-void LidarInfoDataQueue::Push(LidarInfoData* lidar_info_data) {
-  LidarInfoData data;
-  // data = &lidar_info_data;  // TODO !
-
+void LidarInfoDataQueue::Push(const LidarInfoData* lidar_info_data) {
+  LidarInfoData data(*lidar_info_data);
   std::lock_guard<std::mutex> lock(mutex_);
   lidar_info_data_queue_.push_back(std::move(data));
 }

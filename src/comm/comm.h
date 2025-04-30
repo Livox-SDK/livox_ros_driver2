@@ -38,6 +38,7 @@
 
 #include "lidar_imu_data_queue.h"
 #include "lidar_info_data_queue.h"
+#include "lidar_diagn_data_share.h"
 
 namespace livox_ros {
 
@@ -334,6 +335,7 @@ typedef struct {
   LidarDataQueue data;
   LidarImuDataQueue imu_data;
   LidarInfoDataQueue lidar_info_data;
+  LidarDiagnDataShare lidar_diagn_data;
 
   uint32_t firmware_ver; /**< Firmware version of lidar  */
   UserLivoxLidarConfig livox_config;

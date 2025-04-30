@@ -267,6 +267,7 @@ else()
     src/comm/semaphore.cpp
     src/comm/lidar_imu_data_queue.cpp
     src/comm/lidar_info_data_queue.cpp
+    src/comm/lidar_diagn_data_share.cpp
     src/comm/cache_index.cpp
     src/comm/pub_handler.cpp
 
@@ -304,6 +305,7 @@ else()
     ${Boost_LIBRARY}
     ${PCL_LIBRARIES}
     ${APR_LIBRARIES}
+    ${diagnostic_updater_LIBRARY}
   )
 
   rclcpp_components_register_node(${PROJECT_NAME}

@@ -25,6 +25,7 @@
 #ifndef LIVOX_ROS_DRIVER2_LDDC_H_
 #define LIVOX_ROS_DRIVER2_LDDC_H_
 
+#include <functional>
 #include "include/livox_ros_driver2.h"
 
 #include "driver_node.h"
@@ -90,13 +91,23 @@ class Lddc final {
   uint8_t GetTransferFormat(void) { return transfer_format_; }
   uint8_t IsMultiTopic(void) { return use_multi_topic_; }
   void SetRosNode(livox_ros::DriverNode *node) { cur_node_ = node; }
-  void SetRosDiagnostic(livox_ros::DriverNode *node, double period, const std::string& hardwareID) {
-    diagnostic_updater_ = std::make_unique<diagnostic_updater::Updater>(node, period);
-    diagnostic_updater_->setHardwareID(hardwareID);
-  }
-
   // void SetRosPub(ros::Publisher *pub) { global_pub_ = pub; };  // NOT USED
   void SetPublishFrq(uint32_t frq) { publish_frq_ = frq; }
+#ifdef BUILDING_ROS2
+  void SetRosDiagnostic(livox_ros::DriverNode *node, double period, double timeout) {
+    diagn_timeout_ = timeout;
+    diagn_updater_ = std::make_unique<diagnostic_updater::Updater>(node, period);
+    if (lds_ != nullptr) {
+      for(unsigned int i=0; i<kMaxSourceLidar; i++) {
+          if ((lds_->lidars_[i].lidar_type == kLivoxLidarType) && (lds_->lidars_[i].handle != 0)) {
+            diagn_updater_->add(lds_->lidars_[i].livox_config.name, std::bind(&Lddc::DiagnProcedure, this, std::placeholders::_1, lds_->lidars_ + i));
+          }
+        }
+    } else {
+      std::cout<<"Diagnostic update, has not been correctly initialized."<<std::endl;
+    }
+  }
+#endif
 
  public:
   Lds *lds_;
@@ -126,7 +137,6 @@ class Lddc final {
   void PublishPclData(const uint8_t index, const uint64_t timestamp, const PointCloud& cloud);
 
   void InitImuMsg(const ImuData& imu_data, ImuMsg& imu_msg, uint64_t& timestamp, std::string& frame_id);
-  void InitDiagnostic();
 
   void FillPointsToPclMsg(PointCloud& pcl_msg, LivoxPointXyzrtlt* src_point, uint32_t num);
   void FillPointsToCustomMsg(CustomMsg& livox_msg, LivoxPointXyzrtlt* src_point, uint32_t num,
@@ -134,6 +144,7 @@ class Lddc final {
 
 #ifdef BUILDING_ROS2
   PublisherPtr CreatePublisher(uint8_t msg_type, std::string &topic_name, uint32_t queue_size);
+  void DiagnProcedure(diagnostic_updater::DiagnosticStatusWrapper &status, LidarDevice *lidar);  
 #endif
 
   PublisherPtr GetCurrentPublisher(uint8_t index);
@@ -147,7 +158,6 @@ class Lddc final {
   double publish_frq_;
   uint32_t publish_period_ns_;
   std::string frame_id_;
-  LidarInfoData lidar_info_data_;
 
 #ifdef BUILDING_ROS1
   bool enable_lidar_bag_;
@@ -165,7 +175,10 @@ class Lddc final {
 #endif
 
   livox_ros::DriverNode *cur_node_;
-  std::unique_ptr<diagnostic_updater::Updater> diagnostic_updater_;
+#ifdef BUILDING_ROS2
+  std::unique_ptr<diagnostic_updater::Updater> diagn_updater_;
+  double diagn_timeout_;
+#endif
 };
 
 }  // namespace livox_ros

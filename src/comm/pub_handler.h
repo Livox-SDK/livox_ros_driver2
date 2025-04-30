@@ -77,6 +77,7 @@ class PubHandler {
   using PointCloudsCallback = std::function<void(PointFrame*, void *)>;
   using ImuDataCallback = std::function<void(ImuData*, void*)>;
   using LidarInfoCallback = std::function<void(LidarInfoData*, void*)>;
+  using LidarDiagnCallback = std::function<void(LidarDiagnData*, void*)>;
   using TimePoint = std::chrono::high_resolution_clock::time_point;
 
 
@@ -93,6 +94,7 @@ class PubHandler {
   void ClearAllLidarsExtrinsicParams();
   void SetImuDataCallback(ImuDataCallback cb, void* client_data);
   void SetLidarInfoCallback(LidarInfoCallback cb, void* client_data);
+  void SetLidarDiagnCallback(LidarDiagnCallback cb, void* client_data);
 
  private:
   //thread to process raw data
@@ -124,7 +126,10 @@ class PubHandler {
   void* imu_client_data_ = nullptr;
 
   LidarInfoCallback lidar_info_callback_;
-  void* lidar_info_data_ = nullptr;
+  void* lidar_info_client_data_ = nullptr;
+
+  LidarDiagnCallback lidar_diagn_callback_;
+  void* lidar_diagn_client_data_ = nullptr;
 
   PointFrame frame_;
 

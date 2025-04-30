@@ -36,8 +36,9 @@ DriverNode::~DriverNode() {
   exit_signal_.set_value();
   pointclouddata_poll_thread_->join();
   imudata_poll_thread_->join();
+#ifdef BUILDING_ROS2
   lidarinfo_poll_thread_->join();
-  diagnostic_poll_thread_->join();
+#endif
 }
 
 } // namespace livox_ros

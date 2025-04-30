@@ -46,6 +46,7 @@ class Lds {
   void StoragePointData(PointFrame* frame);
   void StorageLvxPointData(PointFrame* frame);
   void StorageLidarInfoData(LidarInfoData* frame);
+  void StorageLidarDiagnData(LidarDiagnData* frame);
 
   int8_t GetHandle(const uint8_t lidar_type, const PointPacket* lidar_point);
   void PushLidarData(PointPacket* lidar_data, const uint8_t index, const uint64_t base_time);

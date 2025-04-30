@@ -194,6 +194,27 @@ void Lds::StorageLidarInfoData(LidarInfoData* lidar_info_data) {
   }
 }
 
+void Lds::StorageLidarDiagnData(LidarDiagnData* lidar_diagn_data) {
+  uint32_t device_num = 0;
+  if (lidar_diagn_data->lidar_type == kLivoxLidarType) {
+    device_num = lidar_diagn_data->handle;
+  } else {
+    printf("Storage lidar diagn data (diagnostic) failed, unknown lidar type:%u.\n", lidar_diagn_data->lidar_type);
+    return;
+  }
+
+  uint8_t index = 0;
+  int ret = cache_index_.GetIndex(lidar_diagn_data->lidar_type, device_num, index);
+  if (ret != 0) {
+    printf("Storage lidar diagn point data (diagnostic) failed, can not get index, lidar type:%u, device_num:%u.\n", lidar_diagn_data->lidar_type, device_num);
+    return;
+  }
+
+  LidarDevice *p_lidar = &lidars_[index];
+  LidarDiagnDataShare* lidar_diagn_share = &p_lidar->lidar_diagn_data;
+  lidar_diagn_share->Push(lidar_diagn_data);
+}
+
 void Lds::PushLidarData(PointPacket* lidar_data, const uint8_t index, const uint64_t base_time) {
   if (lidar_data == nullptr) {
     return;

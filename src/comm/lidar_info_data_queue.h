@@ -37,20 +37,14 @@ namespace livox_ros {
 typedef struct LidarInfoData {
   uint8_t lidar_type;
   uint32_t handle;
-
-
   uint64_t time_stamp;
-  LidarInfoData() {
-    lidar_type = 0;
-    handle = 0;
+  LidarInfoData(): lidar_type(0), handle(0), time_stamp(0) {}
 
-    time_stamp = 0;
-  }
 } LidarInfoData;
 
 class LidarInfoDataQueue {
  public:
-  void Push(LidarInfoData* imu_data);
+  void Push(const LidarInfoData* imu_data);
   bool Pop(LidarInfoData& imu_data);
   bool Empty();
   void Clear();

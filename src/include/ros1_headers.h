@@ -35,7 +35,6 @@
 #include <pcl_ros/point_cloud.h>
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/PointCloud2.h>
-#include <diagnostic_updater/diagnostic_updater.h>
 #include "livox_ros_driver2/CustomMsg.h"
 #include "livox_ros_driver2/CustomPoint.h"
 

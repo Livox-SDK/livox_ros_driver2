@@ -81,6 +81,20 @@ void LidarCommonCallback::LidarInfoCallback(LidarInfoData* lidar_info_data, void
   lds_lidar->StorageLidarInfoData(lidar_info_data);
 }
 
+void LidarCommonCallback::LidarDiagnCallback(LidarDiagnData* lidar_diagn_data, void* client_data) {
+  if (lidar_diagn_data == nullptr) {
+    printf("Lidar diagn data (diagnostic) is nullptr.\n");
+    return;
+  }
+  if (client_data == nullptr) {
+    printf("Lidar diagn data cb (diagnostic) failed, client data is nullptr.\n");
+    return;
+  }
+
+  LdsLidar *lds_lidar = static_cast<LdsLidar *>(client_data);
+  lds_lidar->StorageLidarDiagnData(lidar_diagn_data);
+}
+
 } // namespace livox_ros
 
 
