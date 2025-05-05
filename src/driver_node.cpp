@@ -37,7 +37,7 @@ DriverNode::~DriverNode() {
   pointclouddata_poll_thread_->join();
   imudata_poll_thread_->join();
 #ifdef BUILDING_ROS2
-  lidarinfo_poll_thread_->join();
+  // lidarinfo_poll_thread_->join();
 #endif
 }
 

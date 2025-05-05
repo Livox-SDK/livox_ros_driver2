@@ -97,6 +97,7 @@ class Lddc final {
   void SetRosDiagnostic(livox_ros::DriverNode *node, double period, double timeout) {
     diagn_timeout_ = timeout;
     diagn_updater_ = std::make_unique<diagnostic_updater::Updater>(node, period);
+    diagn_updater_->setHardwareID("none");
     if (lds_ != nullptr) {
       for(unsigned int i=0; i<kMaxSourceLidar; i++) {
           if ((lds_->lidars_[i].lidar_type == kLivoxLidarType) && (lds_->lidars_[i].handle != 0)) {
@@ -144,7 +145,7 @@ class Lddc final {
 
 #ifdef BUILDING_ROS2
   PublisherPtr CreatePublisher(uint8_t msg_type, std::string &topic_name, uint32_t queue_size);
-  void DiagnProcedure(diagnostic_updater::DiagnosticStatusWrapper &status, LidarDevice *lidar);  
+  void DiagnProcedure(diagnostic_updater::DiagnosticStatusWrapper &status, LidarDevice *lidar);
 #endif
 
   PublisherPtr GetCurrentPublisher(uint8_t index);

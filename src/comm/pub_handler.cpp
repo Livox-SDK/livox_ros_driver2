@@ -173,39 +173,19 @@ void PubHandler::OnLivoxLidarCmdObserverCallback(const uint32_t handle,
   if (!self) {
     return;
   }
-
   if(self->is_quit_.load()) {
     return;
   }
-/*
-  static FastCRC16 crc_16;
-  static FastCRC32 crc_32;
-  static const uint8_t offset_of_crc16 = offsetof(LivoxLidarCmdPacket, crc16_h);
-  static const uint8_t offset_of_data  = offsetof(LivoxLidarCmdPacket, data);
-  struct in_addr tmp_addr;
-  tmp_addr.s_addr = handle;
-  if (crc_16.ccitt(reinterpret_cast<const uint8_t*>(data), offset_of_crc16) != data->crc16_h) {
-  std::cout << "error lidar: " << inet_ntoa(tmp_addr) << ", crc16 check failure." << std::endl;
-  return;
-  }
-  if (crc_32.crc32(reinterpret_cast<const uint8_t*>(data) + offset_of_data, data->length - offset_of_data) != data->crc32_d) {
-  std::cout << "error lidar: " << inet_ntoa(tmp_addr) << ", crc32 check failure." << std::endl;
-  return;
-  }
-*/
+
   uint16_t cmd_id = data->cmd_id;
-/*
   uint8_t cmd_type = data->cmd_type;
-*/
+
   switch(cmd_id) {
     case kCommandIDLidarSearch:
       {
-      /*
         if(cmd_type == kCommandTypeAck) {
-        const livox::lidar::DetectionData *dd = reinterpret_cast<const livox::lidar::DetectionData*>(data_);
+          QueryLivoxLidarInternalInfo(handle, QueryInternalInfoCallback, self);
         }
-      */ // TODO !
-        QueryLivoxLidarInternalInfo(handle, QueryInternalInfoCallback, self);
       }
       break;
     default:
@@ -217,7 +197,6 @@ void PubHandler::OnLivoxLidarCmdObserverCallback(const uint32_t handle,
 void PubHandler::QueryInternalInfoCallback(livox_status status, uint32_t handle,
                                                 LivoxLidarDiagInternalInfoResponse* response,
                                                 void* client_data) {
-  std::cout << " === QueryInternalInfoCallback() - BEGIN === " << std::endl;
   if (status != kLivoxLidarStatusSuccess) {
     return;
   }
@@ -233,7 +212,6 @@ void PubHandler::QueryInternalInfoCallback(livox_status status, uint32_t handle,
   }
 
   DirectLidarStateInfo direct_lidar_state_info;
-
   memset(direct_lidar_state_info.hms_code, 0, sizeof(direct_lidar_state_info.hms_code));
 
   uint16_t off = 0;
@@ -245,7 +223,7 @@ void PubHandler::QueryInternalInfoCallback(livox_status status, uint32_t handle,
     }
     if(kv->key == kKeyHmsCode) {
       memcpy(direct_lidar_state_info.hms_code, &(kv->value[0]), sizeof(direct_lidar_state_info.hms_code));
-
+/*
       printf("[%d] kvKey (kv->key): 0x%x, kKeyHmsCode(), len: %d, code: 0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x\n",
         (uint32_t)i, (unsigned int)(kv->key), kv->length,
         direct_lidar_state_info.hms_code[0], direct_lidar_state_info.hms_code[1],
@@ -253,16 +231,16 @@ void PubHandler::QueryInternalInfoCallback(livox_status status, uint32_t handle,
         direct_lidar_state_info.hms_code[4], direct_lidar_state_info.hms_code[5],
         direct_lidar_state_info.hms_code[6], direct_lidar_state_info.hms_code[7]
       );
+*/
     }
 
     off += sizeof(uint16_t) * 2;
     off += kv->length;
   }
 
-  std::cout << " === QueryInternalInfoCallback() === " << std::endl;
-#if 0
+#if 0 // TODO ! send lidar info data, IMPORTANT !!! not used, because we do not store data when it is not received (queue overflow problem)
   {
-    LidarInfoData lidar_info_data;  // TODO !
+    LidarInfoData lidar_info_data;
     lidar_info_data.lidar_type = kLivoxLidarType;
     lidar_info_data.handle = handle;
 
@@ -281,13 +259,13 @@ void PubHandler::QueryInternalInfoCallback(livox_status status, uint32_t handle,
 
     CreateDiagnStatusCode(direct_lidar_state_info.lidar_diag_status, lidar_diagn_data.status_code);
 
-    for ( uint16_t i = 0; i<(sizeof(direct_lidar_state_info.hms_code)/sizeof(uint32_t)); i++ ) {
+    for (uint16_t i = 0; i<(sizeof(direct_lidar_state_info.hms_code)/sizeof(uint32_t)); i++) {
       if (direct_lidar_state_info.hms_code[i] != 0) {
         CreateDiagnCodeInfo(direct_lidar_state_info.hms_code[i], hms_diagn_code_info);
         lidar_diagn_data.hms_diagn.push_back(hms_diagn_code_info);
       }
     }
-    if ( lidar_diagn_data.hms_diagn.empty() ) {
+    if (lidar_diagn_data.hms_diagn.empty()) {
       CreateDiagnCodeInfo(0, hms_diagn_code_info);
       lidar_diagn_data.hms_diagn.push_back(hms_diagn_code_info);
     }

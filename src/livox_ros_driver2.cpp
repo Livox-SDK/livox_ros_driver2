@@ -190,7 +190,7 @@ DriverNode::DriverNode(const rclcpp::NodeOptions & node_options)
 
   pointclouddata_poll_thread_ = std::make_shared<std::thread>(&DriverNode::PointCloudDataPollThread, this);
   imudata_poll_thread_ = std::make_shared<std::thread>(&DriverNode::ImuDataPollThread, this);
-  lidarinfo_poll_thread_ = std::make_shared<std::thread>(&DriverNode::LidarInfoPollThread, this);
+  // lidarinfo_poll_thread_ = std::make_shared<std::thread>(&DriverNode::LidarInfoPollThread, this);
 }
 
 }  // namespace livox_ros

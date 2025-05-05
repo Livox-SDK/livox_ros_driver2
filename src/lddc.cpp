@@ -183,30 +183,6 @@ void Lddc::DistributeLidarInfo(void) {
   }
 }
 
-/*
-void Lddc::DistributeDiagnostic(void) {
-  if (!lds_) {
-    std::cout << "lds is not registered" << std::endl;
-    return;
-  }
-  if (lds_->IsRequestExit()) {
-    std::cout << "DistributeDiagnostic is RequestExit" << std::endl;
-    return;
-  }
-
-  lds_->lidar_info_semaphore_.Wait();
-  for (uint32_t i = 0; i < lds_->lidar_count_; i++) {
-    uint32_t lidar_id = i;
-    LidarDevice *lidar = &lds_->lidars_[lidar_id];
-    LidarInfoDataQueue *p_queue = &lidar->lidar_info_data;
-    if ((kConnectStateSampling != lidar->connect_state) || (p_queue == nullptr)) {
-      continue;
-    }
-    // PollingLidarImuData(lidar_id, lidar); //TODO !
-  }
-}
-*/
-
 void Lddc::PollingLidarPointCloudData(uint8_t index, LidarDevice *lidar) {
   LidarDataQueue *p_queue = &lidar->data;
   if (p_queue == nullptr || p_queue->storage_packet == nullptr) {
@@ -607,28 +583,8 @@ void Lddc::PublishLidarInfoData(LidarInfoDataQueue& lidar_info_data_queue, const
     //printf("Publish lidar info data failed, lidar info data queue pop failed.\n");
     return;
   }
-#if 0
-  ImuMsg imu_msg;
-  uint64_t timestamp;
-  InitImuMsg(imu_data, imu_msg, timestamp, frame_id);
-
-#ifdef BUILDING_ROS1
-  PublisherPtr publisher_ptr = GetCurrentImuPublisher(index);
-#elif defined BUILDING_ROS2
-  Publisher<ImuMsg>::SharedPtr publisher_ptr = std::dynamic_pointer_cast<Publisher<ImuMsg>>(GetCurrentImuPublisher(index));
-#endif
-
-  if (kOutputToRos == output_type_) {
-    publisher_ptr->publish(imu_msg);
-  } else {
-#ifdef BUILDING_ROS1
-    if (bag_ && enable_imu_bag_) {
-      bag_->write(publisher_ptr->getTopic(), ros::Time(timestamp / 1000000000.0), imu_msg);
-    }
-#endif
-  }
-#endif
   lidar_info_data = lidar_info_data;
+  // TODO ! requires writing
 }
 
 #ifdef BUILDING_ROS2

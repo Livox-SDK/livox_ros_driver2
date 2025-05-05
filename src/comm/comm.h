@@ -173,16 +173,6 @@ typedef enum {
   kCommandTypeAck = 1,
 } CommandType;
 
-/*
-typedef struct {
-  uint8_t ret_code;
-  uint8_t dev_type;
-  char sn[16];
-  uint8_t lidar_ip[4];
-  uint16_t cmd_port;
-} DetectionData;
-*/ // TODO !
-
 /** 8bytes stamp to uint64_t stamp */
 typedef union {
   struct {
