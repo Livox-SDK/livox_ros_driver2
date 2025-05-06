@@ -224,16 +224,16 @@ void PubHandler::QueryInternalInfoCallback(livox_status status, uint32_t handle,
     if(kv->key == kKeyLidarDiagStatus) {
       memcpy(&direct_lidar_state_info.lidar_diag_status, &(kv->value[0]), sizeof(direct_lidar_state_info.lidar_diag_status));
 /*
-      printf("[%d] kvKey (kv->key): 0x%x, kKeyLidarDiagStatus(), len: %d, code: 0x%hx\n",
-        (uint32_t)i, (unsigned int)(kv->key), kv->length, direct_lidar_state_info.lidar_diag_status);
+      printf("handle: 0x%x, param_num: [%d], kvKey (kv->key): 0x%x, kKeyLidarDiagStatus(), len: %d, code: 0x%hx\n",
+        handle, (uint32_t)i, (unsigned int)(kv->key), kv->length, direct_lidar_state_info.lidar_diag_status);
       fflush(stdout);
 */
     }
     if(kv->key == kKeyHmsCode) {
       memcpy(direct_lidar_state_info.hms_code, &(kv->value[0]), sizeof(direct_lidar_state_info.hms_code));
 /*
-      printf("[%d] kvKey (kv->key): 0x%x, kKeyHmsCode(), len: %d, code: 0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x\n",
-        (uint32_t)i, (unsigned int)(kv->key), kv->length,
+      printf("handle: 0x%x, param_num: [%d], kvKey (kv->key): 0x%x, kKeyHmsCode(), len: %d, code: 0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x\n",
+        handle, (uint32_t)i, (unsigned int)(kv->key), kv->length,
         direct_lidar_state_info.hms_code[0], direct_lidar_state_info.hms_code[1],
         direct_lidar_state_info.hms_code[2], direct_lidar_state_info.hms_code[3],
         direct_lidar_state_info.hms_code[4], direct_lidar_state_info.hms_code[5],
