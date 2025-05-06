@@ -36,8 +36,10 @@ static std::string TranslateDiagnStatusCode2String(uint8_t code) {
       return std::string("Warning.");
     case LidarDiagStatusLevelError:
       return std::string("Error.");
-    case LidarDiagStatusLevelSafertyErr:
+    case LidarDiagStatusLevelSafetyErr:
       return std::string("SafertyErr.");
+    case LidarDiagStatusLevelUnknow:
+      return std::string("Undefined.");
     default:
       return std::string("Undefined.");
   }
@@ -59,8 +61,8 @@ void CreateDiagnStatusCode(uint16_t lidar_diag_status, LidarDiagnData::StatusCod
 }
 
 void CreateDiagnCodeInfo(uint32_t hms_code_full, HmsDiagnCodeInfo& hms_diagn_code_info) {
-  uint16_t hms_abnormal_id = (hms_code_full & 0xffff0000) >> 16;
-  uint8_t hms_abnormal_level = hms_code_full & 0xff;
+  uint16_t hms_abnormal_id = (hms_code_full & 0xFFFF0000) >> 16;
+  uint8_t hms_abnormal_level = hms_code_full & 0xFF;
 
   std::string hms_abnormal_description = "This is undescribed HMS code.";
   std::string hms_suggested_solution = "";
@@ -91,6 +93,10 @@ void CreateDiagnCodeInfo(uint32_t hms_code_full, HmsDiagnCodeInfo& hms_diagn_cod
       hms_diagn_code_info = { hms_abnormal_id, HmsDiagnAbnormalLevelFatal,
         { std::string("FATAL - ") + hms_abnormal_description, hms_suggested_solution } };
       break;
+    case HmsDiagnAbnormalLevelUnkown:
+      hms_diagn_code_info = { hms_abnormal_id, HmsDiagnAbnormalLevelUnkown,
+        { std::string("UNKOWN - ") + hms_abnormal_description, hms_suggested_solution } };
+        break;
     default:
       hms_diagn_code_info = { hms_abnormal_id, HmsDiagnAbnormalLevelUnkown,
         { std::string("UNKOWN - ") + hms_abnormal_description, hms_suggested_solution } };

@@ -183,7 +183,7 @@ void PubHandler::OnLivoxLidarCmdObserverCallback(const uint32_t handle,
   switch(cmd_id) {
     case kCommandIDLidarSearch:
       {
-        if(cmd_type == kCommandTypeAck) {
+        if(cmd_type == kCommandTypeAck) { // maybe we don't need this check
           QueryLivoxLidarInternalInfo(handle, QueryInternalInfoCallback, self);
         }
       }
@@ -212,7 +212,10 @@ void PubHandler::QueryInternalInfoCallback(livox_status status, uint32_t handle,
   }
 
   DirectLidarStateInfo direct_lidar_state_info;
-  memset(direct_lidar_state_info.hms_code, 0, sizeof(direct_lidar_state_info.hms_code));
+  // LiDAR diag status code, setting initial value to unknown/undefined
+  memset(&direct_lidar_state_info.lidar_diag_status, 0xFF, sizeof(direct_lidar_state_info.lidar_diag_status));
+  // HMS (health management system), setting initial value to unknown/undefined
+  memset(&direct_lidar_state_info.hms_code, 0xFF, sizeof(direct_lidar_state_info.hms_code));
 
   uint16_t off = 0;
   for (uint8_t i = 0; i < response->param_num; ++i) {
@@ -220,6 +223,11 @@ void PubHandler::QueryInternalInfoCallback(livox_status status, uint32_t handle,
 
     if(kv->key == kKeyLidarDiagStatus) {
       memcpy(&direct_lidar_state_info.lidar_diag_status, &(kv->value[0]), sizeof(direct_lidar_state_info.lidar_diag_status));
+/*
+      printf("[%d] kvKey (kv->key): 0x%x, kKeyLidarDiagStatus(), len: %d, code: 0x%hx\n",
+        (uint32_t)i, (unsigned int)(kv->key), kv->length, direct_lidar_state_info.lidar_diag_status);
+      fflush(stdout);
+*/
     }
     if(kv->key == kKeyHmsCode) {
       memcpy(direct_lidar_state_info.hms_code, &(kv->value[0]), sizeof(direct_lidar_state_info.hms_code));
@@ -231,6 +239,7 @@ void PubHandler::QueryInternalInfoCallback(livox_status status, uint32_t handle,
         direct_lidar_state_info.hms_code[4], direct_lidar_state_info.hms_code[5],
         direct_lidar_state_info.hms_code[6], direct_lidar_state_info.hms_code[7]
       );
+      fflush(stdout);
 */
     }
 
@@ -260,13 +269,15 @@ void PubHandler::QueryInternalInfoCallback(livox_status status, uint32_t handle,
     CreateDiagnStatusCode(direct_lidar_state_info.lidar_diag_status, lidar_diagn_data.status_code);
 
     for (uint16_t i = 0; i<(sizeof(direct_lidar_state_info.hms_code)/sizeof(uint32_t)); i++) {
-      if (direct_lidar_state_info.hms_code[i] != 0) {
+      if (((direct_lidar_state_info.hms_code[i] & 0xFF) != HmsDiagnAbnormalLevelOk) &&
+          ((direct_lidar_state_info.hms_code[i] & 0xFF) != HmsDiagnAbnormalLevelUnkown))
+      {
         CreateDiagnCodeInfo(direct_lidar_state_info.hms_code[i], hms_diagn_code_info);
         lidar_diagn_data.hms_diagn.push_back(hms_diagn_code_info);
       }
     }
     if (lidar_diagn_data.hms_diagn.empty()) {
-      CreateDiagnCodeInfo(0, hms_diagn_code_info);
+      CreateDiagnCodeInfo(direct_lidar_state_info.hms_code[0], hms_diagn_code_info);
       lidar_diagn_data.hms_diagn.push_back(hms_diagn_code_info);
     }
 

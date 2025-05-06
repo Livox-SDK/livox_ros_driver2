@@ -776,7 +776,7 @@ void Lddc::DiagnProcedure(diagnostic_updater::DiagnosticStatusWrapper & stat, Li
       stat.summary(diagnostic_msgs::msg::DiagnosticStatus::WARN, "The device is not working properly.");
       break;
     case LidarDiagStatusLevelError:
-    case LidarDiagStatusLevelSafertyErr:
+    case LidarDiagStatusLevelSafetyErr:
       stat.summary(diagnostic_msgs::msg::DiagnosticStatus::ERROR, "The device is in an error state.");
       break;
     default:

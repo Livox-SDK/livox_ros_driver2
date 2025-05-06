@@ -36,12 +36,12 @@
 namespace livox_ros {
 
 typedef enum {
-  HmsDiagnAbnormalLevelOk = 0x00,
+  HmsDiagnAbnormalLevelOk = 0x00,  // added value, not defined in Livox documentation
   HmsDiagnAbnormalLevelInfo = 0x01,
   HmsDiagnAbnormalLevelWarning = 0x02,
   HmsDiagnAbnormalLevelError = 0x03,
   HmsDiagnAbnormalLevelFatal = 0x04,
-  HmsDiagnAbnormalLevelUnkown = 0xFF,
+  HmsDiagnAbnormalLevelUnkown = 0xFF,  // added value, not defined in Livox documentation
 
 } HmsDiagnAbnormalLevel;
 
@@ -49,7 +49,8 @@ typedef enum {
   LidarDiagStatusLevelNormal = 0,
   LidarDiagStatusLevelWarning = 1,
   LidarDiagStatusLevelError = 2,
-  LidarDiagStatusLevelSafertyErr = 3,
+  LidarDiagStatusLevelSafetyErr = 3,
+  LidarDiagStatusLevelUnknow = 0xF,  // added value, not defined in Livox documentation
 } LidarDiagStatusLevel;
 
 // HMS(health management system) codes
@@ -94,6 +95,7 @@ static std::map<uint16_t, HmsDiagnInfo> hms_diagn_codes { // <HMS abnormal ID, H
  { 0x0408, { "PPS time synchronization fails because of loss of PPS signal.", "Please check the PPS signal." } },
  { 0x0409, { "GPS signal is abnormal.", "Please check the GPS time source." } },
  { 0x040A, { "The PTP and GPTP signals exist at the same time.", "Please check the network topology, use PTP or GPTP alone to synchronize." } },
+ { 0xFFFF, { "Health Management System (HMS) codes not received.", "" } },  // added value, not defined in Livox documentation
 };
 
 typedef struct LidarDiagnData {
@@ -110,7 +112,7 @@ typedef struct LidarDiagnData {
   } status_code;
   std::vector<HmsDiagnCodeInfo> hms_diagn;
 
-  LidarDiagnData(): lidar_type(0), handle(0), time_stamp() {}
+  LidarDiagnData(): lidar_type(0), handle(0), time_stamp(0) {}
 
   bool empty() { return time_stamp == 0.0; }
 } LidarDiagnData;
