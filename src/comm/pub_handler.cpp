@@ -266,8 +266,6 @@ void PubHandler::QueryInternalInfoCallback(livox_status status, uint32_t handle,
     lidar_diagn_data.time_stamp =
       std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
-    CreateDiagnStatusCode(direct_lidar_state_info.lidar_diag_status, lidar_diagn_data.status_code);
-
     for (uint16_t i = 0; i<(sizeof(direct_lidar_state_info.hms_code)/sizeof(uint32_t)); i++) {
       if (((direct_lidar_state_info.hms_code[i] & 0xFF) != HmsDiagnAbnormalLevelOk) &&
           ((direct_lidar_state_info.hms_code[i] & 0xFF) != HmsDiagnAbnormalLevelUnkown))
@@ -276,11 +274,14 @@ void PubHandler::QueryInternalInfoCallback(livox_status status, uint32_t handle,
         lidar_diagn_data.hms_diagn.push_back(hms_diagn_code_info);
       }
     }
+/*
     if (lidar_diagn_data.hms_diagn.empty()) {
       CreateDiagnCodeInfo(direct_lidar_state_info.hms_code[0], hms_diagn_code_info);
       lidar_diagn_data.hms_diagn.push_back(hms_diagn_code_info);
     }
-
+*/
+    CreateDiagnStatusCode(direct_lidar_state_info.lidar_diag_status, lidar_diagn_data.status_code);
+    CreateDiagnStatusCodeGlobal(lidar_diagn_data.hms_diagn, lidar_diagn_data.status_code);
     self->lidar_diagn_callback_(&lidar_diagn_data, self->lidar_diagn_client_data_);
   }
   return;

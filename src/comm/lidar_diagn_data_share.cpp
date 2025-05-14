@@ -1,8 +1,6 @@
 //
 // The MIT License (MIT)
 //
-// Copyright (c) 2022 Livox. All rights reserved.
-//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
@@ -39,9 +37,9 @@ static std::string TranslateDiagnStatusCode2String(uint8_t code) {
     case LidarDiagStatusLevelSafetyErr:
       return std::string("SafertyErr.");
     case LidarDiagStatusLevelUnknow:
-      return std::string("Undefined.");
+      return std::string("Unknow level.");
     default:
-      return std::string("Undefined.");
+      return std::string("Undefined code.");
   }
 }
 
@@ -50,13 +48,28 @@ void CreateDiagnStatusCode(uint16_t lidar_diag_status, LidarDiagnData::StatusCod
   uint8_t scan_module = (lidar_diag_status >> 4) && 0x000f;
   uint8_t ranging_module = (lidar_diag_status >> 8) && 0x000f;
   uint8_t communication_module = (lidar_diag_status >> 12) && 0x000f;
-  std::vector<uint8_t> status_codes_all { system_module, scan_module, ranging_module, communication_module };
-  uint8_t global = *std::max_element(status_codes_all.begin(), status_codes_all.begin());
 
   status_code.system_module = StatusCodeInfo(system_module, TranslateDiagnStatusCode2String(system_module));
   status_code.scan_module = StatusCodeInfo(scan_module, TranslateDiagnStatusCode2String(scan_module));
   status_code.ranging_module = StatusCodeInfo(ranging_module, TranslateDiagnStatusCode2String(ranging_module));
   status_code.communication_module = StatusCodeInfo(communication_module, TranslateDiagnStatusCode2String(communication_module));
+}
+
+void CreateDiagnStatusCodeGlobal(const std::vector<HmsDiagnCodeInfo>& hms_diagn, LidarDiagnData::StatusCode& status_code) {
+  std::vector<uint8_t> status_codes_all {
+    status_code.system_module.first,
+    status_code.scan_module.first,
+    status_code.ranging_module.first,
+    status_code.communication_module.first
+  };
+  for(const HmsDiagnCodeInfo& hms_diagn_code_info: hms_diagn) {
+    // Normalization of 'HmsDiagnAbnormalLevel' values ​​to 'LidarDiagStatusLevel' values
+    // There is a shift of 1 value between the states, ex.
+    //         HmsDiagnAbnormalLevelInfo = 0x01, and LidarDiagStatusLevelNormal = 0,
+    // '1' should be subtract from HmsDiagnCodeInfo.HmsDiagnAbnormalLevel
+    status_codes_all.push_back(std::get<1>(hms_diagn_code_info) - 1);
+  }
+  uint8_t global = *std::max_element(status_codes_all.begin(), status_codes_all.end());
   status_code.global = StatusCodeInfo(global, TranslateDiagnStatusCode2String(global));
 }
 
@@ -75,7 +88,7 @@ void CreateDiagnCodeInfo(uint32_t hms_code_full, HmsDiagnCodeInfo& hms_diagn_cod
   switch (hms_abnormal_level) {
     case HmsDiagnAbnormalLevelOk:
       hms_diagn_code_info = { hms_abnormal_id, HmsDiagnAbnormalLevelOk,
-        { std::string("OK - ") + hms_abnormal_description, hms_suggested_solution } };
+        { std::string("OK? (not occur!) - ") + hms_abnormal_description, hms_suggested_solution } };
       break;
     case HmsDiagnAbnormalLevelInfo:
       hms_diagn_code_info = { hms_abnormal_id, HmsDiagnAbnormalLevelInfo,
@@ -95,11 +108,11 @@ void CreateDiagnCodeInfo(uint32_t hms_code_full, HmsDiagnCodeInfo& hms_diagn_cod
       break;
     case HmsDiagnAbnormalLevelUnkown:
       hms_diagn_code_info = { hms_abnormal_id, HmsDiagnAbnormalLevelUnkown,
-        { std::string("UNKOWN - ") + hms_abnormal_description, hms_suggested_solution } };
+        { hms_abnormal_description, hms_suggested_solution } };
         break;
     default:
       hms_diagn_code_info = { hms_abnormal_id, HmsDiagnAbnormalLevelUnkown,
-        { std::string("UNKOWN - ") + hms_abnormal_description, hms_suggested_solution } };
+        { std::string("UNKOWN ERR LEVEL - ") + hms_abnormal_description, hms_suggested_solution } };
       break;
   }
 }

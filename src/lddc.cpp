@@ -780,7 +780,7 @@ void Lddc::DiagnProcedure(diagnostic_updater::DiagnosticStatusWrapper & stat, Li
       stat.summary(diagnostic_msgs::msg::DiagnosticStatus::ERROR, "The device is in an error state.");
       break;
     default:
-      stat.summary(diagnostic_msgs::msg::DiagnosticStatus::ERROR, "The device does not report its status.");
+      stat.summary(diagnostic_msgs::msg::DiagnosticStatus::ERROR, "The device does not report its correct status.");
       break;
   }
 

@@ -1,8 +1,6 @@
 //
 // The MIT License (MIT)
 //
-// Copyright (c) 2022 Livox. All rights reserved.
-//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
@@ -36,21 +34,20 @@
 namespace livox_ros {
 
 typedef enum {
-  HmsDiagnAbnormalLevelOk = 0x00,  // added value, not defined in Livox documentation
-  HmsDiagnAbnormalLevelInfo = 0x01,
-  HmsDiagnAbnormalLevelWarning = 0x02,
-  HmsDiagnAbnormalLevelError = 0x03,
-  HmsDiagnAbnormalLevelFatal = 0x04,
-  HmsDiagnAbnormalLevelUnkown = 0xFF,  // added value, not defined in Livox documentation
-
+    HmsDiagnAbnormalLevelOk = 0x00,  // added value, not defined in Livox documentation
+    HmsDiagnAbnormalLevelInfo = 0x01,
+    HmsDiagnAbnormalLevelWarning = 0x02,
+    HmsDiagnAbnormalLevelError = 0x03,
+    HmsDiagnAbnormalLevelFatal = 0x04,
+    HmsDiagnAbnormalLevelUnkown = 0xFF,  // added value, not defined in Livox documentation
 } HmsDiagnAbnormalLevel;
 
 typedef enum {
-  LidarDiagStatusLevelNormal = 0,
-  LidarDiagStatusLevelWarning = 1,
-  LidarDiagStatusLevelError = 2,
-  LidarDiagStatusLevelSafetyErr = 3,
-  LidarDiagStatusLevelUnknow = 0xF,  // added value, not defined in Livox documentation
+    LidarDiagStatusLevelNormal = 0,
+    LidarDiagStatusLevelWarning = 1,
+    LidarDiagStatusLevelError = 2,
+    LidarDiagStatusLevelSafetyErr = 3,
+    LidarDiagStatusLevelUnknow = 0xF,  // added value, not defined in Livox documentation
 } LidarDiagStatusLevel;
 
 // HMS(health management system) codes
@@ -119,6 +116,7 @@ typedef struct LidarDiagnData {
 
 void CreateDiagnStatusCode(uint16_t lidar_diag_status, LidarDiagnData::StatusCode& status_code);
 void CreateDiagnCodeInfo(uint32_t hms_code_full, HmsDiagnCodeInfo& hms_diagn_code_info);
+void CreateDiagnStatusCodeGlobal(const std::vector<HmsDiagnCodeInfo>& hms_diagn, LidarDiagnData::StatusCode& status_code);
 
 class LidarDiagnDataShare {
  public:
