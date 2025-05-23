@@ -36,7 +36,16 @@ For ROS2 Humble installation, please refer to:
 
 Desktop-Full installation is recommend.
 
-## 2. Build & Run Livox ROS Driver 2
+## 2. Compatibility
+
+### Ubuntu 24.04 and ROS2 Jazzy
+
+This driver has been updated to support building and running on Ubuntu 24.04 with ROS2 Jazzy.
+Key considerations:
+*   **Livox SDK**: You must install a version of the Livox SDK that is compatible with Ubuntu 24.04 and can be correctly linked by this ROS2 Jazzy package. Please refer to the official Livox SDK documentation for information on compatible versions and installation instructions. The driver expects the SDK shared library (`liblivox_lidar_sdk_shared.so`) to be in a standard location like `/usr/local/lib` and headers to be discoverable.
+*   **Dependencies**: Ensure all other ROS2 Jazzy dependencies are correctly installed.
+
+## 3. Build & Run Livox ROS Driver 2
 
 ### 2.1 Clone Livox ROS Driver 2 source code:
 
@@ -110,7 +119,7 @@ A rviz launch example for HAP LiDAR would be:
 ros2 launch livox_ros_driver2 rviz_HAP_launch.py
 ```
 
-## 3. Launch file and livox_ros_driver2 internal parameter configuration instructions
+## 4. Launch file and livox_ros_driver2 internal parameter configuration instructions
 
 ### 3.1 Launch file configuration instructions
 
@@ -183,7 +192,7 @@ uint8   line            # laser number in lidar
 
 &ensp;&ensp;&ensp;&ensp;Please refer to the pcl :: PointXYZI data structure in the point_types.hpp file of the PCL library.
 
-## 4. LiDAR config
+## 5. LiDAR config
 
 LiDAR Configurations (such as ip, port, data type... etc.) can be set via a json-style config file. Config files for single HAP, Mid360 and mixed-LiDARs are in the "config" folder. The parameter naming *'user_config_path'* in launch files indicates such json file path.
 
@@ -514,13 +523,13 @@ For more infomation about the HAP config, please refer to:
 
 ```
 
-## 5. Supported LiDAR list
+## 6. Supported LiDAR list
 
 * HAP
 * Mid360
 * (more types are comming soon...)
 
-## 6. FAQ
+## 7. FAQ
 
 ### 6.1 launch with "livox_lidar_rviz_HAP.launch" but no point cloud display on the grid?
 

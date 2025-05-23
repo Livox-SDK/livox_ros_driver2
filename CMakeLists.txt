@@ -245,6 +245,16 @@ else(ROS_EDITION STREQUAL "ROS2")
     LIBRARY_NAME ${PROJECT_NAME}
   )
 
+# Livox SDK Dependency
+# --------------------
+# The following lines locate the Livox SDK. Please ensure that the version
+# of the Livox SDK you have installed is compatible with your target OS
+# (e.g., Ubuntu 24.04) and ROS2 distribution (e.g., Jazzy).
+# Refer to the official Livox documentation for SDK compatibility information
+# and installation instructions.
+# The driver currently expects the SDK shared library (liblivox_lidar_sdk_shared.so)
+# to be found in a standard system path like /usr/local/lib and headers to be
+# discoverable by the compiler.
   ## make sure the livox_lidar_sdk_shared library is installed
   find_library(LIVOX_LIDAR_SDK_LIBRARY liblivox_lidar_sdk_shared.so /usr/local/lib REQUIRED)
 
@@ -287,6 +297,9 @@ else(ROS_EDITION STREQUAL "ROS2")
     ${LIVOX_INTERFACES} "rosidl_typesupport_cpp")
     target_link_libraries(${PROJECT_NAME} "${cpp_typesupport_target}")
   else()
+    # Default for other/newer ROS2 versions (e.g., Iron, Jazzy)
+    # If Jazzy or future versions require specific handling for
+    # LIVOX_INTERFACES, add a specific elseif block above.
     set(LIVOX_INTERFACE_TARGET "${LIVOX_INTERFACES}__rosidl_typesupport_cpp")
     add_dependencies(${PROJECT_NAME} ${LIVOX_INTERFACES})
     get_target_property(LIVOX_INTERFACES_INCLUDE_DIRECTORIES ${LIVOX_INTERFACE_TARGET} INTERFACE_INCLUDE_DIRECTORIES)
