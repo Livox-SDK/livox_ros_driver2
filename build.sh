@@ -3,6 +3,7 @@
 readonly VERSION_ROS1="ROS1"
 readonly VERSION_ROS2="ROS2"
 readonly VERSION_HUMBLE="humble"
+readonly VERSION_JAZZY="jazzy"
 
 pushd `pwd` > /dev/null
 cd `dirname $0`
@@ -10,6 +11,7 @@ echo "Working Path: "`pwd`
 
 ROS_VERSION=""
 ROS_HUMBLE=""
+ROS_JAZZY=""
 
 # Set working ROS version
 if [ "$1" = "ROS2" ]; then
@@ -17,10 +19,14 @@ if [ "$1" = "ROS2" ]; then
 elif [ "$1" = "humble" ]; then
     ROS_VERSION=${VERSION_ROS2}
     ROS_HUMBLE=${VERSION_HUMBLE}
+elif [ "$1" = "jazzy" ]; then
+    ROS_VERSION=${VERSION_ROS2}
+    ROS_JAZZY=${VERSION_JAZZY}
 elif [ "$1" = "ROS1" ]; then
     ROS_VERSION=${VERSION_ROS1}
 else
     echo "Invalid Argument"
+    echo "Usage: $0 [ROS1|ROS2|humble|jazzy]"
     exit
 fi
 echo "ROS version is: "$ROS_VERSION
@@ -58,7 +64,7 @@ if [ $ROS_VERSION = ${VERSION_ROS1} ]; then
     catkin_make -DROS_EDITION=${VERSION_ROS1}
 elif [ $ROS_VERSION = ${VERSION_ROS2} ]; then
     cd ../../
-    colcon build --cmake-args -DROS_EDITION=${VERSION_ROS2} -DHUMBLE_ROS=${ROS_HUMBLE}
+    colcon build --cmake-args -DROS_EDITION=${VERSION_ROS2} -DHUMBLE_ROS=${ROS_HUMBLE} -DJAZZY_ROS=${ROS_JAZZY}
 fi
 popd > /dev/null
 
