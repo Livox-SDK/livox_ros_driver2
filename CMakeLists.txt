@@ -189,7 +189,6 @@ else(ROS_EDITION STREQUAL "ROS2")
   # Copyright(c) 2020 livoxtech limited.
 
   cmake_minimum_required(VERSION 3.14)
-  project(livox_ros_driver2)
 
   # Default to C99
   if(NOT CMAKE_C_STANDARD)
@@ -209,8 +208,8 @@ else(ROS_EDITION STREQUAL "ROS2")
 
   # Printf version info
   include(cmake/version.cmake)
-  project(${PROJECT_NAME} VERSION ${LIVOX_ROS_DRIVER2_VERSION} LANGUAGES CXX)
-  message(STATUS "${PROJECT_NAME} version: ${LIVOX_ROS_DRIVER2_VERSION}")
+  project(livox_ros_driver2 VERSION ${LIVOX_ROS_DRIVER2_VERSION} LANGUAGES CXX)
+  message(STATUS "livox_ros_driver2 version: ${LIVOX_ROS_DRIVER2_VERSION}")
 
   #---------------------------------------------------------------------------------------
   # Add ROS Version MACRO
