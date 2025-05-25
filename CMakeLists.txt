@@ -220,6 +220,7 @@ else(ROS_EDITION STREQUAL "ROS2")
   # uncomment the following section in order to fill in
   # further dependencies manually.
   # find_package(<dependency> REQUIRED)
+  find_package(MPI) # Added this line
   find_package(ament_cmake_auto REQUIRED)
   ament_auto_find_build_dependencies()
   find_package(PCL REQUIRED)
@@ -241,7 +242,7 @@ else(ROS_EDITION STREQUAL "ROS2")
     "msg/CustomPoint.msg"
     "msg/CustomMsg.msg"
     DEPENDENCIES builtin_interfaces std_msgs
-    LIBRARY_NAME ${PROJECT_NAME}
+    LIBRARY_NAME ${LIVOX_INTERFACES}
   )
 
 # Livox SDK Dependency
