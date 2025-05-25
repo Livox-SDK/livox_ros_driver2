@@ -221,6 +221,14 @@ else(ROS_EDITION STREQUAL "ROS2")
   # further dependencies manually.
   # find_package(<dependency> REQUIRED)
   find_package(MPI) # Added this line
+  # Note on PCL/VTK/MPI dependencies:
+  # The following find_package calls (especially for PCL via pcl_conversions)
+  # may require MPI if PCL and its dependency VTK were built with MPI support.
+  # If you encounter CMake errors related to "VTK::mpi" or missing "MPI::MPI_C"
+  # (often seen on aarch64 or custom builds), ensure that MPI development
+  # libraries (e.g., libopenmpi-dev on Debian/Ubuntu) are installed on your
+  # system and are discoverable by CMake. This find_package(MPI) call above
+  # attempts to locate MPI beforehand, but system configuration is key.
   find_package(ament_cmake_auto REQUIRED)
   ament_auto_find_build_dependencies()
   find_package(PCL REQUIRED)
@@ -242,7 +250,6 @@ else(ROS_EDITION STREQUAL "ROS2")
     "msg/CustomPoint.msg"
     "msg/CustomMsg.msg"
     DEPENDENCIES builtin_interfaces std_msgs
-    LIBRARY_NAME ${LIVOX_INTERFACES}
   )
 
 # Livox SDK Dependency
