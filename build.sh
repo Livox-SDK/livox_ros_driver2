@@ -60,15 +60,11 @@ fi
 
 # substitute the files/folders: CMakeList.txt, package.xml(s)
 if [ ${ROS_VERSION} = ${VERSION_ROS1} ]; then
-    if [ -f package.xml ]; then
-        rm package.xml
-    fi
-    cp -f package_ROS1.xml package.xml
+    rm -f package.xml # Ensure any existing package.xml (file or symlink) is removed
+    ln -s package_ROS1.xml package.xml
 elif [ ${ROS_VERSION} = ${VERSION_ROS2} ]; then
-    if [ -f package.xml ]; then
-        rm package.xml
-    fi
-    cp -f package_ROS2.xml package.xml
+    rm -f package.xml # Ensure any existing package.xml (file or symlink) is removed
+    ln -s package_ROS2.xml package.xml
     cp -rf launch_ROS2/ launch/
 fi
 
@@ -87,5 +83,6 @@ popd > /dev/null
 if [ $ROS_VERSION = ${VERSION_ROS2} ]; then
     rm -rf launch/
 fi
+rm -f package.xml # Add this line to remove the symlink
 
 popd > /dev/null
