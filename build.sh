@@ -2,34 +2,49 @@
 
 readonly VERSION_ROS1="ROS1"
 readonly VERSION_ROS2="ROS2"
-readonly VERSION_HUMBLE="humble"
-readonly VERSION_JAZZY="jazzy"
 
 pushd `pwd` > /dev/null
 cd `dirname $0`
 echo "Working Path: "`pwd`
 
 ROS_VERSION=""
-ROS_HUMBLE=""
-ROS_JAZZY=""
+ROS_DISTRO="jazzy" # Default to jazzy
 
 # Set working ROS version
-if [ "$1" = "ROS2" ]; then
+if [ -z "$1" ]; then
+    # No argument provided, use default ROS2 (Jazzy)
     ROS_VERSION=${VERSION_ROS2}
-elif [ "$1" = "humble" ]; then
-    ROS_VERSION=${VERSION_ROS2}
-    ROS_HUMBLE=${VERSION_HUMBLE}
-elif [ "$1" = "jazzy" ]; then
-    ROS_VERSION=${VERSION_ROS2}
-    ROS_JAZZY=${VERSION_JAZZY}
+    # ROS_DISTRO is already "jazzy" by default
+    echo "No argument provided, defaulting to ROS2 Jazzy."
 elif [ "$1" = "ROS1" ]; then
     ROS_VERSION=${VERSION_ROS1}
+    ROS_DISTRO="" # Not applicable for ROS1
+elif [ "$1" = "ROS2" ]; then
+    # Generic ROS2 argument, use default ROS2 (Jazzy)
+    ROS_VERSION=${VERSION_ROS2}
+    # ROS_DISTRO is already "jazzy" by default
+    echo "Generic ROS2 argument, defaulting to Jazzy."
 else
-    echo "Invalid Argument"
-    echo "Usage: $0 [ROS1|ROS2|humble|jazzy]"
-    exit
+    # Argument provided is assumed to be a ROS2 distribution name
+    ROS_VERSION=${VERSION_ROS2}
+    ROS_DISTRO="$1"
+    echo "Using ROS2 distribution: $ROS_DISTRO"
 fi
-echo "ROS version is: "$ROS_VERSION
+
+# Basic validation for ROS_DISTRO if ROS_VERSION is ROS2
+if [ "${ROS_VERSION}" = "${VERSION_ROS2}" ]; then
+    if [ -z "${ROS_DISTRO}" ]; then
+        echo "Error: ROS_DISTRO is empty for ROS2 build. This should not happen."
+        exit 1
+    fi
+    # You could add a list of known/supported distros here for stricter validation if desired
+    # Example: if [[ ! " humble jazzy iron " =~ " ${ROS_DISTRO} " ]]; then ...
+fi
+
+echo "ROS version is: ${ROS_VERSION}"
+if [ "${ROS_VERSION}" = "${VERSION_ROS2}" ]; then
+    echo "ROS distribution is: ${ROS_DISTRO}"
+fi
 
 # clear `build/` folder.
 # TODO: Do not clear these folders, if the last build is based on the same ROS version.
@@ -64,7 +79,7 @@ if [ $ROS_VERSION = ${VERSION_ROS1} ]; then
     catkin_make -DROS_EDITION=${VERSION_ROS1}
 elif [ $ROS_VERSION = ${VERSION_ROS2} ]; then
     # cd ../../ # Modified: Keep build context in /app for sandbox environment
-    colcon build --cmake-args -DROS_EDITION=${VERSION_ROS2} -DHUMBLE_ROS=${ROS_HUMBLE} -DJAZZY_ROS=${ROS_JAZZY}
+    colcon build --cmake-args -DROS_EDITION=${VERSION_ROS2} -DROS_DISTRO=${ROS_DISTRO}
 fi
 popd > /dev/null
 

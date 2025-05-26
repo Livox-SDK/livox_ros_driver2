@@ -298,18 +298,11 @@ else(ROS_EDITION STREQUAL "ROS2")
 
   target_include_directories(${PROJECT_NAME} PRIVATE ${livox_sdk_INCLUDE_DIRS})
 
-  # get include directories of custom msg headers
-  if(HUMBLE_ROS STREQUAL "humble")
-    rosidl_get_typesupport_target(cpp_typesupport_target
-    ${LIVOX_INTERFACES} "rosidl_typesupport_cpp")
-    target_link_libraries(${PROJECT_NAME} "${cpp_typesupport_target}")
-  else()
-    # Default for other/newer ROS2 versions (e.g., Iron, Jazzy)
-    # If Jazzy or future versions require specific handling for
-    # LIVOX_INTERFACES, add a specific elseif block above.
-    set(LIVOX_INTERFACE_TARGET "${LIVOX_INTERFACES}__rosidl_typesupport_cpp")
-    add_dependencies(${PROJECT_NAME} ${LIVOX_INTERFACES})
-  endif()
+  # Set up the target for linking against message typesupport
+  set(LIVOX_INTERFACE_TARGET "${LIVOX_INTERFACES}__rosidl_typesupport_cpp")
+
+  # Ensure the main project target depends on the interface generation targets
+  add_dependencies(${PROJECT_NAME} ${LIVOX_INTERFACES})
 
   # include file direcotry
   target_include_directories(${PROJECT_NAME} PUBLIC
