@@ -10,7 +10,7 @@ if(ROS_EDITION STREQUAL "ROS1")
   # Start livox_ros_driver2 project
   #---------------------------------------------------------------------------------------
   include(cmake/version.cmake)
-  project(livox_ros_driver2 VERSION ${LIVOX_ROS_DRIVER2_VERSION} LANGUAGES CXX)
+  project(livox_ros_driver2 VERSION ${LIVOX_ROS_DRIVER2_VERSION} LANGUAGES CXX C)
   message(STATUS "livox_ros_driver2 version: ${LIVOX_ROS_DRIVER2_VERSION}")
 
   #---------------------------------------------------------------------------------------
@@ -208,7 +208,7 @@ else(ROS_EDITION STREQUAL "ROS2")
 
   # Printf version info
   include(cmake/version.cmake)
-  project(livox_ros_driver2 VERSION ${LIVOX_ROS_DRIVER2_VERSION} LANGUAGES CXX)
+  project(livox_ros_driver2 VERSION ${LIVOX_ROS_DRIVER2_VERSION} LANGUAGES CXX C)
   message(STATUS "livox_ros_driver2 version: ${LIVOX_ROS_DRIVER2_VERSION}")
 
   #---------------------------------------------------------------------------------------
