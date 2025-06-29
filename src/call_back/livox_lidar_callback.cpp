@@ -45,7 +45,7 @@ void LivoxLidarCallback::LidarInfoChangeCallback(const uint32_t handle,
     // add lidar device
     bool add_non_config_lidar_ = false;  // TODO change sdk to make this selectable
     if (add_non_config_lidar_) {
-      std::cout << "Adding unconfigurated lidar, this is discouraged as this can lead to unwanted lidars being added." << std::endl;
+      std::cout << "Adding unconfigured lidar, this is discouraged as this can lead to unwanted lidar being added." << std::endl;
       uint8_t index = 0;
       int8_t ret = lds_lidar->cache_index_.GetFreeIndex(kLivoxLidarType, handle, index);
       if (ret != 0) {
@@ -54,6 +54,9 @@ void LivoxLidarCallback::LidarInfoChangeCallback(const uint32_t handle,
       }
       LidarDevice *p_lidar = &(lds_lidar->lidars_[index]);
       p_lidar->lidar_type = kLivoxLidarType;
+    } else {
+      std::cout << "Not adding unconfigured lidar " << std::endl;
+      return;
     }
   } else {
     // set the lidar according to the user-defined config
