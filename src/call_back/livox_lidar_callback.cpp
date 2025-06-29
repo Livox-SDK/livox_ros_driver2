@@ -43,14 +43,18 @@ void LivoxLidarCallback::LidarInfoChangeCallback(const uint32_t handle,
   if (lidar_device == nullptr) {
     std::cout << "found lidar not defined in the user-defined config, ip: " << IpNumToString(handle) << std::endl;
     // add lidar device
-    uint8_t index = 0;
-    int8_t ret = lds_lidar->cache_index_.GetFreeIndex(kLivoxLidarType, handle, index);
-    if (ret != 0) {
-      std::cout << "failed to add lidar device, lidar ip: " << IpNumToString(handle) << std::endl;
-      return;
+    bool add_non_config_lidar_ = false;  // TODO change sdk to make this selectable
+    if (add_non_config_lidar_) {
+      std::cout << "Adding unconfigurated lidar, this is discouraged as this can lead to unwanted lidars being added." << std::endl;
+      uint8_t index = 0;
+      int8_t ret = lds_lidar->cache_index_.GetFreeIndex(kLivoxLidarType, handle, index);
+      if (ret != 0) {
+        std::cout << "failed to add lidar device, lidar ip: " << IpNumToString(handle) << std::endl;
+        return;
+      }
+      LidarDevice *p_lidar = &(lds_lidar->lidars_[index]);
+      p_lidar->lidar_type = kLivoxLidarType;
     }
-    LidarDevice *p_lidar = &(lds_lidar->lidars_[index]);
-    p_lidar->lidar_type = kLivoxLidarType;
   } else {
     // set the lidar according to the user-defined config
     const UserLivoxLidarConfig& config = lidar_device->livox_config;
