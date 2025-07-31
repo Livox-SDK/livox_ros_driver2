@@ -116,7 +116,7 @@ void PubHandler::OnLivoxLidarPointCloudCallback(uint32_t handle, const uint8_t d
       imu_data.handle = handle;
       imu_data.time_stamp = GetEthPacketTimestamp(data->time_type,
                                                   data->timestamp, sizeof(data->timestamp));
-      // Take into account the lidar roll.
+      // Take into account the lidar extrinsics.
       imu_data.gyro_x = (imu->gyro_x * extrinsic_.rotation[0][0] +
                          imu->gyro_y * extrinsic_.rotation[0][1] +
                          imu->gyro_z * extrinsic_.rotation[0][2]);
