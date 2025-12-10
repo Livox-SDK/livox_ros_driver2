@@ -72,6 +72,11 @@ bool LivoxLidarConfigParser::ParseUserConfigs(const rapidjson::Document &doc,
 
     // parse user configs
     user_config.handle = IpStringToNum(std::string(config["ip"].GetString()));
+    if(!config.HasMember("name")) {
+      user_config.ldName = config["ip"].GetString();
+    } else {
+      user_config.ldName = config["name"].GetString();
+    }
     if (!config.HasMember("pcl_data_type")) {
       user_config.pcl_data_type = -1;
     } else {
