@@ -239,9 +239,6 @@ void PubHandler::RawDataProcess() {
       }
       raw_data = raw_packet_queue_.front();
       raw_packet_queue_.pop_front();
-      if (raw_packet_queue_.size() < 3) { // reduce CPU usage
-        std::this_thread::sleep_for(std::chrono::microseconds(50));
-      }
     }
     uint32_t id = 0;
     GetLidarId(raw_data.lidar_type, raw_data.handle, id);

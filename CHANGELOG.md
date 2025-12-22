@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.4]
+### Fixed
+- Optimize framing performance
+
 ## [1.2.3]
 ### Fixed
 - Optimize framing logic and reduce CPU usage
