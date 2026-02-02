@@ -1,6 +1,6 @@
 # Livox ROS Driver 2
 
-Livox ROS Driver 2 is the 2nd-generation driver package used to connect LiDAR products produced by Livox, applicable for ROS (noetic recommended) and ROS2 (foxy or humble recommended).
+Livox ROS Driver 2 is the 2nd-generation driver package used to connect LiDAR products produced by Livox, applicable for ROS (noetic recommended) and ROS2 (foxy, humble, or jazzy recommended).
 
   **Note :**
 
@@ -13,6 +13,7 @@ Livox ROS Driver 2 is the 2nd-generation driver package used to connect LiDAR pr
   * Ubuntu 18.04 for ROS Melodic;
   * Ubuntu 20.04 for ROS Noetic and ROS2 Foxy;
   * Ubuntu 22.04 for ROS2 Humble;
+  * **Ubuntu 24.04 for ROS2 Jazzy;**
 
   **Tips:**
 
@@ -33,6 +34,9 @@ For ROS2 Foxy installation, please refer to:
 
 For ROS2 Humble installation, please refer to:
 [ROS Humble installation instructions](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html)
+
+**For ROS2 Jazzy installation, please refer to:**
+**[ROS Jazzy installation instructions](https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debians.html)**
 
 Desktop-Full installation is recommend.
 
@@ -62,17 +66,32 @@ source /opt/ros/noetic/setup.sh
 ./build.sh ROS1
 ```
 
-#### For ROS2 Foxy:
+#### For ROS2:
+
+**The driver automatically detects your ROS2 distribution from the `ROS_DISTRO` environment variable.**
+Simply source your ROS2 installation and run the build script:
+
+##### ROS2 Jazzy (Ubuntu 24.04):
+```shell
+source /opt/ros/jazzy/setup.sh
+./build.sh ROS2
+```
+
+##### ROS2 Humble (Ubuntu 22.04):
+```shell
+source /opt/ros/humble/setup.sh
+./build.sh ROS2
+```
+
+##### ROS2 Foxy (Ubuntu 20.04):
 ```shell
 source /opt/ros/foxy/setup.sh
 ./build.sh ROS2
 ```
 
-#### For ROS2 Humble:
-```shell
-source /opt/ros/humble/setup.sh
-./build.sh humble
-```
+  **Note :**
+
+  The build system automatically adapts to your ROS2 distribution version. No manual version specification is required. Future ROS2 distributions (Iron, Rolling, etc.) are automatically supported.
 
 ### 2.4 Run Livox ROS Driver 2:
 
@@ -83,10 +102,10 @@ source ../../devel/setup.sh
 roslaunch livox_ros_driver2 [launch file]
 ```
 
-in which,  
+in which,
 
 * **livox_ros_driver2** : is the ROS package name of Livox ROS Driver 2;
-* **[launch file]** : is the ROS launch file you want to use; the 'launch_ROS1' folder contains several launch samples for your reference;  
+* **[launch file]** : is the ROS launch file you want to use; the 'launch_ROS1' folder contains several launch samples for your reference;
 
 An rviz launch example for HAP LiDAR would be:
 
@@ -100,7 +119,7 @@ source ../../install/setup.sh
 ros2 launch livox_ros_driver2 [launch file]
 ```
 
-in which,  
+in which,
 
 * **[launch file]** : is the ROS2 launch file you want to use; the 'launch_ROS2' folder contains several launch samples for your reference.
 
@@ -341,7 +360,7 @@ For more infomation about the HAP config, please refer to:
     "MID360": {
         "lidar_net_info": {
             "cmd_data_port": 56100, # command port
-            "push_msg_port": 56200, 
+            "push_msg_port": 56200,
             "point_data_port": 56300,
             "imu_data_port": 56400,
             "log_data_port": 56500
@@ -384,7 +403,7 @@ For more infomation about the HAP config, please refer to:
     "MID360": {
         "lidar_net_info": {
             "cmd_data_port": 56100, # command port
-            "push_msg_port": 56200, 
+            "push_msg_port": 56200,
             "point_data_port": 56300,
             "imu_data_port": 56400,
             "log_data_port": 56500
@@ -435,7 +454,7 @@ For more infomation about the HAP config, please refer to:
     <arg name="msg_frame_id" default="livox_frame"/>
     <arg name="lidar_bag" default="true"/>
     <arg name="imu_bag" default="true"/>
-    <!--user configure parameters for ros end--> 
+    <!--user configure parameters for ros end-->
 
     <param name="xfer_format" value="$(arg xfer_format)"/>
     <param name="multi_topic" value="$(arg multi_topic)"/>
@@ -482,7 +501,7 @@ For more infomation about the HAP config, please refer to:
     <arg name="msg_frame_id" default="livox_frame"/>
     <arg name="lidar_bag" default="true"/>
     <arg name="imu_bag" default="true"/>
-    <!--user configure parameters for ros end--> 
+    <!--user configure parameters for ros end-->
 
     <param name="xfer_format" value="$(arg xfer_format)"/>
     <param name="multi_topic" value="$(arg multi_topic)"/>
@@ -496,7 +515,7 @@ For more infomation about the HAP config, please refer to:
     <param name="enable_lidar_bag" type="bool" value="$(arg lidar_bag)"/>
     <param name="enable_imu_bag" type="bool" value="$(arg imu_bag)"/>
 
-    <node name="livox_lidar_publisher1" pkg="livox_ros_driver2"
+    <node name="livox_lidar_publisher2" pkg="livox_ros_driver2"
           type="livox_ros_driver2_node" required="true"
           output="screen" args="$(arg cmdline_arg)"/>
 
@@ -543,3 +562,5 @@ Please add '/usr/local/lib' to the env LD_LIBRARY_PATH.
   export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
   source ~/.bashrc
   ```
+
+---
