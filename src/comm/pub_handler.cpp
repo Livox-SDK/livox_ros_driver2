@@ -119,9 +119,17 @@ void PubHandler::OnLivoxLidarPointCloudCallback(uint32_t handle, const uint8_t d
       
       uint32_t id = 0;
       GetLidarId(LidarProtoType::kLivoxLidarType, handle, id);
-      const auto it = self->lidar_process_handlers_.find(id);
-      if (it != self->lidar_process_handlers_.end()) {
-        auto& e = it->second->GetDetailedLidarExtrinsics();
+      bool has_extrinsics = false;
+      ExtParameterDetailed e;
+      {
+        std::lock_guard<std::mutex> lock(self->lidar_process_handlers_mutex_);
+        const auto it = self->lidar_process_handlers_.find(id);
+        if (it != self->lidar_process_handlers_.end()) {
+          e = it->second->GetDetailedLidarExtrinsics();
+          has_extrinsics = true;
+        }
+      }
+      if (has_extrinsics) {
 
         // Take into account the lidar extrinsics.
         imu_data.gyro_x = (imu->gyro_x * e.rotation[0][0] +
@@ -192,7 +200,15 @@ void PubHandler::PublishPointCloud() {
 void PubHandler::CheckTimer(uint32_t id) {
 
   if (PubHandler::is_timestamp_sync_.load()) { // Enable time synchronization
-    auto& process_handler = lidar_process_handlers_[id];
+    LidarPubHandler* process_handler = nullptr;
+    {
+      std::lock_guard<std::mutex> lock(lidar_process_handlers_mutex_);
+      auto it = lidar_process_handlers_.find(id);
+      if (it == lidar_process_handlers_.end()) {
+        return;
+      }
+      process_handler = it->second.get();
+    }
     uint64_t recent_time_ms = process_handler->GetRecentTimeStamp() / kRatioOfMsToNs;
     if ((recent_time_ms % publish_interval_ms_ != 0) || recent_time_ms == 0) {
       return;
@@ -270,13 +286,32 @@ void PubHandler::RawDataProcess() {
     }
     uint32_t id = 0;
     GetLidarId(raw_data.lidar_type, raw_data.handle, id);
-    if (lidar_process_handlers_.find(id) == lidar_process_handlers_.end()) {
-      lidar_process_handlers_[id].reset(new LidarPubHandler());
+    LidarPubHandler* process_handler = nullptr;
+    {
+      std::lock_guard<std::mutex> lock(lidar_process_handlers_mutex_);
+      auto it = lidar_process_handlers_.find(id);
+      if (it == lidar_process_handlers_.end()) {
+        lidar_process_handlers_[id].reset(new LidarPubHandler());
+        it = lidar_process_handlers_.find(id);
+      }
+      process_handler = it->second.get();
     }
-    auto &process_handler = lidar_process_handlers_[id];
-    if (lidar_extrinsics_.find(id) != lidar_extrinsics_.end()) {
-        lidar_process_handlers_[id]->SetLidarsExtParam(lidar_extrinsics_[id]);
+
+    LidarExtParameter lidar_param = {};
+    bool has_lidar_extrinsics = false;
+    {
+      std::lock_guard<std::mutex> lock(packet_mutex_);
+      auto extrinsics_it = lidar_extrinsics_.find(id);
+      if (extrinsics_it != lidar_extrinsics_.end()) {
+        lidar_param = extrinsics_it->second;
+        has_lidar_extrinsics = true;
+      }
     }
+
+    if (has_lidar_extrinsics) {
+      process_handler->SetLidarsExtParam(lidar_param);
+    }
+
     process_handler->PointCloudProcess(raw_data);
     CheckTimer(id);
   }
@@ -362,6 +397,7 @@ void LidarPubHandler::LivoxLidarPointCloudProcess(RawPacket & pkt) {
 }
 
 void LidarPubHandler::SetLidarsExtParam(LidarExtParameter lidar_param) {
+  std::lock_guard<std::mutex> lock(extrinsic_mutex_);
   if (is_set_extrinsic_params_) {
     return;
   }
@@ -482,9 +518,9 @@ void LidarPubHandler::ProcessSphericalPoint(RawPacket& pkt) {
   }
 }
 
-const ExtParameterDetailed& LidarPubHandler::GetDetailedLidarExtrinsics() const {
+ExtParameterDetailed LidarPubHandler::GetDetailedLidarExtrinsics() const {
+  std::lock_guard<std::mutex> lock(extrinsic_mutex_);
   return extrinsic_;
 }
 
 } // namespace livox_ros
-

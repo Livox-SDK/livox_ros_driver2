@@ -54,7 +54,7 @@ class LidarPubHandler {
   uint32_t GetLidarPointCloudsSize();
   uint64_t GetLidarBaseTime();
 
-  const ExtParameterDetailed& GetDetailedLidarExtrinsics() const;
+  ExtParameterDetailed GetDetailedLidarExtrinsics() const;
 
  private:
   void LivoxLidarPointCloudProcess(RawPacket & pkt);
@@ -70,6 +70,7 @@ class LidarPubHandler {
       {0, 0, 1}
     }
   };
+  mutable std::mutex extrinsic_mutex_;
   std::mutex mutex_;
   std::atomic_bool is_set_extrinsic_params_;
 };
@@ -127,6 +128,7 @@ class PubHandler {
   TimePoint last_pub_time_;
 
   std::map<uint32_t, std::unique_ptr<LidarPubHandler>> lidar_process_handlers_;
+  std::mutex lidar_process_handlers_mutex_;
   std::map<uint32_t, std::vector<PointXyzlt>> points_;
   std::map<uint32_t, LidarExtParameter> lidar_extrinsics_;
   static std::atomic<bool> is_timestamp_sync_;
@@ -138,4 +140,3 @@ PubHandler &pub_handler();
 }  // namespace livox_ros
 
 #endif  // LIVOX_DRIVER_PUB_HANDLER_H_
-
