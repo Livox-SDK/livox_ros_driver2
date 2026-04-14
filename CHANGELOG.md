@@ -1,6 +1,13 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## [1.2.6]
+### Added
+- Support Ubuntu 24.04 and ROS2 Jazzy.
+
+## [1.2.5]
+### Added
+- Support Mid-360s Lidar.
 
 ## [1.2.4]
 ### Fixed
