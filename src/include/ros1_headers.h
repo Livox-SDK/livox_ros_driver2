@@ -35,8 +35,8 @@
 #include <pcl_ros/point_cloud.h>
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/PointCloud2.h>
-#include "livox_ros_driver2/CustomMsg.h"
-#include "livox_ros_driver2/CustomPoint.h"
+#include "livox_ros_driver2_ed/CustomMsg.h"
+#include "livox_ros_driver2_ed/CustomPoint.h"
 
 
 #define DRIVER_DEBUG(node, ...) ROS_DEBUG(__VA_ARGS__)
