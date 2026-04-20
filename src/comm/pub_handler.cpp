@@ -116,12 +116,40 @@ void PubHandler::OnLivoxLidarPointCloudCallback(uint32_t handle, const uint8_t d
       imu_data.handle = handle;
       imu_data.time_stamp = GetEthPacketTimestamp(data->time_type,
                                                   data->timestamp, sizeof(data->timestamp));
-      imu_data.gyro_x = imu->gyro_x;
-      imu_data.gyro_y = imu->gyro_y;
-      imu_data.gyro_z = imu->gyro_z;
-      imu_data.acc_x = imu->acc_x;
-      imu_data.acc_y = imu->acc_y;
-      imu_data.acc_z = imu->acc_z;
+      
+      uint32_t id = 0;
+      GetLidarId(LidarProtoType::kLivoxLidarType, handle, id);
+      const auto it = self->lidar_process_handlers_.find(id);
+      if (it != self->lidar_process_handlers_.end()) {
+        auto& e = it->second->GetDetailedLidarExtrinsics();
+
+        // Take into account the lidar extrinsics.
+        imu_data.gyro_x = (imu->gyro_x * e.rotation[0][0] +
+                          imu->gyro_y * e.rotation[0][1] +
+                          imu->gyro_z * e.rotation[0][2]);
+        imu_data.gyro_y = (imu->gyro_x * e.rotation[1][0] +
+                          imu->gyro_y * e.rotation[1][1] +
+                          imu->gyro_z * e.rotation[1][2]);
+        imu_data.gyro_z = (imu->gyro_x * e.rotation[2][0] +
+                          imu->gyro_y * e.rotation[2][1] +
+                          imu->gyro_z * e.rotation[2][2]);
+        imu_data.acc_x = (imu->acc_x * e.rotation[0][0] +
+                          imu->acc_y * e.rotation[0][1] +
+                          imu->acc_z * e.rotation[0][2]);
+        imu_data.acc_y = (imu->acc_x * e.rotation[1][0] +
+                          imu->acc_y * e.rotation[1][1] +
+                          imu->acc_z * e.rotation[1][2]);
+        imu_data.acc_z = (imu->acc_x * e.rotation[2][0] +
+                          imu->acc_y * e.rotation[2][1] +
+                          imu->acc_z * e.rotation[2][2]);
+      } else {
+        imu_data.gyro_x = imu->gyro_x;
+        imu_data.gyro_y = imu->gyro_y;
+        imu_data.gyro_z = imu->gyro_z;
+        imu_data.acc_x = imu->acc_x;
+        imu_data.acc_y = imu->acc_y;
+        imu_data.acc_z = imu->acc_z;
+      }
       self->imu_callback_(&imu_data, self->imu_client_data_);
     }
     return;
@@ -454,4 +482,9 @@ void LidarPubHandler::ProcessSphericalPoint(RawPacket& pkt) {
   }
 }
 
+const ExtParameterDetailed& LidarPubHandler::GetDetailedLidarExtrinsics() const {
+  return extrinsic_;
+}
+
 } // namespace livox_ros
+

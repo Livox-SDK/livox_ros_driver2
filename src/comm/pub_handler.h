@@ -53,6 +53,8 @@ class LidarPubHandler {
   uint32_t GetLidarPointCloudsSize();
   uint64_t GetLidarBaseTime();
 
+  const ExtParameterDetailed& GetDetailedLidarExtrinsics() const;
+
  private:
   void LivoxLidarPointCloudProcess(RawPacket & pkt);
   void ProcessCartesianHighPoint(RawPacket & pkt);
@@ -135,3 +137,4 @@ PubHandler &pub_handler();
 }  // namespace livox_ros
 
 #endif  // LIVOX_DRIVER_PUB_HANDLER_H_
+
