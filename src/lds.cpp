@@ -113,6 +113,7 @@ void Lds::StorageImuData(ImuData* imu_data) {
   }
 
   LidarDevice *p_lidar = &lidars_[index];
+  p_lidar->connect_state = kConnectStateSampling;
   LidarImuDataQueue* imu_queue = &p_lidar->imu_data;
   imu_queue->Push(imu_data);
   if (!imu_queue->Empty()) {
@@ -163,6 +164,7 @@ void Lds::StoragePointData(PointFrame* frame) {
       printf("Storage point data failed, lidar type:%u, handle:%u.\n", lidar_point.lidar_type, lidar_point.handle);
       continue;
     }
+    lidars_[index].connect_state = kConnectStateSampling;
     PushLidarData(&lidar_point, index, base_time);
   }
 }
