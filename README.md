@@ -234,6 +234,7 @@ LiDAR Configurations (such as ip, port, data type... etc.) can be set via a json
       "ip" : "192.168.1.100",  # ip of the LiDAR you want to config
       "pcl_data_type" : 1,
       "pattern_mode" : 0,
+      "frame_id" : "livox_hap_frame",
       "blind_spot_set" : 50,
       "extrinsic_parameter" : {
         "roll": 0.0,
@@ -253,9 +254,10 @@ The parameter attributes in the above json file are described in the following t
 **LiDAR configuration parameter**
 | Parameter                  | Type    | Description                                                  | Default         |
 | :------------------------- | ------- | ------------------------------------------------------------ | --------------- |
-| ip             | String  | Ip of the LiDAR you want to config | 192.168.1.100 |
-| pcl_data_type             | Int | Choose the resolution of the point cloud data to send<br>1 -- Cartesian coordinate data (32 bits)<br>2 -- Cartesian coordinate data (16 bits) <br>3 --Spherical coordinate data| 1           |
-| pattern_mode                | Int     | Space scan pattern<br>0 -- non-repeating scanning pattern mode<br>1 -- repeating scanning pattern mode <br>2 -- repeating scanning pattern mode (low scanning rate) | 0               |
+| ip             | String    | Ip of the LiDAR you want to config | 192.168.1.100 |
+| pcl_data_type              | Int | Choose the resolution of the point cloud data to send<br>1 -- Cartesian coordinate data (32 bits)<br>2 -- Cartesian coordinate data (16 bits) <br>3 --Spherical coordinate data| 1           |
+| pattern_mode               | Int     | Space scan pattern<br>0 -- non-repeating scanning pattern mode<br>1 -- repeating scanning pattern mode <br>2 -- repeating scanning pattern mode (low scanning rate) | 0               |
+| frame_id                   | String  | LiDAR's frame ID in PointCloud2 and other ROS messages       | livox_lidar     |
 | blind_spot_set (Only for HAP LiDAR)                 | Int     | Set blind spot<br>Range from 50 cm to 200 cm               | 50               |
 | extrinsic_parameter |      | Set extrinsic parameter<br> The data types of "roll" "picth" "yaw" are float <br>  The data types of "x" "y" "z" are int<br>               |
 
@@ -316,6 +318,7 @@ For more infomation about the HAP config, please refer to:
       "ip" : "192.168.1.100",  # ip of the HAP you want to config
       "pcl_data_type" : 1,
       "pattern_mode" : 0,
+      "frame_id" : "livox_hap_frame",
       "blind_spot_set" : 50,
       "extrinsic_parameter" : {
         "roll": 0.0,
@@ -330,6 +333,7 @@ For more infomation about the HAP config, please refer to:
       "ip" : "192.168.1.12",  # ip of the Mid360 you want to config
       "pcl_data_type" : 1,
       "pattern_mode" : 0,
+      "frame_id" : "livox_mid360_frame",
       "extrinsic_parameter" : {
         "roll": 0.0,
         "pitch": 0.0,
@@ -375,6 +379,7 @@ For more infomation about the HAP config, please refer to:
             "ip": "192.168.1.100", # ip of the LiDAR you want to config
             "pcl_data_type": 1,
             "pattern_mode": 0,
+            "frame_id" : "livox_mid360_frame1",
             "extrinsic_parameter": {
                 "roll": 0.0,
                 "pitch": 0.0,
@@ -418,6 +423,7 @@ For more infomation about the HAP config, please refer to:
             "ip": "192.168.2.100", # ip of the LiDAR you want to config
             "pcl_data_type": 1,
             "pattern_mode": 0,
+            "frame_id" : "livox_mid360_frame2",
             "extrinsic_parameter": {
                 "roll": 0.0,
                 "pitch": 0.0,
