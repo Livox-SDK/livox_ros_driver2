@@ -42,13 +42,12 @@ namespace livox_ros {
 /** Lidar Data Distribute Control--------------------------------------------*/
 #ifdef BUILDING_ROS1
 Lddc::Lddc(int format, int multi_topic, int data_src, int output_type,
-    double frq, std::string &frame_id, bool lidar_bag, bool imu_bag)
+    double frq, bool lidar_bag, bool imu_bag)
     : transfer_format_(format),
       use_multi_topic_(multi_topic),
       data_src_(data_src),
       output_type_(output_type),
       publish_frq_(frq),
-      frame_id_(frame_id),
       enable_lidar_bag_(lidar_bag),
       enable_imu_bag_(imu_bag) {
   publish_period_ns_ = kNsPerSecond / publish_frq_;
@@ -62,13 +61,12 @@ Lddc::Lddc(int format, int multi_topic, int data_src, int output_type,
 }
 #elif defined BUILDING_ROS2
 Lddc::Lddc(int format, int multi_topic, int data_src, int output_type,
-           double frq, std::string &frame_id)
+           double frq)
     : transfer_format_(format),
       use_multi_topic_(multi_topic),
       data_src_(data_src),
       output_type_(output_type),
-      publish_frq_(frq),
-      frame_id_(frame_id) {
+      publish_frq_(frq) {
   publish_period_ns_ = kNsPerSecond / publish_frq_;
   lds_ = nullptr;
 #if 0

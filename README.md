@@ -444,7 +444,6 @@ For more infomation about the HAP config, please refer to:
     <arg name="rviz_enable" default="true"/>
     <arg name="rosbag_enable" default="false"/>
     <arg name="cmdline_arg" default="$(arg bd_list)"/>
-    <arg name="msg_frame_id" default="livox_frame"/>
     <arg name="lidar_bag" default="true"/>
     <arg name="imu_bag" default="true"/>
     <!--user configure parameters for ros end--> 
@@ -457,7 +456,6 @@ For more infomation about the HAP config, please refer to:
     <param name="cmdline_str" type="string" value="$(arg bd_list)"/>
     <param name="cmdline_file_path" type="string" value="$(arg lvx_file_path)"/>
     <param name="user_config_path" type="string" value="$(find livox_ros_driver2)/config/MID360_config1.json"/> # Mid360 MID360_config1 name
-    <param name="frame_id" type="string" value="$(arg msg_frame_id)"/>
     <param name="enable_lidar_bag" type="bool" value="$(arg lidar_bag)"/>
     <param name="enable_imu_bag" type="bool" value="$(arg imu_bag)"/>
 
@@ -491,7 +489,6 @@ For more infomation about the HAP config, please refer to:
     <arg name="rviz_enable" default="true"/>
     <arg name="rosbag_enable" default="false"/>
     <arg name="cmdline_arg" default="$(arg bd_list)"/>
-    <arg name="msg_frame_id" default="livox_frame"/>
     <arg name="lidar_bag" default="true"/>
     <arg name="imu_bag" default="true"/>
     <!--user configure parameters for ros end--> 
@@ -504,7 +501,6 @@ For more infomation about the HAP config, please refer to:
     <param name="cmdline_str" type="string" value="$(arg bd_list)"/>
     <param name="cmdline_file_path" type="string" value="$(arg lvx_file_path)"/>
     <param name="user_config_path" type="string" value="$(find livox_ros_driver2)/config/MID360_config2.json"/> # Mid360 MID360_config2 name
-    <param name="frame_id" type="string" value="$(arg msg_frame_id)"/>
     <param name="enable_lidar_bag" type="bool" value="$(arg lidar_bag)"/>
     <param name="enable_imu_bag" type="bool" value="$(arg imu_bag)"/>
 
