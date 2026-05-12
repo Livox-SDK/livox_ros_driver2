@@ -582,6 +582,6 @@ ros2 launch fusioncore_ros fusioncore.launch.py \
   --ros-args -r /imu/data:=/livox/imu
 ```
 
-FusionCore handles the `odom → base_link` transform. Feed its output into KISS-ICP, Fast-LIO, or any LiDAR SLAM stack for the `map → odom` layer — the two pipelines are fully independent.
+FusionCore handles the `odom → base_link` transform. Feed its output into KISS-ICP, Fast-LIO, or any LiDAR SLAM stack for the `map → odom` layer; the two pipelines are fully independent.
 
 Full documentation and config reference: https://github.com/manankharwar/fusioncore
