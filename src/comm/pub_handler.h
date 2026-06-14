@@ -36,7 +36,6 @@
 #include <thread>
 #include <unordered_set>
 
-#include "livox_lidar_def.h"
 #include "livox_lidar_api.h"
 #include "comm/comm.h"
 

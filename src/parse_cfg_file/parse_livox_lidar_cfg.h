@@ -26,7 +26,6 @@
 #define LIVOX_ROS_DRIVER_LIVOX_LIDAR_CFG_PARSER_H_
 
 #include "comm/comm.h"
-#include "livox_lidar_def.h"
 
 #include "rapidjson/document.h"
 #include "rapidjson/filereadstream.h"

@@ -40,7 +40,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #endif // WIN32
-
+#include "livox_lidar_api.h"
 #include "comm/comm.h"
 #include "comm/pub_handler.h"
 

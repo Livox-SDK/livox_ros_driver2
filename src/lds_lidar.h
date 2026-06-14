@@ -34,7 +34,6 @@
 #include "lds.h"
 #include "comm/comm.h"
 
-#include "livox_lidar_api.h"
 #include "livox_lidar_def.h"
 
 #include "rapidjson/document.h"
