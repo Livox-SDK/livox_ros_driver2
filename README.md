@@ -14,6 +14,7 @@ Livox ROS Driver 2 is the 2nd-generation driver package used to connect LiDAR pr
   * Ubuntu 20.04 for ROS Noetic and ROS2 Foxy;
   * Ubuntu 22.04 for ROS2 Humble;
   * Ubuntu 24.04 for ROS 2 Jazzy;
+  * Ubuntu 24.04 for ROS 2 Kilted;
 
   **Tips:**
 
@@ -37,6 +38,9 @@ For ROS2 Humble installation, please refer to:
 
 For ROS2 Jazzy installation, please refer to:
 [ROS Jazzy installation instructions](https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debians.html)
+
+For ROS2 Kilted installation, please refer to:
+[ROS Kilted installation instructions](https://docs.ros.org/en/kilted/Installation/Ubuntu-Install-Debians.html)
 
 
 Desktop-Full installation is recommend.
@@ -84,6 +88,13 @@ source /opt/ros/humble/setup.sh
 ```shell
 source /opt/ros/jazzy/setup.sh
 ./build.sh jazzy
+```
+
+#### For ROS2 Kilted:
+
+```shell
+source /opt/ros/kilted/setup.sh
+./build.sh kilted
 ```
 
 ### 2.4 Run Livox ROS Driver 2:
