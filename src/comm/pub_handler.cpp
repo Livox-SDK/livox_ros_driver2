@@ -132,7 +132,11 @@ void PubHandler::OnLivoxLidarPointCloudCallback(uint32_t handle, const uint8_t d
   packet.extrinsic_enable = false; 
   if (dev_type == LivoxLidarDeviceType::kLivoxLidarTypeIndustrialHAP) {
     packet.line_num = kLineNumberHAP;
-  } else if (dev_type == LivoxLidarDeviceType::kLivoxLidarTypeMid360||dev_type==LivoxLidarDeviceType::kLivoxLidarTypeMid360s) {
+  // Mid-360s is device type 35 (kLivoxLidarTypeMid360s), an enumerator only
+  // present in Livox-SDK2 >= v1.3; compare numerically so this compiles
+  // against the fleet-pinned SDK v1.2.5 as well as newer SDKs.
+  } else if (dev_type == LivoxLidarDeviceType::kLivoxLidarTypeMid360 ||
+             static_cast<int>(dev_type) == 35) {
     packet.line_num = kLineNumberMid360;
   } else {
     packet.line_num = kLineNumberDefault;
