@@ -58,6 +58,7 @@ class LidarPubHandler {
   void ProcessCartesianHighPoint(RawPacket & pkt);
   void ProcessCartesianLowPoint(RawPacket & pkt);
   void ProcessSphericalPoint(RawPacket & pkt);
+  void ProcessDoubleEchoPoint(RawPacket& pkt);
   std::vector<PointXyzlt> points_clouds_;
   ExtParameterDetailed extrinsic_ = {
     {0, 0, 0},

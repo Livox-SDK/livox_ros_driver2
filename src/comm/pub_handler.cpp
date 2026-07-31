@@ -326,6 +326,9 @@ void LidarPubHandler::LivoxLidarPointCloudProcess(RawPacket & pkt) {
     case kLivoxLidarSphericalCoordinateData:
       ProcessSphericalPoint(pkt);
       break;
+      case kLivoxLidarDoubleEchoData:
+      ProcessDoubleEchoPoint(pkt);
+      break;
     default:
       std::cout << "unknown data type: " << static_cast<int>(pkt.data_type)
                 << " !!" << std::endl;
@@ -454,4 +457,55 @@ void LidarPubHandler::ProcessSphericalPoint(RawPacket& pkt) {
   }
 }
 
+
+void LidarPubHandler::ProcessDoubleEchoPoint(RawPacket& pkt)
+{
+  LivoxLidarDoubleEchoRawPoint* raw = (LivoxLidarDoubleEchoRawPoint*)pkt.raw_data.data();
+  PointXyzlt point1 = {};
+  PointXyzlt point2 = {};
+  uint32_t index = 0;
+  for (uint32_t i = 0; i < pkt.point_num; i++) {
+    if (pkt.extrinsic_enable) {
+      point1.x = raw[i].x1 / 1000.0;
+      point1.y = raw[i].y1 / 1000.0;
+      point1.z = raw[i].z1 / 1000.0;
+
+      point2.x = raw[i].x2 / 1000.0;
+      point2.y = raw[i].y2 / 1000.0;
+      point2.z = raw[i].z2 / 1000.0;
+    } else {
+      point1.x = (raw[i].x1 * extrinsic_.rotation[0][0] +
+                  raw[i].y1 * extrinsic_.rotation[0][1] +
+                  raw[i].z1 * extrinsic_.rotation[0][2] + extrinsic_.trans[0]) / 1000.0;
+      point1.y = (raw[i].x1* extrinsic_.rotation[1][0] +
+                  raw[i].y1 * extrinsic_.rotation[1][1] +
+                  raw[i].z1 * extrinsic_.rotation[1][2] + extrinsic_.trans[1]) / 1000.0;
+      point1.z = (raw[i].x1 * extrinsic_.rotation[2][0] +
+                  raw[i].y1 * extrinsic_.rotation[2][1] +
+                  raw[i].z1 * extrinsic_.rotation[2][2] + extrinsic_.trans[2]) / 1000.0;
+
+      point2.x = (raw[i].x2 * extrinsic_.rotation[0][0] +
+                  raw[i].y2 * extrinsic_.rotation[0][1] +
+                  raw[i].z2 * extrinsic_.rotation[0][2] + extrinsic_.trans[0]) / 1000.0;
+      point2.y = (raw[i].x2* extrinsic_.rotation[1][0] +
+                  raw[i].y2 * extrinsic_.rotation[1][1] +
+                  raw[i].z2 * extrinsic_.rotation[1][2] + extrinsic_.trans[1]) / 1000.0;
+      point2.z = (raw[i].x2 * extrinsic_.rotation[2][0] +
+                  raw[i].y2 * extrinsic_.rotation[2][1] +
+                  raw[i].z2 * extrinsic_.rotation[2][2] + extrinsic_.trans[2]) / 1000.0;
+    }
+    point1.intensity = raw[i].reflectivity1;
+    point1.line = i % pkt.line_num;
+    point1.tag = raw[i].tag1;
+    point1.offset_time = pkt.time_stamp + i * pkt.point_interval;
+
+    point2.intensity = raw[i].reflectivity2;
+    point2.line = i % pkt.line_num;
+    point2.tag = raw[i].tag2;
+    point2.offset_time = pkt.time_stamp + i * pkt.point_interval;
+    std::lock_guard<std::mutex> lock(mutex_);
+    points_clouds_.push_back(point1);
+    points_clouds_.push_back(point2);
+  }
+}
 } // namespace livox_ros

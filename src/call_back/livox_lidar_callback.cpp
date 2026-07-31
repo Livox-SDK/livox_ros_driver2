@@ -88,6 +88,9 @@ void LivoxLidarCallback::LidarInfoChangeCallback(const uint32_t handle,
         std::cout << "set dual emit mode, handle: " << handle << ", enable dual emit: "
                   << static_cast<int32_t>(config.dual_emit_en) << std::endl;
       }
+      if (!lidar_device->livox_config.set_bits) {
+        lidar_device->connect_state = kConnectStateSampling;
+      }
     } // free lock for set_bits
 
     // set extrinsic params into lidar
