@@ -225,6 +225,7 @@ else(ROS_EDITION STREQUAL "ROS2")
   ament_auto_find_build_dependencies()
   find_package(PCL REQUIRED)
   find_package(std_msgs REQUIRED)
+  find_package(sensor_msgs REQUIRED)
   find_package(builtin_interfaces REQUIRED)
   find_package(rosidl_default_generators REQUIRED)
 
@@ -264,6 +265,7 @@ else(ROS_EDITION STREQUAL "ROS2")
     src/driver_node.cpp
     src/lds.cpp
     src/lds_lidar.cpp
+    src/custom_msg_to_pointcloud2.cpp
 
     src/comm/comm.cpp
     src/comm/ldq.cpp
@@ -315,6 +317,11 @@ else(ROS_EDITION STREQUAL "ROS2")
   rclcpp_components_register_node(${PROJECT_NAME}
     PLUGIN "livox_ros::DriverNode"
     EXECUTABLE ${PROJECT_NAME}_node
+  )
+
+  rclcpp_components_register_node(${PROJECT_NAME}
+    PLUGIN "livox_ros::CustomMsgToPointCloud2Node"
+    EXECUTABLE custom_msg_to_pointcloud2_node
   )
 
   if(BUILD_TESTING)
