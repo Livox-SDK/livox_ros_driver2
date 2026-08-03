@@ -604,3 +604,33 @@ Please add '/usr/local/lib' to the env LD_LIBRARY_PATH.
   export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib
   source ~/.bashrc
   ```
+
+
+## 7. Using Livox IMU with a GPS + wheel odometry state estimator
+
+The driver publishes IMU data on `/livox/imu` (`sensor_msgs/Imu`). For outdoor robots that need a globally-referenced odometry estimate alongside the LiDAR pipeline, [FusionCore](https://github.com/manankharwar/fusioncore) is a ROS 2 UKF that fuses the Livox IMU with wheel encoders and GPS to produce an `odom → base_link` TF and `/fusion/odom` at 100 Hz.
+
+```bash
+sudo apt install ros-jazzy-fusioncore-ros
+# or: ros-humble-fusioncore-ros
+```
+
+Point FusionCore at the Livox IMU topic in your robot YAML:
+
+```yaml
+fusioncore:
+  ros__parameters:
+    imu.frame_id: livox_frame
+```
+
+Launch with a topic remap:
+
+```bash
+ros2 launch fusioncore_ros fusioncore.launch.py \
+  fusioncore_config:=robot.yaml \
+  --ros-args -r /imu/data:=/livox/imu
+```
+
+FusionCore handles the `odom → base_link` transform. Feed its output into KISS-ICP, Fast-LIO, or any LiDAR SLAM stack for the `map → odom` layer; the two pipelines are fully independent.
+
+Full documentation and config reference: https://github.com/manankharwar/fusioncore
