@@ -3,6 +3,8 @@ from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch_ros.actions import Node
 import launch
+from launch.substitutions import PathJoinSubstitution
+from launch_ros.substitutions import FindPackageShare
 
 ################### user configure parameters for ros2 start ###################
 xfer_format   = 0    # 0-Pointcloud2(PointXYZRTL), 1-customized pointcloud format
@@ -14,10 +16,16 @@ frame_id      = 'livox_frame'
 lvx_file_path = '/home/livox/livox_test.lvx'
 cmdline_bd_code = 'livox0000000001'
 
-cur_path = os.path.split(os.path.realpath(__file__))[0] + '/'
-cur_config_path = cur_path + '../config'
-rviz_config_path = os.path.join(cur_config_path, 'display_point_cloud_ROS2.rviz')
-user_config_path = os.path.join(cur_config_path, 'mixed_HAP_MID360_config.json')
+rviz_config_path = PathJoinSubstitution([
+                    FindPackageShare('livox_ros_driver2'),
+                    "config",
+                    "display_point_cloud_ROS2.rviz"
+                ])
+user_config_path = PathJoinSubstitution([
+                    FindPackageShare('livox_ros_driver2'),
+                    "config",
+                    "mixed_HAP_MID360_config.json"
+                ])
 ################### user configure parameters for ros2 end #####################
 
 livox_ros2_params = [
