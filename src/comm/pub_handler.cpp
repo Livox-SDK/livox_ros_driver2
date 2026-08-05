@@ -139,7 +139,16 @@ void PubHandler::OnLivoxLidarPointCloudCallback(uint32_t handle, const uint8_t d
   }
   packet.data_type = data->data_type;
   packet.point_num = data->dot_num;
-  packet.point_interval = data->time_interval * 100 / data->dot_num;  //ns
+
+  // Per Mid-360 "Point Cloud & IMU Data Protocol", the time_interval field:
+  // "In this frame of point cloud data,
+  // the time of the last point minus the time of the first point."
+  if (data->dot_num >= 2) {
+    packet.point_interval = data->time_interval * 100 / (data->dot_num - 1);  //ns
+  } else {
+    // When there are less than two points, point_interval is ineffective.
+    packet.point_interval = 0;
+  }
   packet.time_stamp = GetEthPacketTimestamp(data->time_type,
                                             data->timestamp, sizeof(data->timestamp));
   uint32_t length = data->length - sizeof(LivoxLidarEthernetPacket) + 1;
