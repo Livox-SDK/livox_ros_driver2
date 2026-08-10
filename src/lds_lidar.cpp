@@ -133,7 +133,7 @@ bool LdsLidar::InitLivoxLidar() {
 
   // parse user config
   LivoxLidarConfigParser parser(path_);
-  std::vector<UserLivoxLidarConfig> user_configs;
+
   if (!parser.Parse(user_configs)) {
     std::cout << "failed to parse user-defined config" << std::endl;
   }
@@ -202,6 +202,11 @@ int LdsLidar::DeInitLdsLidar(void) {
   }
 
   if (lidar_summary_info_.lidar_type & kLivoxLidarType) {
+    // setting the lidars to idel state when closing
+    LivoxLidarWorkMode mode = kLivoxLidarWakeUp;
+    for (auto& config : user_configs) {
+      SetLivoxLidarWorkMode(config.handle, mode, nullptr , nullptr);
+    }
     LivoxLidarSdkUninit();
     printf("Livox Lidar SDK Deinit completely!\n");
   }
