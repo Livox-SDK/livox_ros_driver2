@@ -52,16 +52,16 @@ using Publisher = ros::Publisher;
 using PublisherPtr = ros::Publisher*;
 using PointCloud2 = sensor_msgs::PointCloud2;
 using PointField = sensor_msgs::PointField;
-using CustomMsg = livox_ros_driver2::CustomMsg;
-using CustomPoint = livox_ros_driver2::CustomPoint;
+using CustomMsg = livox_ros_driver2_ed::CustomMsg;
+using CustomPoint = livox_ros_driver2_ed::CustomPoint;
 using ImuMsg = sensor_msgs::Imu;
 #elif defined BUILDING_ROS2
 template <typename MessageT> using Publisher = rclcpp::Publisher<MessageT>;
 using PublisherPtr = std::shared_ptr<rclcpp::PublisherBase>;
 using PointCloud2 = sensor_msgs::msg::PointCloud2;
 using PointField = sensor_msgs::msg::PointField;
-using CustomMsg = livox_ros_driver2::msg::CustomMsg;
-using CustomPoint = livox_ros_driver2::msg::CustomPoint;
+using CustomMsg = livox_ros_driver2_ed::msg::CustomMsg;
+using CustomPoint = livox_ros_driver2_ed::msg::CustomPoint;
 using ImuMsg = sensor_msgs::msg::Imu;
 #endif
 
@@ -101,6 +101,7 @@ class Lddc final {
   void PollingLidarImuData(uint8_t index, LidarDevice *lidar);
 
   void PublishPointcloud2(LidarDataQueue *queue, uint8_t index);
+  void PublishVelodynePointcloud2(LidarDataQueue *queue, uint8_t index);
   void PublishCustomPointcloud(LidarDataQueue *queue, uint8_t index);
   void PublishPclMsg(LidarDataQueue *queue, uint8_t index);
 
