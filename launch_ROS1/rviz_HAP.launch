@@ -16,21 +16,26 @@
 	<arg name="imu_bag" default="true"/>
 	<!--user configure parameters for ros end--> 
 
-	<param name="xfer_format" value="$(arg xfer_format)"/>
-	<param name="multi_topic" value="$(arg multi_topic)"/>
-	<param name="data_src" value="$(arg data_src)"/>
-	<param name="publish_freq" type="double" value="$(arg publish_freq)"/>
-	<param name="output_data_type" value="$(arg output_type)"/>
-	<param name="cmdline_str" type="string" value="$(arg bd_list)"/>
-	<param name="cmdline_file_path" type="string" value="$(arg lvx_file_path)"/>
-	<param name="user_config_path" type="string" value="$(find livox_ros_driver2)/config/HAP_config.json"/>
-	<param name="frame_id" type="string" value="$(arg msg_frame_id)"/>
-	<param name="enable_lidar_bag" type="bool" value="$(arg lidar_bag)"/>
-	<param name="enable_imu_bag" type="bool" value="$(arg imu_bag)"/>
-
-	<node name="livox_lidar_publisher2" pkg="livox_ros_driver2"
-	      type="livox_ros_driver2_node" required="true"
-	      output="screen" args="$(arg cmdline_arg)"/>
+	<node
+			name="livox_lidar_publisher2"
+			pkg="livox_ros_driver2"
+	      	type="livox_ros_driver2_node"
+			required="true"
+	      	output="screen"
+			args="$(arg cmdline_arg)"
+	>
+		<param name="xfer_format"                     value="$(arg xfer_format)"/>
+		<param name="multi_topic"                     value="$(arg multi_topic)"/>
+		<param name="data_src"                        value="$(arg data_src)"/>
+		<param name="publish_freq"      type="double" value="$(arg publish_freq)"/>
+		<param name="output_data_type"                value="$(arg output_type)"/>
+		<param name="cmdline_str"       type="string" value="$(arg bd_list)"/>
+		<param name="cmdline_file_path" type="string" value="$(arg lvx_file_path)"/>
+		<param name="user_config_path"  type="string" value="$(find livox_ros_driver2)/config/HAP_config.json"/>
+		<param name="frame_id"          type="string" value="$(arg msg_frame_id)"/>
+		<param name="enable_lidar_bag"  type="bool"   value="$(arg lidar_bag)"/>
+		<param name="enable_imu_bag"    type="bool"   value="$(arg imu_bag)"/>
+	</node>
 
 	<group if="$(arg rviz_enable)">
 		<node name="livox_rviz" pkg="rviz" type="rviz" respawn="true"
