@@ -478,7 +478,7 @@ void Lddc::PublishPclData(const uint8_t index, const uint64_t timestamp, const P
 }
 
 void Lddc::InitImuMsg(const ImuData& imu_data, ImuMsg& imu_msg, uint64_t& timestamp) {
-  imu_msg.header.frame_id = "livox_frame";
+  imu_msg.header.frame_id.assign(frame_id_);
 
   timestamp = imu_data.time_stamp;
 #ifdef BUILDING_ROS1
