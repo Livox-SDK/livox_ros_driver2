@@ -1,4 +1,18 @@
-# judge which cmake codes to use 
+# Default cache args so `colcon build --packages-select livox_ros_driver2`
+# works without passing -DROS_EDITION / -DDISTRO_ROS explicitly.
+if(NOT DEFINED ROS_EDITION)
+  set(ROS_EDITION "ROS2")
+endif()
+
+if(NOT DEFINED DISTRO_ROS)
+  if(DEFINED ENV{ROS_DISTRO})
+    set(DISTRO_ROS $ENV{ROS_DISTRO})
+  else()
+    set(DISTRO_ROS "jazzy")
+  endif()
+endif()
+
+# judge which cmake codes to use
 if(ROS_EDITION STREQUAL "ROS1")
 
   # Copyright(c) 2019 livoxtech limited.
