@@ -259,13 +259,13 @@ else(ROS_EDITION STREQUAL "ROS2")
     LIBRARY_NAME ${PROJECT_NAME}
   )
 
-  ## make sure the livox_lidar_sdk_shared library is installed
-  find_library(LIVOX_LIDAR_SDK_LIBRARY liblivox_lidar_sdk_shared.so /usr/local/lib REQUIRED)
-
-  ##
-  find_path(LIVOX_LIDAR_SDK_INCLUDE_DIR
-    NAMES "livox_lidar_api.h" "livox_lidar_def.h"
-    REQUIRED)
+  ## Build livox_lidar_sdk_shared in-tree from the sibling Livox-SDK2 checkout
+  ## (src/thirdparty/Livox-SDK2) as part of this package's own build, instead
+  ## of requiring a prior `cmake && make install` into /usr/local.
+  set(LIVOX_SDK2_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../Livox-SDK2" CACHE PATH
+    "Path to the Livox-SDK2 source tree")
+  add_subdirectory(${LIVOX_SDK2_DIR}/sdk_core ${CMAKE_CURRENT_BINARY_DIR}/livox_sdk2)
+  set(LIVOX_LIDAR_SDK_LIBRARY livox_lidar_sdk_shared)
 
   ## PCL library
   link_directories(${PCL_LIBRARY_DIRS})
@@ -310,7 +310,6 @@ else(ROS_EDITION STREQUAL "ROS2")
   target_include_directories(${PROJECT_NAME} PUBLIC
     ${PCL_INCLUDE_DIRS}
     ${APR_INCLUDE_DIRS}
-    ${LIVOX_LIDAR_SDK_INCLUDE_DIR}
     ${LIVOX_INTERFACES_INCLUDE_DIRECTORIES}   # for custom msgs
     3rdparty
     src
