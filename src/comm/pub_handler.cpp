@@ -28,6 +28,7 @@
 #include <chrono>
 #include <iostream>
 #include <limits>
+#include <mutex>
 
 namespace livox_ros {
 
@@ -271,7 +272,30 @@ uint64_t PubHandler::GetEthPacketTimestamp(uint8_t timestamp_type, uint8_t* time
     return time.stamp;
   }
 
-  return std::chrono::high_resolution_clock::now().time_since_epoch().count();
+  // In "No sync source" mode, Livox packets still provide a device-local
+  // monotonic timebase. Preserve that relative timing and anchor it to host
+  // time once, instead of replacing every packet timestamp with the current
+  // host receive timestamp.
+  static std::mutex no_sync_time_mutex;
+  static bool no_sync_base_ready = false;
+  static uint64_t no_sync_device_base = 0;
+  static uint64_t no_sync_host_base = 0;
+
+  const uint64_t device_time = static_cast<uint64_t>(time.stamp);
+  const uint64_t host_now =
+      std::chrono::duration_cast<std::chrono::nanoseconds>(
+          std::chrono::high_resolution_clock::now().time_since_epoch())
+          .count();
+
+  std::lock_guard<std::mutex> lock(no_sync_time_mutex);
+  if (!no_sync_base_ready || device_time < no_sync_device_base) {
+    no_sync_base_ready = true;
+    no_sync_device_base = device_time;
+    no_sync_host_base = host_now;
+    return host_now;
+  }
+
+  return no_sync_host_base + (device_time - no_sync_device_base);
 }
 
 /*******************************/

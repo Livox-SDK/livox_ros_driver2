@@ -227,6 +227,18 @@ void Lddc::PublishCustomPointcloud(LidarDataQueue *queue, uint8_t index) {
     InitCustomMsg(livox_msg, pkg, index);
     FillPointsToCustomMsg(livox_msg, pkg);
     PublishCustomPointData(livox_msg, index);
+
+#ifdef BUILDING_ROS2
+    PointCloud2 debug_cloud;
+    uint64_t timestamp = 0;
+    InitPointcloud2Msg(pkg, debug_cloud, timestamp);
+
+    Publisher<PointCloud2>::SharedPtr debug_publisher_ptr =
+      std::dynamic_pointer_cast<Publisher<PointCloud2>>(GetCurrentDebugPointcloudPublisher(index));
+    if (debug_publisher_ptr && kOutputToRos == output_type_) {
+      debug_publisher_ptr->publish(debug_cloud);
+    }
+#endif
   }
 }
 
@@ -686,6 +698,30 @@ std::shared_ptr<rclcpp::PublisherBase> Lddc::GetCurrentImuPublisher(uint8_t hand
       global_imu_pub_ = CreatePublisher(kLivoxImuMsg, topic_name, queue_size);
     }
     return global_imu_pub_;
+  }
+}
+
+std::shared_ptr<rclcpp::PublisherBase> Lddc::GetCurrentDebugPointcloudPublisher(uint8_t handle) {
+  uint32_t queue_size = kMinEthPacketQueueSize;
+  if (use_multi_topic_) {
+    if (!private_debug_pub_[handle]) {
+      char name_str[64];
+      memset(name_str, 0, sizeof(name_str));
+      std::string ip_string = IpNumToString(lds_->lidars_[handle].handle);
+      snprintf(name_str, sizeof(name_str), "livox/lidar_points_%s",
+          ReplacePeriodByUnderline(ip_string).c_str());
+      std::string topic_name(name_str);
+      queue_size = queue_size * 2;
+      private_debug_pub_[handle] = CreatePublisher(kPointCloud2Msg, topic_name, queue_size);
+    }
+    return private_debug_pub_[handle];
+  } else {
+    if (!global_debug_pub_) {
+      std::string topic_name("livox/lidar_points");
+      queue_size = queue_size * 8;
+      global_debug_pub_ = CreatePublisher(kPointCloud2Msg, topic_name, queue_size);
+    }
+    return global_debug_pub_;
   }
 }
 #endif

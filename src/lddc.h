@@ -126,6 +126,7 @@ class Lddc final {
 
 #ifdef BUILDING_ROS2
   PublisherPtr CreatePublisher(uint8_t msg_type, std::string &topic_name, uint32_t queue_size);
+  PublisherPtr GetCurrentDebugPointcloudPublisher(uint8_t index);
 #endif
 
   PublisherPtr GetCurrentPublisher(uint8_t index);
@@ -151,6 +152,8 @@ class Lddc final {
 #elif defined BUILDING_ROS2
   PublisherPtr private_pub_[kMaxSourceLidar];
   PublisherPtr global_pub_;
+  PublisherPtr private_debug_pub_[kMaxSourceLidar];
+  PublisherPtr global_debug_pub_;
   PublisherPtr private_imu_pub_[kMaxSourceLidar];
   PublisherPtr global_imu_pub_;
 #endif
