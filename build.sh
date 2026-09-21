@@ -4,6 +4,7 @@ readonly VERSION_ROS1="ROS1"
 readonly VERSION_ROS2="ROS2"
 readonly VERSION_HUMBLE="humble"
 readonly VERSION_JAZZY="jazzy"
+readonly VERSION_KILTED="kilted"
 
 pushd `pwd` > /dev/null
 cd `dirname $0`
@@ -21,6 +22,9 @@ elif [ "$1" = "humble" ]; then
 elif [ "$1" = "jazzy" ]; then
     ROS_VERSION=${VERSION_ROS2}
     ROS_DISTRO=${VERSION_JAZZY}
+elif [ "$1" = "kilted" ]; then
+    ROS_VERSION=${VERSION_ROS2}
+    ROS_DISTRO=${VERSION_KILTED}
 elif [ "$1" = "ROS1" ]; then
     ROS_VERSION=${VERSION_ROS1}
 else
