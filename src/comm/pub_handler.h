@@ -126,6 +126,9 @@ class PubHandler {
 
   std::map<uint32_t, std::unique_ptr<LidarPubHandler>> lidar_process_handlers_;
   std::map<uint32_t, std::vector<PointXyzlt>> points_;
+  /** Publish slot (recent timestamp / publish_interval_) of the last frame, per lidar.
+   *  Used to publish exactly once per publish period in time-synchronized mode. */
+  std::map<uint32_t, uint64_t> last_publish_slot_;
   std::map<uint32_t, LidarExtParameter> lidar_extrinsics_;
   static std::atomic<bool> is_timestamp_sync_;
   uint16_t lidar_listen_id_ = 0;

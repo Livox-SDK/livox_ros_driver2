@@ -165,12 +165,27 @@ void PubHandler::CheckTimer(uint32_t id) {
 
   if (PubHandler::is_timestamp_sync_.load()) { // Enable time synchronization
     auto& process_handler = lidar_process_handlers_[id];
-    uint64_t recent_time_ms = process_handler->GetRecentTimeStamp() / kRatioOfMsToNs;
-    if ((recent_time_ms % publish_interval_ms_ != 0) || recent_time_ms == 0) {
+    uint64_t recent_time = process_handler->GetRecentTimeStamp();
+    if (recent_time == 0) {
       return;
     }
 
-    uint64_t diff = process_handler->GetRecentTimeStamp() - process_handler->GetLidarBaseTime();
+    const uint64_t slot = recent_time / (publish_interval_ > 0 ? publish_interval_ : 1);
+    auto slot_it = last_publish_slot_.find(id);
+    if (slot_it == last_publish_slot_.end()) {
+      last_publish_slot_[id] = slot;
+      return;
+    }
+    if (slot_it->second > slot) {
+      slot_it->second = slot;
+      return;
+    }
+    if (slot_it->second == slot) {
+      return;
+    }
+    slot_it->second = slot;
+
+    uint64_t diff = recent_time - process_handler->GetLidarBaseTime();
     if (diff < publish_interval_tolerance_) {
       return;
     }
