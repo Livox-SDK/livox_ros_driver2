@@ -61,7 +61,7 @@
       "ip": "192.168.0.10",
       "pcl_data_type": 1,
       "pattern_mode": 0,
-      "frame_id": "mid360s_back",
+      "frame_id": "mid360_back",
       "extrinsic_parameter": {
         "roll": 0.0,
         "pitch": 0.0,
