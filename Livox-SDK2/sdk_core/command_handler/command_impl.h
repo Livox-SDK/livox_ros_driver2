@@ -102,6 +102,26 @@ class CommandImpl {
   static livox_status StartForcedHeating(uint32_t handle, LivoxLidarAsyncControlCallback cb, void* client_data);
   static livox_status StopForcedHeating(uint32_t handle, LivoxLidarAsyncControlCallback cb, void* client_data);
 
+  static livox_status SetLidarFogNoiseFilterMode(uint32_t handle, LivoxFogNoiseFilterMode fog_filter_mode, LivoxLidarAsyncControlCallback cb, void* client_data);
+
+  static livox_status SetLivoxLidarITOCtrlMode(uint32_t handle, LivoxLidarItoCtrlMode ito_mode, LivoxLidarAsyncControlCallback cb, void* client_data);
+
+  static livox_status SetLivoxLidarPclFreqMod(uint32_t handle, LivoxLidarPclFreqMod pcl_freq_mod, LivoxLidarAsyncControlCallback cb, void* client_data);
+
+  static livox_status SetLivoxLidarTimeFilterMode(uint32_t handle, LivoxLidarTimeFilterMode time_filter_mode, LivoxLidarAsyncControlCallback cb, void* client_data);
+
+  static livox_status SetLivoxLidarImuRange(uint32_t handle, LivoxLidarImuOutRate imu_out_rate,
+      LivoxLidarAccelRange accel_range, LivoxLidarGyroRange gyro_range,
+      LivoxLidarAsyncControlCallback cb, void* client_data);
+
+  static livox_status SetNTPServerIp(uint32_t handle, const NTPServerIpInfo* server_ip, LivoxLidarAsyncControlCallback cb, void* client_data);
+
+  static livox_status SetLivoxLidarEscMode(uint32_t handle, LivoxLidarEscMode esc_mode, LivoxLidarAsyncControlCallback cb, void* client_data);
+
+  static livox_status SetLivoxLidarFovMode(uint32_t handle, LivoxLidarFovMode fov_mode, LivoxLidarAsyncControlCallback cb, void* client_data);
+
+  static livox_status SetLivoxLidarEchoMode(uint32_t handle, LivoxLidarEchoMode echo_mode, LivoxLidarAsyncControlCallback cb, void* client_data);
+
   static livox_status SetLivoxLidarLogParam(uint32_t handle, const LivoxLidarLogParam& log_param, LivoxLidarAsyncControlCallback cb, void* client_data);
 
   static livox_status LivoxLidarRequestReset(uint32_t handle, LivoxLidarResetCallback cb, void* client_data);

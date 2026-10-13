@@ -27,7 +27,6 @@
 #include <iostream>
 #include <cstdio>
 #include <arpa/inet.h>
-#include <string>
 
 namespace livox_ros {
 

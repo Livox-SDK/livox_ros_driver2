@@ -109,6 +109,9 @@ set(COMMAND_HANDLER_SOURCES
         command_handler/mid360_command_handler.cpp
         command_handler/build_request.cpp
         command_handler/parse_lidar_state_info.cpp
+        command_handler/mid360s_command_handler.cpp
+        command_handler/avia2_command_handler.cpp
+        command_handler/mid360l_command_handler.cpp
         )
 set(DEBUG_POINT_CLOUD_HANDLER_SOURCES
         debug_point_cloud_handler/debug_point_cloud_manager.cpp

@@ -33,7 +33,7 @@
 #include "comm/define.h"
 
 #include <string>
-#include <fstream>
+#include <cstdio>
 #include <thread>
 #include <mutex>
 #include <condition_variable>
@@ -63,8 +63,8 @@ class DebugPointCloudHandler {
   std::mutex            data_mutex_;
   std::condition_variable cv_;
 
-  std::shared_ptr<std::thread>    thread_ptr_{nullptr};
-  std::shared_ptr<std::ofstream>  file_handle_{nullptr};
+  std::shared_ptr<std::thread>  thread_ptr_{nullptr};
+  FILE*                         file_handle_{nullptr};
 
   static constexpr uint64_t max_file_size_ = {4ULL * 1024 * 1024 * 1024};
 };

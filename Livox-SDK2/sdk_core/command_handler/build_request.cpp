@@ -161,6 +161,185 @@ bool BuildRequest::BuildUpdateMid360LidarCfgRequest(const LivoxLidarCfg& lidar_c
 
 }
 
+bool BuildRequest::BuildSetNTPserverIPInfoRequest(const NTPServerIpInfo& server_ip_config, uint8_t* req_buf, uint16_t& req_len) {
+  uint16_t key_num = 1;
+  memcpy(&req_buf[req_len], &key_num, sizeof(key_num));
+  req_len = sizeof(key_num) + sizeof(uint16_t);
+
+  LivoxLidarKeyValueParam * kv = (LivoxLidarKeyValueParam *)&req_buf[req_len];
+  kv->key = static_cast<uint16_t>(kKeySetNTPServerIp);
+  kv->length = sizeof(uint8_t) * 4;
+  NTPServerIpInfoValue* server_ip_val = (NTPServerIpInfoValue*)&kv->value;
+  if (!InitServerIpinfoVal(server_ip_config, server_ip_val)) {
+    LOG_ERROR("Build set Server ip info request failed.");
+    return false;
+  }
+
+  req_len += sizeof(LivoxLidarKeyValueParam) - sizeof(uint8_t) + sizeof(NTPServerIpInfoValue);
+  return true;
+}
+
+bool BuildRequest::BuildUpdateMid360lLidarCfgRequest(const LivoxLidarCfg& lidar_cfg,
+  uint8_t* req_buf, uint16_t& req_len) {
+
+  uint16_t key_num = 3;
+  memcpy(&req_buf[req_len], &key_num, sizeof(key_num));
+  req_len = sizeof(key_num) + sizeof(uint16_t);
+
+  LivoxLidarKeyValueParam * state_kv = (LivoxLidarKeyValueParam *)&req_buf[req_len];
+  state_kv->key = static_cast<uint16_t>(kKeyStateInfoHostIpCfg);
+  state_kv->length = sizeof(uint8_t) * 8;
+  HostIpInfoValue* host_state_ip_info_val = (HostIpInfoValue*)&state_kv->value;
+  if (!InitHostIpAddr(lidar_cfg.host_net_info.host_ip, host_state_ip_info_val)) {
+    LOG_ERROR("Build update lidar cfg request failed, init host ip addr failed.");
+    return false;
+  }
+
+  if (lidar_cfg.host_net_info.multicast_ip.empty()) {
+    if (!InitHostIpAddr(lidar_cfg.host_net_info.host_ip, host_state_ip_info_val)) {
+      LOG_ERROR("Build update lidar cfg request failed, init host ip addr failed.");
+      return false;
+    }
+  } else {
+    if (!InitMulticastHostIpAddr(lidar_cfg.host_net_info.multicast_ip, host_state_ip_info_val)) {
+      LOG_ERROR("Build update lidar cfg request failed, init pointcloud multicast ip addr failed.");
+      return false;
+    }
+  }
+
+  uint16_t lidar_state_port = kMid360lLidarPushMsgPort;
+  memcpy(&(host_state_ip_info_val->host_port), &lidar_cfg.host_net_info.push_msg_port, sizeof(lidar_cfg.host_net_info.push_msg_port));
+  memcpy(&(host_state_ip_info_val->lidar_port), &lidar_state_port, sizeof(lidar_state_port));
+  req_len += sizeof(LivoxLidarKeyValueParam) - sizeof(uint8_t) + sizeof(HostIpInfoValue);
+
+  LivoxLidarKeyValueParam * point_kv = (LivoxLidarKeyValueParam *)&req_buf[req_len];
+  point_kv->key = static_cast<uint16_t>(kKeyLidarPointDataHostIpCfg);
+  point_kv->length = sizeof(uint8_t) * 8;
+  HostIpInfoValue* host_point_ip_info_val = (HostIpInfoValue*)&point_kv->value;
+  if (lidar_cfg.host_net_info.multicast_ip.empty()) {
+    if (!InitHostIpAddr(lidar_cfg.host_net_info.host_ip, host_point_ip_info_val)) {
+      LOG_ERROR("Build update lidar cfg request failed, init pointcloud host ip addr failed.");
+      return false;
+    }
+  } else {
+    if (!InitMulticastHostIpAddr(lidar_cfg.host_net_info.multicast_ip, host_point_ip_info_val)) {
+      LOG_ERROR("Build update lidar cfg request failed, init pointcloud multicast ip addr failed.");
+      return false;
+    }
+  }
+
+  uint16_t lidar_point_port = kMid360lLidarPointCloudPort;
+  memcpy(&(host_point_ip_info_val->host_port), &lidar_cfg.host_net_info.point_data_port, sizeof(lidar_cfg.host_net_info.point_data_port));
+  memcpy(&(host_point_ip_info_val->lidar_port), &lidar_point_port, sizeof(lidar_point_port));
+  req_len += sizeof(LivoxLidarKeyValueParam) - sizeof(uint8_t) + sizeof(HostIpInfoValue);
+
+  LivoxLidarKeyValueParam * imu_kv = (LivoxLidarKeyValueParam *)&req_buf[req_len];
+  imu_kv->key = static_cast<uint16_t>(kKeyLidarImuHostIpCfg);
+  imu_kv->length = sizeof(uint8_t) * 8;
+  HostIpInfoValue* host_imu_ip_info_val = (HostIpInfoValue*)&imu_kv->value;
+
+  if (lidar_cfg.host_net_info.multicast_ip.empty()) {
+    if (!InitHostIpAddr(lidar_cfg.host_net_info.host_ip, host_imu_ip_info_val)) {
+      LOG_ERROR("Build update lidar cfg request failed, init imu host ip addr failed.");
+      return false;
+    }
+  } else {
+    if (!InitMulticastHostIpAddr(lidar_cfg.host_net_info.multicast_ip, host_imu_ip_info_val)) {
+      LOG_ERROR("Build update lidar cfg request failed, init imu multicast ip addr failed.");
+      return false;
+    }
+  }
+
+  uint16_t lidar_imu_port = kMid360lLidarImuDataPort;
+  memcpy(&(host_imu_ip_info_val->host_port), &lidar_cfg.host_net_info.imu_data_port, sizeof(lidar_cfg.host_net_info.imu_data_port));
+  memcpy(&(host_imu_ip_info_val->lidar_port), &lidar_imu_port, sizeof(lidar_imu_port));
+  req_len += sizeof(LivoxLidarKeyValueParam) - sizeof(uint8_t) + sizeof(HostIpInfoValue);
+
+  return true;
+}
+
+bool BuildRequest::BuildUpdateAvia2LidarCfgRequest(const LivoxLidarCfg& lidar_cfg,
+  uint8_t* req_buf, uint16_t& req_len) {
+
+  uint16_t key_num = 3;
+  memcpy(&req_buf[req_len], &key_num, sizeof(key_num));
+  req_len = sizeof(key_num) + sizeof(uint16_t);
+
+  LivoxLidarKeyValueParam * state_kv = (LivoxLidarKeyValueParam *)&req_buf[req_len];
+  state_kv->key = static_cast<uint16_t>(kKeyStateInfoHostIpCfg);
+  state_kv->length = sizeof(uint8_t) * 8;
+  HostIpInfoValue* host_state_ip_info_val = (HostIpInfoValue*)&state_kv->value;
+  if (!InitHostIpAddr(lidar_cfg.host_net_info.host_ip, host_state_ip_info_val)) {
+    LOG_ERROR("Build update lidar cfg request failed, init host ip addr failed.");
+    return false;
+  }
+
+  if (lidar_cfg.host_net_info.multicast_ip.empty()) {
+    if (!InitHostIpAddr(lidar_cfg.host_net_info.host_ip, host_state_ip_info_val)) {
+      LOG_ERROR("Build update lidar cfg request failed, init host ip addr failed.");
+      return false;
+    }
+  } else {
+    if (!InitMulticastHostIpAddr(lidar_cfg.host_net_info.multicast_ip, host_state_ip_info_val)) {
+      LOG_ERROR("Build update lidar cfg request failed, init pointcloud multicast ip addr failed.");
+      return false;
+    }
+  }
+
+  uint16_t lidar_state_port = kAvia2LidarPushMsgPort;
+  memcpy(&(host_state_ip_info_val->host_port), &lidar_cfg.host_net_info.push_msg_port, sizeof(lidar_cfg.host_net_info.push_msg_port));
+  memcpy(&(host_state_ip_info_val->lidar_port), &lidar_state_port, sizeof(lidar_state_port));
+  req_len += sizeof(LivoxLidarKeyValueParam) - sizeof(uint8_t) + sizeof(HostIpInfoValue);
+
+  LivoxLidarKeyValueParam * point_kv = (LivoxLidarKeyValueParam *)&req_buf[req_len];
+  point_kv->key = static_cast<uint16_t>(kKeyLidarPointDataHostIpCfg);
+  point_kv->length = sizeof(uint8_t) * 8;
+  HostIpInfoValue* host_point_ip_info_val = (HostIpInfoValue*)&point_kv->value;
+  if (lidar_cfg.host_net_info.multicast_ip.empty()) {
+    if (!InitHostIpAddr(lidar_cfg.host_net_info.host_ip, host_point_ip_info_val)) {
+      LOG_ERROR("Build update lidar cfg request failed, init pointcloud host ip addr failed.");
+      return false;
+    }
+  } else {
+    if (!InitMulticastHostIpAddr(lidar_cfg.host_net_info.multicast_ip, host_point_ip_info_val)) {
+      LOG_ERROR("Build update lidar cfg request failed, init pointcloud multicast ip addr failed.");
+      return false;
+    }
+  }
+
+  uint16_t lidar_point_port = kAvia2LidarPointCloudPort;
+  memcpy(&(host_point_ip_info_val->host_port), &lidar_cfg.host_net_info.point_data_port, sizeof(lidar_cfg.host_net_info.point_data_port));
+  memcpy(&(host_point_ip_info_val->lidar_port), &lidar_point_port, sizeof(lidar_point_port));
+  req_len += sizeof(LivoxLidarKeyValueParam) - sizeof(uint8_t) + sizeof(HostIpInfoValue);
+
+  LivoxLidarKeyValueParam * imu_kv = (LivoxLidarKeyValueParam *)&req_buf[req_len];
+  imu_kv->key = static_cast<uint16_t>(kKeyLidarImuHostIpCfg);
+  imu_kv->length = sizeof(uint8_t) * 8;
+  HostIpInfoValue* host_imu_ip_info_val = (HostIpInfoValue*)&imu_kv->value;
+
+  if (lidar_cfg.host_net_info.multicast_ip.empty()) {
+    if (!InitHostIpAddr(lidar_cfg.host_net_info.host_ip, host_imu_ip_info_val)) {
+      LOG_ERROR("Build update lidar cfg request failed, init imu host ip addr failed.");
+      return false;
+    }
+  } else {
+    if (!InitMulticastHostIpAddr(lidar_cfg.host_net_info.multicast_ip, host_imu_ip_info_val)) {
+      LOG_ERROR("Build update lidar cfg request failed, init imu multicast ip addr failed.");
+      return false;
+    }
+  }
+
+  uint16_t lidar_imu_port = kMid360LidarImuDataPort;
+  memcpy(&(host_imu_ip_info_val->host_port), &lidar_cfg.host_net_info.imu_data_port, sizeof(lidar_cfg.host_net_info.imu_data_port));
+  memcpy(&(host_imu_ip_info_val->lidar_port), &lidar_imu_port, sizeof(lidar_imu_port));
+  req_len += sizeof(LivoxLidarKeyValueParam) - sizeof(uint8_t) + sizeof(HostIpInfoValue);
+  // LOG_ERROR("Build imu host ip:{}, host_port:{}, lidar_port:{}", lidar_cfg.host_net_info.imu_data_ip.c_str(),
+  //     lidar_cfg.host_net_info.imu_data_port, lidar_imu_port);
+
+  return true;
+
+}
+
 bool BuildRequest::BuildUpdateLidarCfgRequest(const LivoxLidarCfg& lidar_cfg,
     uint8_t* req_buf, uint16_t& req_len) {
   
@@ -197,7 +376,12 @@ bool BuildRequest::BuildUpdateLidarCfgRequest(const LivoxLidarCfg& lidar_cfg,
     lidar_point_port = kMid360LidarPointCloudPort;
   } else if (lidar_cfg.device_type == kLivoxLidarTypePA) {
     lidar_point_port = kPaLidarPointCloudPort;
-  } else {
+  } else if (lidar_cfg.device_type == kLivoxLidarTypeMid360s) {
+      lidar_point_port = kMid360sLidarPointCloudPort;
+  } else if (lidar_cfg.device_type == kLivoxLidarTypeAvia2) {
+      lidar_point_port = kAvia2LidarPointCloudPort;
+  }
+  else {
     LOG_ERROR("Build update lidar cfg request failed, unknown the dev_type:{}", lidar_cfg.device_type);
     return false;
   }
@@ -231,7 +415,12 @@ bool BuildRequest::BuildUpdateLidarCfgRequest(const LivoxLidarCfg& lidar_cfg,
     lidar_imu_port = kHAPIMUPort;
   } else if (lidar_cfg.device_type == kLivoxLidarTypeMid360) {
     lidar_imu_port = kMid360LidarImuDataPort;
-  } else {
+  } else if (lidar_cfg.device_type == kLivoxLidarTypeMid360s) {
+    lidar_imu_port = kMid360sLidarImuDataPort;
+  } else if (lidar_cfg.device_type == kLivoxLidarTypeAvia2) {
+    lidar_imu_port = kAvia2LidarImuDataPort;
+  }
+  else {
     LOG_ERROR("Build update lidar cfg request failed, unknown the dev_type:{}", lidar_cfg.device_type);
     return false;
   }
@@ -243,7 +432,6 @@ bool BuildRequest::BuildUpdateLidarCfgRequest(const LivoxLidarCfg& lidar_cfg,
   //     lidar_cfg.host_net_info.imu_data_port, lidar_imu_port);
   return true;
 }
-
 
 bool BuildRequest::BuildSetLidarIPInfoRequest(const LivoxLidarIpInfo& lidar_ip_config, uint8_t* req_buf, uint16_t& req_len) {
   uint16_t key_num = 1;
@@ -264,7 +452,7 @@ bool BuildRequest::BuildSetLidarIPInfoRequest(const LivoxLidarIpInfo& lidar_ip_c
 }
 
 bool BuildRequest::BuildSetHostStateInfoIPCfgRequest(const HostStateInfoIpInfo& host_state_info_ipcfg,
-    uint8_t* req_buf, uint16_t& req_len) {
+  uint8_t* req_buf, uint16_t& req_len) {
   uint16_t key_num = 1;
   memcpy(&req_buf[req_len], &key_num, sizeof(key_num));
   req_len = sizeof(key_num) + sizeof(uint16_t);
@@ -328,6 +516,21 @@ bool BuildRequest::BuildSetHostImuDataIPInfoRequest(const HostImuDataIPInfo& hos
 
   req_len += sizeof(LivoxLidarKeyValueParam) - sizeof(uint8_t) + sizeof(HostIpInfoValue);
   return true;
+}
+
+bool BuildRequest::InitServerIpinfoVal(const NTPServerIpInfo& ntp_server_ip_config, NTPServerIpInfoValue* ntp_server_ip_val_ptr){
+  if (ntp_server_ip_val_ptr == nullptr) {
+    return false;
+  }
+
+  // Set ntp server ip info
+  std::vector<uint8_t> vec_server_ip;
+  if (!IpToU8(ntp_server_ip_config.host_ip, ".", vec_server_ip)) {
+    return false;
+  }
+  memcpy(ntp_server_ip_val_ptr->server_ipaddr, vec_server_ip.data(), sizeof(uint8_t) * 4);
+  return true;
+
 }
 
 bool BuildRequest::InitLidarIpinfoVal(const LivoxLidarIpInfo& lidar_ip_config, LivoxLidarIpInfoValue* lidar_ipinfo_val_ptr) {

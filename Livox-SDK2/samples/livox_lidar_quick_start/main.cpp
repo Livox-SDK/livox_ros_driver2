@@ -43,8 +43,8 @@ void PointCloudCallback(uint32_t handle, const uint8_t dev_type, LivoxLidarEther
   if (data == nullptr) {
     return;
   }
-  printf("point cloud handle: %u, data_num: %d, data_type: %d, length: %d, frame_counter: %d\n",
-      handle, data->dot_num, data->data_type, data->length, data->frame_cnt);
+  // printf("point cloud handle: %u, data_num: %d, data_type: %d, length: %d, udp_counter: %d\n",
+  //     handle, data->dot_num, data->data_type, data->length, data->udp_cnt);
 
   if (data->data_type == kLivoxLidarCartesianCoordinateHighData) {
     LivoxLidarCartesianHighRawPoint *p_point_data = (LivoxLidarCartesianHighRawPoint *)data->data;
@@ -58,6 +58,20 @@ void PointCloudCallback(uint32_t handle, const uint8_t dev_type, LivoxLidarEther
     LivoxLidarCartesianLowRawPoint *p_point_data = (LivoxLidarCartesianLowRawPoint *)data->data;
   } else if (data->data_type == kLivoxLidarSphericalCoordinateData) {
     LivoxLidarSpherPoint* p_point_data = (LivoxLidarSpherPoint *)data->data;
+  } else if (data->data_type == kLivoxLidarDoubleEchoData) {
+    LivoxLidarDoubleEchoRawPoint* p_point_data = (LivoxLidarDoubleEchoRawPoint *)data->data;
+    for (uint32_t i = 0; i < data->dot_num; i++) {
+      //p_point_data[i].x1;
+      //p_point_data[i].y1;
+      //p_point_data[i].z1;
+      //p_point_data[i].reflectivity1;
+      //p_point_data[i].tag1;
+      //p_point_data[i].x2;
+      //p_point_data[i].y2;
+      //p_point_data[i].z2;
+      //p_point_data[i].reflectivity2;
+      //p_point_data[i].tag2;
+    }
   }
 }
 
@@ -65,8 +79,8 @@ void ImuDataCallback(uint32_t handle, const uint8_t dev_type,  LivoxLidarEtherne
   if (data == nullptr) {
     return;
   } 
-  printf("Imu data callback handle:%u, data_num:%u, data_type:%u, length:%u, frame_counter:%u.\n",
-      handle, data->dot_num, data->data_type, data->length, data->frame_cnt);
+  // printf("Imu data callback handle:%u, data_num:%u, data_type:%u, length:%u, frame_counter:%u.\n",
+  //     handle, data->dot_num, data->data_type, data->length, data->frame_cnt);
 }
 
 // void OnLidarSetIpCallback(livox_vehicle_status status, uint32_t handle, uint8_t ret_code, void*) {
@@ -77,6 +91,50 @@ void ImuDataCallback(uint32_t handle, const uint8_t dev_type,  LivoxLidarEtherne
 //     printf("lidar set ip number timeout\n");
 //   }
 // }
+
+void EscModeSetCallback(livox_status status, uint32_t handle, LivoxLidarAsyncControlResponse *response, void *client_data) {
+  printf("set lidar esc mode!!!!\n");
+  if (response == nullptr) {
+    return;
+  }
+  printf("EscModeSetCallback, status:%u, handle:%u, ret_code:%u, error_key:%u",
+      status, handle, response->ret_code, response->error_key);
+}
+
+void PclFreqSetCallback(livox_status status, uint32_t handle, LivoxLidarAsyncControlResponse *response, void *client_data) {
+  printf("set lidar pcl freq mode!!!!\n");
+  if (response == nullptr) {
+    return;
+  }
+  printf("PclFreqSetCallback, status:%u, handle:%u, ret_code:%u, error_key:%u",
+      status, handle, response->ret_code, response->error_key);
+}
+
+void TimeFilterModeSetCallback(livox_status status, uint32_t handle, LivoxLidarAsyncControlResponse *response, void *client_data) {
+  printf("set lidar time filter mode!!!!\n");
+  if (response == nullptr) {
+    return;
+  }
+  printf("TimeFilterModeSetCallback, status:%u, handle:%u, ret_code:%u, error_key:%u",
+      status, handle, response->ret_code, response->error_key);
+}
+
+void FovModeSetCallback(livox_status status, uint32_t handle, LivoxLidarAsyncControlResponse *response, void *client_data) {
+  printf("set lidar fov mode!!!!\n");
+  if (response == nullptr) {
+    return;
+  }
+  printf("FovModeSetCallback, status:%u, handle:%u, ret_code:%u, error_key:%u",
+      status, handle, response->ret_code, response->error_key);
+}
+
+void PclTypeCallback(livox_status status, uint32_t handle, LivoxLidarAsyncControlResponse *response, void *client_data) {
+  if (response == nullptr) {
+    return;
+  }
+  printf("PclTypeCallback, status:%u, handle:%u, ret_code:%u, error_key:%u",
+      status, handle, response->ret_code, response->error_key);
+}
 
 void WorkModeCallback(livox_status status, uint32_t handle,LivoxLidarAsyncControlResponse *response, void *client_data) {
   if (response == nullptr) {
@@ -157,9 +215,29 @@ void LidarInfoChangeCallback(const uint32_t handle, const LivoxLidarInfo* info, 
     return;
   } 
   printf("LidarInfoChangeCallback Lidar handle: %u SN: %s\n", handle, info->sn);
-  
-  // set the work mode to kLivoxLidarNormal, namely start the lidar
+
+  // set lidar echo mode 0x0024
+  // SetLivoxLidarEchoMode(handle, kLivoxStrongEchoMode, EchoModeSetCallback, nullptr);
+
+  // set the work mode to kLivoxLidarNormal, 0x001a
   SetLivoxLidarWorkMode(handle, kLivoxLidarNormal, WorkModeCallback, nullptr);
+
+  // set the data type to
+  SetLivoxLidarPclDataType(handle, kLivoxLidarDoubleEchoData, PclTypeCallback, nullptr);
+
+  // set esc mode 0x0021
+  SetLivoxLidarEscMode(handle, kLivoxEscSpeedNormal, EscModeSetCallback, nullptr);
+
+  // set lidar fov mode 0x0022
+  // SetLivoxLidarFovMode(handle, kLivoxSmallFovMode, FovModeSetCallback, nullptr);
+
+  // set lidar pcl freq mode 0x0029
+  SetLivoxLidarPclFreqMod(handle, kLivoxLidarPclFreq100k, PclFreqSetCallback, nullptr);
+
+  // set lidar time filter mode 0x0026
+  // 0 = normal mode, 1 = special mode (write point cloud even if timestamp goes backwards)
+  SetLivoxLidarTimeFilterMode(handle, kLivoxLidarTimeFilterSpec, TimeFilterModeSetCallback, nullptr);
+  
 
   QueryLivoxLidarInternalInfo(handle, QueryInternalInfoCallback, nullptr);
 
@@ -203,6 +281,8 @@ int main(int argc, const char *argv[]) {
   
   // REQUIRED, to get a handle to targeted lidar and set its work mode to NORMAL
   SetLivoxLidarInfoChangeCallback(LidarInfoChangeCallback, nullptr);
+
+  
 
 #ifdef WIN32
   Sleep(300000);

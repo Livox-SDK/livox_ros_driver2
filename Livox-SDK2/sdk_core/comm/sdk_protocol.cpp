@@ -124,6 +124,10 @@ bool SdkProtocol::CheckPreamble(uint8_t *buf, uint32_t buf_size) {
     return false;
   }
 
+  if (packet->length > buf_size) {
+    return false;
+  }
+
   uint16_t crc16_h = crc_16_.ccitt(buf, 18);
   if (packet->crc16_h != crc16_h) {
     return false;

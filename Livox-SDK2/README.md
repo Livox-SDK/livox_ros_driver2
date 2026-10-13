@@ -12,15 +12,15 @@ Livox SDK2 API provides a set of C-style APIs, which can be conveniently integra
 
 Livox SDK2 communication protocol opens to all users. It is the communication protocol between user programs and livox products. The protocol consists of control commands and data format, please refer to the documents below:
 
+**Mid-360(S)**:
+
+* [Mid-360(S) Communication protocol](https://livox-wiki-cn.readthedocs.io/zh_CN/latest/tutorials/new_product/mid360/mid360.html) (中文)
+* [Mid-360(S) Communication protocol](https://livox-wiki-en.readthedocs.io/en/latest/tutorials/new_product/mid360/mid360.html) (English)
+
 **HAP(TX/T1)**:
 
 * [HAP Communication protocol](<https://github.com/Livox-SDK/Livox-SDK2/wiki/Livox-SDK-Communication-Protocol-HAP>) (中文)
 * [HAP Communication protocol](<https://github.com/Livox-SDK/Livox-SDK2/wiki/Livox-SDK-Communication-Protocol-HAP(English)>) (English)
-
-**Mid-360**:
-
-* [Mid-360 Communication protocol](https://livox-wiki-cn.readthedocs.io/zh_CN/latest/tutorials/new_product/mid360/mid360.html) (中文)
-* [Mid-360 Communication protocol](https://livox-wiki-en.readthedocs.io/en/latest/tutorials/new_product/mid360/mid360.html) (English)
 
 
 # 2. Installation

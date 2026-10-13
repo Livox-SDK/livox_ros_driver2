@@ -214,6 +214,47 @@ bool ParseLidarStateInfo::ParseStateInfo(const CommPacket& packet,
         key_mask.insert(kKeyRoiMode);
         memcpy(&info.ROI_Mode, &packet.data[offset], val_len);
         break;
+      case static_cast<uint16_t>(kKeySetEscMode) :
+        key_mask.insert(kKeySetEscMode);
+        memcpy(&info.esc_mode, &packet.data[offset], val_len);
+        break;
+      case static_cast<uint16_t>(kKeySetFovMode) :
+        key_mask.insert(kKeySetFovMode);
+        memcpy(&info.fov_mode, &packet.data[offset], val_len);
+        break;
+      case static_cast<uint16_t>(kKeySetEchoMode) :
+        key_mask.insert(kKeySetEchoMode);
+        memcpy(&info.echo_mode, &packet.data[offset], val_len);
+        break;
+      case static_cast<uint16_t>(kKeySetNTPServerIp) : {
+        key_mask.insert(kKeySetNTPServerIp);
+        uint8_t ip[4];
+        memcpy(ip, &packet.data[offset], sizeof(uint8_t) * 4);
+        std::string ip_str = std::to_string(ip[0]) + "." + std::to_string(ip[1]) + "." +
+            std::to_string(ip[2]) + "." + std::to_string(ip[3]);
+        strcpy(info.ntp_server_ip.host_ip, ip_str.c_str());
+        break;
+      }
+      case static_cast<uint16_t>(kKeySetITOCtrl) :
+        key_mask.insert(kKeySetITOCtrl);
+        memcpy(&info.ito_mode, &packet.data[offset], val_len);
+        break;
+      case static_cast<uint16_t>(kKeySetFogNoiseFilter) :
+        key_mask.insert(kKeySetFogNoiseFilter);
+        memcpy(&info.fog_noise_filter, &packet.data[offset], val_len);
+        break;
+      case static_cast<uint16_t>(kKeySetTimeFilterMode) :
+        key_mask.insert(kKeySetTimeFilterMode);
+        memcpy(&info.time_filter_mode, &packet.data[offset], val_len);
+        break;
+      case static_cast<uint16_t>(kKeySetPclFreqMod) :
+        key_mask.insert(kKeySetPclFreqMod);
+        memcpy(&info.pcl_freq_mode, &packet.data[offset], val_len);
+        break;
+      case static_cast<uint16_t>(kKeySetImuRange) :
+        key_mask.insert(kKeySetImuRange);
+        memcpy(&info.imu_range, &packet.data[offset], val_len);
+        break;
       default :
         break;
     }
@@ -566,6 +607,58 @@ void ParseLidarStateInfo::LivoxLidarStateInfoToJson(const DirectLidarStateInfo& 
   if (key_mask.find(kKeyFusaEn) != key_mask.end()) {
     write.Key("fusa_en");
     write.Uint(info.fusa_en);
+  }
+
+  if (key_mask.find(kKeySetEscMode) != key_mask.end()) {
+    write.Key("esc_mode");
+    write.Uint(info.esc_mode);
+  }
+
+  if (key_mask.find(kKeySetFovMode) != key_mask.end()) {
+    write.Key("fov_mode");
+    write.Uint(info.fov_mode);
+  }
+
+  if (key_mask.find(kKeySetEchoMode) != key_mask.end()) {
+    write.Key("echo_mode");
+    write.Uint(info.echo_mode);
+  }
+
+  if (key_mask.find(kKeySetNTPServerIp) != key_mask.end()) {
+    write.Key("ntp_server_ip");
+    write.String(info.ntp_server_ip.host_ip);
+  }
+
+  if (key_mask.find(kKeySetITOCtrl) != key_mask.end()) {
+    write.Key("ito_mode");
+    write.Uint(info.ito_mode);
+  }
+
+  if (key_mask.find(kKeySetFogNoiseFilter) != key_mask.end()) {
+    write.Key("fog_noise_filter");
+    write.Uint(info.fog_noise_filter);
+  }
+
+  if (key_mask.find(kKeySetPclFreqMod) != key_mask.end()) {
+    write.Key("pcl_freq_mode");
+    write.Uint(info.pcl_freq_mode);
+  }
+
+  if (key_mask.find(kKeySetTimeFilterMode) != key_mask.end()) {
+    write.Key("time_filter_mode");
+    write.Uint(info.time_filter_mode);
+  }
+
+  if (key_mask.find(kKeySetImuRange) != key_mask.end()) {
+    write.Key("imu_range");
+    write.StartObject();
+    write.Key("imu_out_rate");
+    write.Uint(info.imu_range.imu_out_rate);
+    write.Key("accel_range");
+    write.Uint(info.imu_range.accel_range);
+    write.Key("gyro_range");
+    write.Uint(info.imu_range.gyro_range);
+    write.EndObject();
   }
   
   if (key_mask.find(kKeySn) != key_mask.end()) {

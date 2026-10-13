@@ -9,8 +9,7 @@
     },
     "host_net_info" : [
       {
-        "host_ip"        : "192.168.1.5",
-        "multicast_ip"   : "224.1.1.5",
+        "host_ip"        : "192.168.0.101",
         "cmd_data_port"  : 56101,
         "push_msg_port"  : 56201,
         "point_data_port": 56301,

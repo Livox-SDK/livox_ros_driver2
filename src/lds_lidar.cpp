@@ -40,7 +40,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #endif // WIN32
-
+#include "livox_lidar_api.h"
 #include "comm/comm.h"
 #include "comm/pub_handler.h"
 
@@ -62,7 +62,7 @@ LdsLidar *g_lds_ldiar = nullptr;
 
 /** Lds lidar function -------------------------------------------------------*/
 LdsLidar::LdsLidar(double publish_freq)
-    : Lds(publish_freq, kSourceRawLidar),
+    : Lds(publish_freq, kSourceRawLidar), 
       auto_connect_mode_(true),
       whitelist_count_(0),
       is_initialized_(false) {

@@ -162,7 +162,7 @@ livox_status LivoxLidarUpgrader::XferFirmware() {
   request->length = read_length;
   request->encrypt_type = firmware_.header_.encrypt_type;
   // read_offset_ += read_length;
-  std::this_thread::sleep_for(std::chrono::milliseconds(5));
+  // std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
   printf("The livox_lidar[%u] xfer firmware read offset %d\r\n", handle_, request->offset);
 

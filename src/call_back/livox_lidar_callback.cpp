@@ -24,6 +24,7 @@
 
 #include "livox_lidar_callback.h"
 
+#include "livox_lidar_api.h"
 #include <string>
 #include <thread>
 #include <iostream>
@@ -54,12 +55,6 @@ void LivoxLidarCallback::LidarInfoChangeCallback(const uint32_t handle,
   } else {
     // set the lidar according to the user-defined config
     const UserLivoxLidarConfig& config = lidar_device->livox_config;
-
-    std::string serial_number(info->sn);
-    std::string ip(info->sn);
-
-    lidar_device->info.sn = serial_number;
-    lidar_device->info.lidar_ip = ip;
 
     // lock for modify the lidar device set_bits
     {
@@ -92,6 +87,9 @@ void LivoxLidarCallback::LidarInfoChangeCallback(const uint32_t handle,
                               LivoxLidarCallback::SetDualEmitCallback, lds_lidar);
         std::cout << "set dual emit mode, handle: " << handle << ", enable dual emit: "
                   << static_cast<int32_t>(config.dual_emit_en) << std::endl;
+      }
+      if (!lidar_device->livox_config.set_bits) {
+        lidar_device->connect_state = kConnectStateSampling;
       }
     } // free lock for set_bits
 
@@ -137,7 +135,7 @@ void LivoxLidarCallback::SetDataTypeCallback(livox_status status, uint32_t handl
               << handle << std::endl;
     return;
   }
-    LdsLidar* lds_lidar = static_cast<LdsLidar*>(client_data);
+  LdsLidar* lds_lidar = static_cast<LdsLidar*>(client_data);
 
   if (status == kLivoxLidarStatusSuccess) {
     std::lock_guard<std::mutex> lock(lds_lidar->config_mutex_);

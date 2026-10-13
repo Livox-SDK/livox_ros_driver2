@@ -347,6 +347,115 @@ livox_status StartForcedHeating(uint32_t handle, LivoxLidarAsyncControlCallback 
  */
 livox_status StopForcedHeating(uint32_t handle, LivoxLidarAsyncControlCallback cb, void* client_data);
 
+// only avia2 support this function.
+/**
+ * Set LiDAR fog noise filter mode.
+ * @param  handle                 device handle.
+ * @param  fog_filter_mode        lidar fog filter mode
+ * @param  cb                     callback for the command.
+ * @param  client_data            user data associated with the command.
+ * @return kStatusSuccess on successful return, see \ref LivoxStatus for other error code.
+ */
+livox_status SetLidarFogNoiseFilterMode(uint32_t handle, LivoxFogNoiseFilterMode fog_filter_mode, LivoxLidarAsyncControlCallback cb, void* client_data);
+
+// only avia2 support this function.
+/**
+ * Set LiDAR ITO control mode.
+ * @param  handle                 device handle.
+ * @param  ito_mode               lidar ito mode
+ * @param  cb                     callback for the command.
+ * @param  client_data            user data associated with the command.
+ * @return kStatusSuccess on successful return, see \ref LivoxStatus for other error code.
+ */
+livox_status SetLivoxLidarITOCtrlMode(uint32_t handle, LivoxLidarItoCtrlMode ito_mode, LivoxLidarAsyncControlCallback cb, void* client_data);
+
+// only mid360l support this function.
+/**
+ * Set LiDAR point cloud frequency mode.
+ * @param  handle                 device handle.
+ * @param  pcl_freq_mod           point cloud frequency mode: 0=80k, 1=50k, 2=100k.
+ * @param  cb                     callback for the command.
+ * @param  client_data            user data associated with the command.
+ * @return kStatusSuccess on successful return, see \ref LivoxStatus for other error code.
+ */
+livox_status SetLivoxLidarPclFreqMod(uint32_t handle, LivoxLidarPclFreqMod pcl_freq_mod, LivoxLidarAsyncControlCallback cb, void* client_data);
+
+// only mid360l / mid360s support this function.
+/**
+ * Set LiDAR time filter mode. Controls whether point cloud frames whose
+ * timestamp goes backwards are still written out.
+ * @param  handle                 device handle.
+ * @param  time_filter_mode       0 = normal mode (drop backward-timestamp frames),
+ *                                1 = special mode (write point cloud even if the
+ *                                timestamp goes backwards).
+ * @param  cb                     callback for the command.
+ * @param  client_data            user data associated with the command.
+ * @return kStatusSuccess on successful return, see \ref LivoxStatus for other error code.
+ */
+livox_status SetLivoxLidarTimeFilterMode(uint32_t handle, LivoxLidarTimeFilterMode time_filter_mode, LivoxLidarAsyncControlCallback cb, void* client_data);
+
+// only mid360l / mid360s support this function.
+/**
+ * Set LiDAR IMU range (output rate, accelerometer full-scale, gyroscope full-scale).
+ * @param  handle                 device handle.
+ * @param  imu_out_rate           IMU output rate: 0=200Hz, 1=500Hz, 2=100Hz, 3=50Hz.
+ * @param  accel_range            Accelerometer range: 0=+/-4g, 1=+/-8g, 2=+/-16g, 3=+/-32g.
+ * @param  gyro_range             Gyroscope range: 0=+/-2000dps, 1=+/-1000dps, 2=+/-500dps,
+ *                                3=+/-250dps, 4=+/-125dps, 5=+/-62.5dps, 6=+/-31.25dps,
+ *                                7=+/-15.625dps.
+ * @param  cb                     callback for the command.
+ * @param  client_data            user data associated with the command.
+ * @return kStatusSuccess on successful return, see \ref LivoxStatus for other error code.
+ */
+livox_status SetLivoxLidarImuRange(uint32_t handle,
+                                   LivoxLidarImuOutRate imu_out_rate,
+                                   LivoxLidarAccelRange accel_range,
+                                   LivoxLidarGyroRange  gyro_range,
+                                   LivoxLidarAsyncControlCallback cb, void* client_data);
+
+/**
+ * Set NTP server Ip info, only avia2 support this function.
+ * @param  handle                 device handle.
+ * @param  ipconfig               NTP server ip info.
+ * @param  cb                     callback for the command.
+ * @param  client_data            user data associated with the command.
+ * @return kStatusSuccess on successful return, see \ref LivoxStatus for other error code.
+ */
+livox_status SetNTPServerIp(uint32_t handle, NTPServerIpInfo* server_ip, LivoxLidarAsyncControlCallback cb, void* client_data);
+
+// mid360 and hap lidar does not support this function.
+/**
+ * Set LiDAR esc mode.
+ * @param  handle                 device handle.
+ * @param  esc_mode               lidar esc mode 
+ * @param  cb                     callback for the command.
+ * @param  client_data            user data associated with the command.
+ * @return kStatusSuccess on successful return, see \ref LivoxStatus for other error code.
+ */
+livox_status SetLivoxLidarEscMode(uint32_t handle, LivoxLidarEscMode esc_mode, LivoxLidarAsyncControlCallback cb, void* client_data);
+
+// avia2 support this function, other not support.
+/**
+ * Set LiDAR fov mode.
+ * @param  handle                 device handle.
+ * @param  fov_mode               lidar fov mode 
+ * @param  cb                     callback for the command.
+ * @param  client_data            user data associated with the command.
+ * @return kStatusSuccess on successful return, see \ref LivoxStatus for other error code.
+ */
+livox_status SetLivoxLidarFovMode(uint32_t handle, LivoxLidarFovMode fov_mode, LivoxLidarAsyncControlCallback cb, void* client_data);
+
+// avia2 support this function, other not support.
+/**
+ * Set LiDAR Echo mode.
+ * @param  handle                 device handle.
+ * @param  echo_mode              lidar echo mode 
+ * @param  cb                     callback for the command.
+ * @param  client_data            user data associated with the command.
+ * @return kStatusSuccess on successful return, see \ref LivoxStatus for other error code.
+ */
+livox_status SetLivoxLidarEchoMode(uint32_t handle, LivoxLidarEchoMode echo_mode, LivoxLidarAsyncControlCallback cb, void* client_data);
+
 /**
  * Set LiDAR glass heat.
  * @param  handle                 device handle.

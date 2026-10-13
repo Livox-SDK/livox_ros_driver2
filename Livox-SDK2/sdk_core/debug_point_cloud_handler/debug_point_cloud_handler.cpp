@@ -30,6 +30,11 @@
 #include <algorithm>
 #include <iostream>
 #include <chrono>
+#ifdef WIN32
+#include <io.h>
+#else
+#include <unistd.h>
+#endif
 
 namespace livox {
 namespace lidar {
@@ -43,8 +48,13 @@ DebugPointCloudHandler::DebugPointCloudHandler(std::uint32_t handle, std::string
 DebugPointCloudHandler::~DebugPointCloudHandler() {
   if (thread_ptr_) {
     enable_.store(false);
+    cv_.notify_all();
     thread_ptr_->join();
     thread_ptr_ = nullptr;
+  }
+  if (file_handle_) {
+    std::fclose(file_handle_);
+    file_handle_ = nullptr;
   }
 }
 
@@ -74,20 +84,32 @@ bool DebugPointCloudHandler::StoreData(uint8_t* buf, uint32_t buf_size) {
 
 void DebugPointCloudHandler::WriteData() {
   while (enable_.load()) {
-    std::unique_lock<std::mutex> lock(data_mutex_);
-    cv_.wait_for(lock, std::chrono::seconds(1), [this]{return !data_.empty() || !enable_.load();});
-    if (!enable_.load()) return;
-    if (file_size_ >=  max_file_size_) {
+    std::vector<uint8_t> local_data;
+    {
+      std::unique_lock<std::mutex> lock(data_mutex_);
+      cv_.wait_for(lock, std::chrono::milliseconds(100),
+                   [this] { return !data_.empty() || !enable_.load(); });
+      if (!enable_.load()) break;
+      local_data.swap(data_);
+    }
+    // 锁已释放，在锁外执行文件 I/O
+
+    if (local_data.empty()) continue;
+
+    if (file_size_ >= max_file_size_) {
       LOG_WARN("{} file size over 4 GB", file_name_);
-      return;
+      break;
     }
     if (!file_handle_) {
-      file_handle_ = std::make_shared<std::ofstream>();
-      file_name_ = fmt::format("lidar_{}_{}.LivoxDebugPointCloudData", handle_, GetCurrentSystemTime());
-      file_handle_->open(fmt::format("{}/{}",file_path_, file_name_), std::ios::binary);
-      if (!file_handle_->is_open()) {
-        LOG_ERROR("filed to open {} path", file_path_);
-        return;
+      char name_buf[256];
+      snprintf(name_buf, sizeof(name_buf), "lidar_%u_%s.LivoxDebugPointCloudData",
+               handle_, GetCurrentSystemTime().c_str());
+      file_name_ = name_buf;
+      std::string full_path = file_path_ + "/" + file_name_;
+      file_handle_ = std::fopen(full_path.c_str(), "ab");
+      if (!file_handle_) {
+        LOG_ERROR("Failed to open {} for writing", full_path);
+        break;
       }
       // write file header
       FastCRC16 crc_16;
@@ -97,22 +119,35 @@ void DebugPointCloudHandler::WriteData() {
       file_header.data_type = {0x01};
       memcpy(file_header.sn, sn_.c_str(), sizeof(file_header.sn));
       memset(file_header.rsvd, 0, sizeof(file_header.rsvd));
-      file_header.crc16 = crc_16.ccitt(reinterpret_cast<const uint8_t*>(&file_header),
-                                      offsetof(LivoxLidarDebugPointCloudFileHeader, crc16));
-
-      file_handle_->write(reinterpret_cast<char*>(&file_header), sizeof(file_header));
+      file_header.crc16 = crc_16.ccitt(
+          reinterpret_cast<const uint8_t*>(&file_header),
+          offsetof(LivoxLidarDebugPointCloudFileHeader, crc16));
+      std::fwrite(&file_header, 1, sizeof(file_header), file_handle_);
       file_size_ += sizeof(file_header);
     }
-    file_handle_->write(reinterpret_cast<char*>(data_.data()), data_.size());
-    file_size_ += data_.size();
-    data_.resize(0);
+
+    std::fwrite(local_data.data(), 1, local_data.size(), file_handle_);
+    file_size_ += local_data.size();
+    std::fflush(file_handle_);
+#ifdef WIN32
+    _commit(_fileno(file_handle_));
+#else
+    fsync(fileno(file_handle_));
+#endif
   }
 }
 
 bool DebugPointCloudHandler::Enable(bool enable) {
   enable_.store(enable);
   if (enable) {
+    if (thread_ptr_) {
+      cv_.notify_all();
+      thread_ptr_->join();
+      thread_ptr_ = nullptr;
+    }
     thread_ptr_ = std::make_shared<std::thread>(&DebugPointCloudHandler::WriteData, this);
+  } else {
+    cv_.notify_all();
   }
   return true;
 }

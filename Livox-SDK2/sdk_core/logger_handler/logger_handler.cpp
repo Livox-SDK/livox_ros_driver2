@@ -27,6 +27,11 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
+#ifdef WIN32
+#include <io.h>
+#else
+#include <unistd.h>
+#endif
 
 #include "base/logging.h"
 #include "command_handler/command_impl.h"
@@ -107,22 +112,26 @@ void LoggerHandler::CreateFile(const WriteBuffer& write_buff) {
     }
     std::fclose(current_files_[log_type].fp);
     current_files_[log_type].fp = nullptr;
-    ChangeCurrentFileName(log_branch_path_[log_type], current_files_[log_type].file_name);
   }
 
-  std::string file_path =  log_branch_path_[log_type] + "/" + 
-                            "." + current_time_str + "_" + serial_num_ + 
+  std::string file_path =  log_branch_path_[log_type] + "/" +
+                            current_time_str + "_" + serial_num_ +
                             "_" + std::to_string(log_type) + "_" + std::to_string(write_buff.file_index) + ".dat";
   LOG_INFO("file path : {}", file_path);
   current_files_[log_type].fp = std::fopen(file_path.c_str(), "ab");
   if (current_files_[log_type].fp) {
     std::fwrite(write_buff.data_ptr.get(), 1, write_buff.data_length, current_files_[log_type].fp);
     std::fflush(current_files_[log_type].fp);
+#ifdef WIN32
+    _commit(_fileno(current_files_[log_type].fp));
+#else
+    fsync(fileno(current_files_[log_type].fp));
+#endif
   }
   current_files_[log_type].flag = write_buff.flag;
   current_files_[log_type].file_index = write_buff.file_index;
   current_files_[log_type].trans_index = write_buff.trans_index;
-  current_files_[log_type].file_name = "." + current_time_str + "_" + serial_num_ + 
+  current_files_[log_type].file_name = current_time_str + "_" + serial_num_ +
                                       "_" + std::to_string(log_type) + "_" + std::to_string(write_buff.file_index) + ".dat";
   LOG_INFO("Create File index: {}", (int)write_buff.file_index);
 }
@@ -149,6 +158,11 @@ void LoggerHandler::WriteFile(const WriteBuffer& write_buff) {
   if (current_files_[log_type].fp) {
     std::fwrite(write_buff.data_ptr.get(), 1, write_buff.data_length, current_files_[log_type].fp);
     std::fflush(current_files_[log_type].fp);
+#ifdef WIN32
+    _commit(_fileno(current_files_[log_type].fp));
+#else
+    fsync(fileno(current_files_[log_type].fp));
+#endif
   } else {
     LOG_ERROR("There is an issue with the lidar firmware, the starting file command is not sent from lidar. trans_index: {}", write_buff.trans_index);
   }
@@ -167,7 +181,6 @@ void LoggerHandler::StopFile(const WriteBuffer& write_buff) {
   if (current_files_[log_type].fp) {
     std::fclose(current_files_[log_type].fp);
     current_files_[log_type].fp = nullptr;
-    ChangeCurrentFileName(log_branch_path_[log_type], current_files_[log_type].file_name);
   }
   current_files_[log_type].fp = nullptr;
   current_files_[log_type].flag = write_buff.flag;
@@ -186,6 +199,7 @@ void LoggerHandler::Write() {
 
     if (write_buff.trans_index < current_files_[write_buff.log_type].trans_index &&
         write_buff.flag != static_cast<uint8_t>(Flag::kCreateFile)) {
+      queue.pop();
       continue;
     }
 

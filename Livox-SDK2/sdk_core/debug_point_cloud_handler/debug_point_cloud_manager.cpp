@@ -31,11 +31,14 @@ void DebugPointCloudManager::AddDevice(const uint32_t handle, const DetectionDat
 
 void DebugPointCloudManager::Handler(uint32_t handle, uint16_t lidar_port, uint8_t *buf, uint32_t buf_size) {
   if (!enable_.load()) return;
-  if (handlers_.find(handle) == handlers_.end()) {
-    auto it = devices_info_.find(handle);
-    if (it != devices_info_.end()) {
-      handlers_.emplace(handle, std::make_shared<DebugPointCloudHandler>(handle, it->second.sn, it->second.dev_type, path_));
-      handlers_[handle]->Enable(enable_.load());
+  auto it = handlers_.find(handle);
+  if (it == handlers_.end() || !it->second) {
+    auto dev_it = devices_info_.find(handle);
+    if (dev_it != devices_info_.end()) {
+      handlers_[handle] = std::make_shared<DebugPointCloudHandler>(handle, dev_it->second.sn, dev_it->second.dev_type, path_);
+      handlers_[handle]->Enable(true);
+    } else {
+      return;
     }
   }
   handlers_[handle]->StoreData(buf, buf_size);
@@ -43,11 +46,13 @@ void DebugPointCloudManager::Handler(uint32_t handle, uint16_t lidar_port, uint8
 
 bool DebugPointCloudManager::Enable(bool enable) {
   enable_.store(enable);
-  for (auto& kv : handlers_) {
-    kv.second->Enable(enable);
-    if (!enable) {
-      kv.second = nullptr;
+  if (!enable) {
+    for (auto& kv : handlers_) {
+      if (kv.second) {
+        kv.second->Enable(false);
+      }
     }
+    handlers_.clear();
   }
   return true;
 }
