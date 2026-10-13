@@ -69,6 +69,8 @@ int main(int argc, char **argv) {
   livox_node.GetNode().getParam("enable_lidar_bag", lidar_bag);
   livox_node.GetNode().getParam("enable_imu_bag", imu_bag);
 
+  RCLCPP_INFO(livox_node.get_logger(), "Frame id: %s.", frame_id.c_str());
+
   printf("data source:%u.\n", data_src);
 
   if (publish_freq > 100.0) {
