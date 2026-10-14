@@ -79,7 +79,7 @@ def main():
         "and BACK_LASER_IP using read-only UDP discovery, then select the matching "
         "thorvald_core/config/livox_multi.json symlink."
     )
-    parser.add_argument("--timeout", type=float, default=5.0, help="Discovery timeout in seconds (default: 5)")
+    parser.add_argument("--timeout", type=float, default=30.0, help="Discovery timeout in seconds (default: 30)")
     parser.add_argument("--host-ip", default=os.environ.get("ENO_HOST_IP") or "0.0.0.0",
                         help="Local lidar-facing IPv4 address (default: ENO_HOST_IP or all interfaces)")
     parser.add_argument("--config-dir", type=Path, help="Override thorvald_core's ROS package config directory")
