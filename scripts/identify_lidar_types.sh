@@ -78,10 +78,18 @@ def main():
         "thorvald_core/config/livox_multi.json symlink."
     )
     parser.add_argument("--timeout", type=float, default=5.0, help="Discovery timeout in seconds (default: 5)")
+    parser.add_argument("--host-ip", default=os.environ.get("ENO_HOST_IP") or "0.0.0.0",
+                        help="Local lidar-facing IPv4 address (default: ENO_HOST_IP or all interfaces)")
     parser.add_argument("--config-dir", type=Path, help="Override thorvald_core's ROS package config directory")
     args = parser.parse_args()
     if not math.isfinite(args.timeout) or args.timeout <= 0:
         parser.error("--timeout must be a finite positive number")
+    try:
+        host_address = ipaddress.IPv4Address(args.host_ip)
+    except ipaddress.AddressValueError:
+        parser.error("--host-ip must be a local IPv4 address")
+    if host_address.is_multicast or args.host_ip == "255.255.255.255":
+        parser.error("--host-ip must be a local IPv4 address")
     positions = {}
     for position in ("FRONT", "BACK"):
         variable = f"{position}_LASER_IP"
@@ -100,12 +108,15 @@ def main():
     detected = {}
     request = discovery_request()
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as probe:
+        probe.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         try:
-            probe.bind(("0.0.0.0", 56000))
+            probe.bind((str(host_address), 56000))
         except OSError as error:
-            print(f"Cannot bind Livox discovery UDP port 56000: {error}. "
-                  "Stop any Livox driver/SDK using that port and retry.", file=sys.stderr)
+            print(f"Cannot bind Livox discovery {host_address}:56000: {error}. "
+                  "Check the local host IP and stop any Livox driver/SDK using "
+                  "that port before retrying.", file=sys.stderr)
             return 1
+        print(f"Livox discovery on {host_address}:56000 (unicast and broadcast)", flush=True)
         deadline = time.monotonic() + args.timeout
         next_request = 0.0
         while pending:
@@ -113,7 +124,7 @@ def main():
             if now >= deadline:
                 break
             if now >= next_request:
-                for address in sorted(pending):
+                for address in sorted(pending) + ["255.255.255.255"]:
                     try:
                         probe.sendto(request, (address, 56000))
                     except OSError as error:

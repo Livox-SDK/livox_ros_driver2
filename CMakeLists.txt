@@ -322,7 +322,7 @@ else(ROS_EDITION STREQUAL "ROS2")
     # uncomment the line when a copyright and license is not present in all source files
     #set(ament_cmake_copyright_FOUND TRUE)
     # the following line skips cpplint (only works in a git repo)
-    # uncomment the line when this package is not in a git repo
+    # uncomment the line when this package is not in a git re8po
     #set(ament_cmake_cpplint_FOUND TRUE)
     ament_lint_auto_find_test_dependencies()
   endif()
