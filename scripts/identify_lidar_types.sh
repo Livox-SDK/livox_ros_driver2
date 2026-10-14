@@ -11,10 +11,12 @@ import binascii
 import ipaddress
 import math
 import os
+import select
 import socket
 import struct
 import sys
 import time
+from contextlib import ExitStack
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -107,10 +109,18 @@ def main():
     pending = set(positions.values())
     detected = {}
     request = discovery_request()
-    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as probe:
+    with ExitStack() as sockets:
+        probe = sockets.enter_context(socket.socket(socket.AF_INET, socket.SOCK_DGRAM))
         probe.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         try:
             probe.bind((str(host_address), 56000))
+            receivers = [probe]
+            if not host_address.is_unspecified:
+                broadcast_listener = sockets.enter_context(
+                    socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                )
+                broadcast_listener.bind(("255.255.255.255", 56000))
+                receivers.append(broadcast_listener)
         except OSError as error:
             print(f"Cannot bind Livox discovery {host_address}:56000: {error}. "
                   "Check the local host IP and stop any Livox driver/SDK using "
@@ -130,17 +140,17 @@ def main():
                     except OSError as error:
                         print(f"Discovery request to {address} failed: {error}", file=sys.stderr)
                 next_request = now + 0.5
-            probe.settimeout(min(deadline - now, max(0.001, next_request - now)))
-            try:
-                packet, (source_ip, source_port) = probe.recvfrom(65535)
-            except socket.timeout:
-                continue
-            if source_ip not in pending or source_port != 56000:
-                continue
-            result = parse_reply(packet, source_ip)
-            if result is not None:
-                detected[source_ip] = result
-                pending.remove(source_ip)
+            readable, _, _ = select.select(
+                receivers, [], [], min(deadline - now, max(0.001, next_request - now))
+            )
+            for receiver in readable:
+                packet, (source_ip, source_port) = receiver.recvfrom(65535)
+                if source_ip not in pending or source_port != 56000:
+                    continue
+                result = parse_reply(packet, source_ip)
+                if result is not None:
+                    detected[source_ip] = result
+                    pending.remove(source_ip)
 
     successful = True
     models = {}
