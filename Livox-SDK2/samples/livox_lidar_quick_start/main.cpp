@@ -165,87 +165,54 @@ void SetIpInfoCallback(livox_status status, uint32_t handle, LivoxLidarAsyncCont
   }
 }
 
+
+
+// 1. HANDLES RESPONSE AFTER GATHERING INTERNAL INFO (CORRECTED TYPE NAME)
 void QueryInternalInfoCallback(livox_status status, uint32_t handle, 
-    LivoxLidarDiagInternalInfoResponse* response, void* client_data) {
-  if (status != kLivoxLidarStatusSuccess) {
-    printf("Query lidar internal info failed.\n");
-    QueryLivoxLidarInternalInfo(handle, QueryInternalInfoCallback, nullptr);
+                               LivoxLidarDiagInternalInfoResponse* response, void* client_data) {
+  if (status != kLivoxLidarStatusSuccess || response == nullptr) {
+    printf("[ERROR] Failed to query LiDAR internal information. Status: %d\n", status);
     return;
   }
 
-  if (response == nullptr) {
-    return;
-  }
+  printf("[INFO] Handshake complete. Pushing IP modification payload...\n");
 
-  uint8_t host_point_ipaddr[4] {0};
-  uint16_t host_point_port = 0;
-  uint16_t lidar_point_port = 0;
+  //!!!!!!!!!!!!!!!!!!!!! READ THIS DATA FROM ARGUMENTS OR CONFIG FILE !!!!!!!!!!!!!!!!!!!!
+  static LivoxLidarIpInfo target_ip_payload;
+  strcpy(target_ip_payload.ip_addr, "192.168.0.11");   // Target IP
+  strcpy(target_ip_payload.net_mask, "255.255.255.0");  // Subnet
+  strcpy(target_ip_payload.gw_addr, "192.168.0.1");     // Gateway
 
-  uint8_t host_imu_ipaddr[4] {0};
-  uint16_t host_imu_data_port = 0;
-  uint16_t lidar_imu_data_port = 0;
-
-  uint16_t off = 0;
-  for (uint8_t i = 0; i < response->param_num; ++i) {
-    LivoxLidarKeyValueParam* kv = (LivoxLidarKeyValueParam*)&response->data[off];
-    if (kv->key == kKeyLidarPointDataHostIpCfg) {
-      memcpy(host_point_ipaddr, &(kv->value[0]), sizeof(uint8_t) * 4);
-      memcpy(&(host_point_port), &(kv->value[4]), sizeof(uint16_t));
-      memcpy(&(lidar_point_port), &(kv->value[6]), sizeof(uint16_t));
-    } else if (kv->key == kKeyLidarImuHostIpCfg) {
-      memcpy(host_imu_ipaddr, &(kv->value[0]), sizeof(uint8_t) * 4);
-      memcpy(&(host_imu_data_port), &(kv->value[4]), sizeof(uint16_t));
-      memcpy(&(lidar_imu_data_port), &(kv->value[6]), sizeof(uint16_t));
+  SetLivoxLidarIp(handle, &target_ip_payload, [](livox_status status, uint32_t handle, 
+                                                 LivoxLidarAsyncControlResponse *response, void *client_data) {
+    if (status == kLivoxLidarStatusSuccess && response && response->ret_code == 0) {
+      printf("\n======================================================\n");
+      printf("[SUCCESS] LiDAR IP permanently changed to %s", target_ip_payload.ip_addr);
+      printf("======================================================\n\n");
+    } else {
+      printf("\n[ERROR] LiDAR rejected the IP rewrite. Return code: %d\n\n", response ? response->ret_code : -1);
     }
-    off += sizeof(uint16_t) * 2;
-    off += kv->length;
-  }
-
-  printf("Host point cloud ip addr:%u.%u.%u.%u, host point cloud port:%u, lidar point cloud port:%u.\n",
-      host_point_ipaddr[0], host_point_ipaddr[1], host_point_ipaddr[2], host_point_ipaddr[3], host_point_port, lidar_point_port);
-
-  printf("Host imu ip addr:%u.%u.%u.%u, host imu port:%u, lidar imu port:%u.\n",
-    host_imu_ipaddr[0], host_imu_ipaddr[1], host_imu_ipaddr[2], host_imu_ipaddr[3], host_imu_data_port, lidar_imu_data_port);
-
+  }, NULL);
 }
 
+// 2. TRIGGERED AUTOMATICALLY WHEN THE DEVICE DETECTS AN ACTIVE PC LINK
 void LidarInfoChangeCallback(const uint32_t handle, const LivoxLidarInfo* info, void* client_data) {
   if (info == nullptr) {
-    printf("lidar info change callback failed, the info is nullptr.\n");
     return;
-  } 
-  printf("LidarInfoChangeCallback Lidar handle: %u SN: %s\n", handle, info->sn);
-
-  // set lidar echo mode 0x0024
-  // SetLivoxLidarEchoMode(handle, kLivoxStrongEchoMode, EchoModeSetCallback, nullptr);
-
-  // set the work mode to kLivoxLidarNormal, 0x001a
-  SetLivoxLidarWorkMode(handle, kLivoxLidarNormal, WorkModeCallback, nullptr);
-
-  // set the data type to
-  SetLivoxLidarPclDataType(handle, kLivoxLidarDoubleEchoData, PclTypeCallback, nullptr);
-
-  // set esc mode 0x0021
-  SetLivoxLidarEscMode(handle, kLivoxEscSpeedNormal, EscModeSetCallback, nullptr);
-
-  // set lidar fov mode 0x0022
-  // SetLivoxLidarFovMode(handle, kLivoxSmallFovMode, FovModeSetCallback, nullptr);
-
-  // set lidar pcl freq mode 0x0029
-  SetLivoxLidarPclFreqMod(handle, kLivoxLidarPclFreq100k, PclFreqSetCallback, nullptr);
-
-  // set lidar time filter mode 0x0026
-  // 0 = normal mode, 1 = special mode (write point cloud even if timestamp goes backwards)
-  SetLivoxLidarTimeFilterMode(handle, kLivoxLidarTimeFilterSpec, TimeFilterModeSetCallback, nullptr);
+  }
   
-
-  QueryLivoxLidarInternalInfo(handle, QueryInternalInfoCallback, nullptr);
-
-  // LivoxLidarIpInfo lidar_ip_info;
-  // strcpy(lidar_ip_info.ip_addr, "192.168.1.10");
-  // strcpy(lidar_ip_info.net_mask, "255.255.255.0");
-  // strcpy(lidar_ip_info.gw_addr, "192.168.1.1");
-  // SetLivoxLidarLidarIp(handle, &lidar_ip_info, SetIpInfoCallback, nullptr);
+  static bool command_sent = false;
+  if (!command_sent) {
+    printf("[INFO] Found LiDAR (SN: %s). Initiating handshake hook...\n", info->sn);
+    
+    // Call QueryLivoxLidarInternalInfo first to force an active control session
+    livox_status status = QueryLivoxLidarInternalInfo(handle, QueryInternalInfoCallback, NULL);
+    if (status != kLivoxLidarStatusSuccess) {
+        printf("[ERROR] Failed to dispatch internal info query task. Code: %d\n", status);
+    } else {
+        command_sent = true; // Prevent looping the command
+    }
+  }
 }
 
 void LivoxLidarPushMsgCallback(const uint32_t handle, const uint8_t dev_type, const char* info, void* client_data) {
