@@ -29,7 +29,7 @@ def update_config_link(config_dir, back_model, front_model):
                   "or specify --config-dir.", file=sys.stderr)
             return 1
     config_dir = config_dir.expanduser().resolve()
-    target = config_dir / f"{back_model}-{front_model}_multi.json"
+    target = config_dir / f"{back_model}_{front_model}_multi.json"
     link = config_dir / "livox_multi.json"
     if not target.is_file():
         print(f"Lidar configuration does not exist: {target}. "
