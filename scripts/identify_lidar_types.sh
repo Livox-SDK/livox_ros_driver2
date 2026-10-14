@@ -15,6 +15,35 @@ import socket
 import struct
 import sys
 import time
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
+
+def update_config_link(config_dir, back_model, front_model):
+    if config_dir is None:
+        try:
+            from ament_index_python.packages import get_package_share_directory
+            config_dir = Path(get_package_share_directory("thorvald_core")) / "config"
+        except (ImportError, LookupError) as error:
+            print(f"Cannot locate thorvald_core: {error}. Source your ROS 2 workspace "
+                  "or specify --config-dir.", file=sys.stderr)
+            return 1
+    config_dir = config_dir.expanduser().resolve()
+    target = config_dir / f"{back_model}-{front_model}_multi.json"
+    link = config_dir / "livox_multi.json"
+    if not target.is_file():
+        print(f"Lidar configuration does not exist: {target}. "
+              "Existing livox_multi.json was not changed.", file=sys.stderr)
+        return 1
+    if link.exists() and not link.is_symlink():
+        print(f"Refusing to replace non-symlink: {link}", file=sys.stderr)
+        return 1
+    with TemporaryDirectory(prefix=".livox_config_", dir=config_dir) as temporary_dir:
+        replacement = Path(temporary_dir) / "livox_multi.json"
+        replacement.symlink_to(target.name)
+        os.replace(replacement, link)
+    print(f"Configuration: {link} -> {target.name}")
+    return 0
 
 
 def discovery_request():
@@ -45,9 +74,11 @@ def parse_reply(packet, source_ip):
 def main():
     parser = argparse.ArgumentParser(
         description="Run on the robot to identify Livox models at FRONT_LASER_IP "
-        "and BACK_LASER_IP using read-only UDP discovery."
+        "and BACK_LASER_IP using read-only UDP discovery, then select the matching "
+        "thorvald_core/config/livox_multi.json symlink."
     )
     parser.add_argument("--timeout", type=float, default=5.0, help="Discovery timeout in seconds (default: 5)")
+    parser.add_argument("--config-dir", type=Path, help="Override thorvald_core's ROS package config directory")
     args = parser.parse_args()
     if not math.isfinite(args.timeout) or args.timeout <= 0:
         parser.error("--timeout must be a finite positive number")
@@ -101,6 +132,7 @@ def main():
                 pending.remove(source_ip)
 
     successful = True
+    models = {}
     for position, address in positions.items():
         if address not in detected:
             print(f"{position} ({address}): no Livox discovery reply within {args.timeout:g}s")
@@ -112,7 +144,11 @@ def main():
               f"(device_type={device_type}, serial={serial})")
         if model is None:
             successful = False
-    return 0 if successful else 1
+        else:
+            models[position] = model
+    if not successful:
+        return 1
+    return update_config_link(args.config_dir, models["BACK"], models["FRONT"])
 
 
 try:
@@ -120,6 +156,6 @@ try:
 except KeyboardInterrupt:
     sys.exit(130)
 except OSError as error:
-    print(f"Livox discovery failed: {error}", file=sys.stderr)
+    print(f"Lidar identification/configuration failed: {error}", file=sys.stderr)
     sys.exit(1)
 PY
